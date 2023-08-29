@@ -13,9 +13,12 @@ pip3 install poppy
 
 pip3 install matplot
 
+pip3 install qutip
+
 main.py is the main gimbalic diode
 lito.py is the defense system
 superport.py is the teleport system
 bayonetta.py is another teleport system example
 quantum.py is a single photon teleport system
+pendulo.py vacuum plates teleport system (temporal anti-gravitatory system)
 XD.py is a sample game that encodes and decodes photons in ascii strings
