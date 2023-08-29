@@ -13,7 +13,7 @@ pip3 install poppy
 
 pip3 install matplot
 
-main.py is the main gimbalic diode simulation
+main.py is the main gimbalic diode
 lito.py is the defense system
 superport.py is the teleport system
 bayonetta.py is another teleport system example
