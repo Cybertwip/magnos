@@ -240,6 +240,11 @@ def start_pygame_emergence_simulation(gravitational_potential):
         else:
             if not emerged:
                 gravitational_potential = teleport_vacuum_plates(True)
+                teleport_count -= 1
+
+                for i in range(len(plate_effects)):
+                    plate_effects[i] -= 0.01  # For example, increase effect by 0.1
+
                 emerged = True
 
         pygame.display.flip()
