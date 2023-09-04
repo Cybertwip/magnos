@@ -12,12 +12,8 @@ p.setGravity(0, -g, 0)
 
 scale_factor = 0.01
 
-# Determine a reasonable size_divisor
-size_divisor = 1
-
-
-earth_radius_game = 63710.00 * scale_factor * size_divisor
-rocket_height_game = 2.00 * scale_factor * size_divisor
+earth_radius_game = 63710.00 * scale_factor
+rocket_height_game = 2.00 * scale_factor
 rocket_mass_game = 3050 * scale_factor
 
 
@@ -28,10 +24,10 @@ mesosphere_distance_real = 85000.00  # in  m
 thermosphere_distance_real = 60000.00  # in m
 
 # Convert the real-world distances (now in km) to the game's scale
-troposphere_distance_game = troposphere_distance_real * scale_factor * size_divisor
-stratosphere_distance_game = stratosphere_distance_real * scale_factor * size_divisor
-mesosphere_distance_game = mesosphere_distance_real * scale_factor * size_divisor
-thermosphere_distance_game = thermosphere_distance_real * scale_factor * size_divisor
+troposphere_distance_game = troposphere_distance_real * scale_factor
+stratosphere_distance_game = stratosphere_distance_real * scale_factor
+mesosphere_distance_game = mesosphere_distance_real * scale_factor
+thermosphere_distance_game = thermosphere_distance_real * scale_factor
 
 # Calculate the radii of each layer based on the game's scale
 troposphere_radius = earth_radius_game + troposphere_distance_game
@@ -55,14 +51,14 @@ thermosphere = Entity(model='sphere', color=thermosphere_color, scale=thermosphe
 
 
 # Define the mass of Earth in your game's scale
-earth_mass_game = 5.972 * 10**24 * scale_factor * size_divisor
+earth_mass_game = 5.972 * 10**24 * scale_factor
 
-moon_radius_game = 1737.1 * scale_factor * size_divisor
+moon_radius_game = 1737.1 * scale_factor
 moon_mass_game = 7.35 * 10**22 * scale_factor**3
 
 # Create the moon
 moon = Entity(model='sphere', color=color.gray, scale=moon_radius_game)
-moon_distance = earth_radius_game + 384400.0 * scale_factor * size_divisor
+moon_distance = earth_radius_game + 384400.0 * scale_factor
 moon.world_position = earth.world_position + Vec3(0, moon_distance, 0)
 
 # Create the moon's collision shape and body
@@ -79,7 +75,7 @@ rocket.scale *= 0.01
 rocket.world_position = earth.world_position + Vec3(0, earth_radius_game + rocket_height_game / 2, 0)
 
 # Camera setup
-camera.far = earth_radius_game * size_divisor * 10  # Adjusted far plane value for better visibility
+camera.far = earth_radius_game * 10  # Adjusted far plane value for better visibility
 camera.near = 0.001
 camera.fov = 10
 camera.position = Vec3(rocket.world_position.x - 0.01, rocket.world_position.y, rocket.world_position.z + 0.1)
@@ -113,7 +109,7 @@ rocket_body = p.createMultiBody(baseMass=rocket_mass_game,
                                 basePosition=rocket_position)
 
 
-rocket_diameter_game = 10.0 * scale_factor * size_divisor  # Assuming a diameter, adjust as needed
+rocket_diameter_game = 10.0 * scale_factor  # Assuming a diameter, adjust as needed
 rocket_radius_game = rocket_diameter_game / 2
 
 # Rocket thrust variables
@@ -160,7 +156,7 @@ initial_fuel_volume = math.pi * (rocket_radius_game**2) * rocket_height_game * f
 initial_fuel_mass = initial_fuel_volume * density_RP1
 
 # Camera setup
-camera.far = (earth_radius_game + moon_distance) * 2 * size_divisor * 10  # Adjusted far plane value for better visibility
+camera.far = (earth_radius_game + moon_distance) * 2 * 10  # Adjusted far plane value for better visibility
 camera.near = 0.001
 camera.fov = 10
 
