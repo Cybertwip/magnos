@@ -60,9 +60,6 @@ thrust_kN = 845  # Thrust of Merlin 1D engine in kN
 thrust_force = thrust_kN * 1000  # Convert kN to N
 thrust_direction = Vec3(0, 1, 0)  # Direction of thrust (upwards in local coordinates)
 
-# Flag to track if rocket is in space
-in_space = False
-
 Isp = 300  # specific impulse in seconds (for an RP-1/LOX engine)
 density_RP1 = 810  # kg/m^3
 
@@ -113,35 +110,169 @@ initial_fuel_volume = math.pi * (rocket_radius_game**2) * rocket_height_game * f
 initial_fuel_mass = initial_fuel_volume * density_RP1
 
 
-def create_entities():
-    global earth, moon, rocket, gimbal
 
-    earth = Entity(model='sphere', color=color.rgb(139, 69, 19), scale=earth_radius_game)
-    
-    moon = Entity(model='sphere', color=color.gray, scale=moon_radius_game)
-    moon_distance = earth_radius_game + 384400.0 * scale_factor
-    moon.world_position = earth.world_position + Vec3(0, moon_distance, 0)
-    
-    rocket = Entity(parent=earth, model='soyuz-fg.glb', scale_y=rocket_height_game, scale_x=rocket_height_game, scale_z=rocket_height_game)
-    rocket.scale *= 0.01
-    rocket.world_position = earth.world_position + Vec3(0, earth_radius_game + rocket_height_game / 2, 0)
-    
-    gimbal = Entity(parent=rocket, model='cube', color=color.red, scale=(0.1, 0.1, 0.5))
-    gimbal_position_offset = Vec3(0, -rocket_height_game / 2, 0)
-    gimbal.world_position = rocket.world_position + gimbal_position_offset
+class Earth:
+    def __init__(self):
+        self.entity = Entity(model='sphere', color=color.rgb(139, 69, 19), scale=earth_radius_game)
+        self.rotation_speed = 10
 
-create_entities()
+    def update(self):
+        self.entity.rotation_y += time.dt * self.rotation_speed
 
-# ===== Camera Setup =====
 
-def setup_camera():
-    camera.far = (earth_radius_game + moon_distance) * 2 * 10
-    camera.near = 0.001
-    camera.fov = 10
-    camera.position = Vec3(rocket.world_position.x - 100, rocket.world_position.y, rocket.world_position.z + 100)
-    camera.look_at(rocket)
+class Rocket:
+    def __init__(self, body):
+        self.entity = Entity(parent=earth.entity, model='soyuz-fg.glb', scale_y=rocket_height_game, scale_x=rocket_height_game, scale_z=rocket_height_game)
+        self.entity.scale *= 0.01
+        self.entity.world_position = earth.entity.world_position + Vec3(0, earth_radius_game + rocket_height_game / 2, 0)
+        self.rocket_body = body
+        self.gimbal_rotation_angle = 0.0
+        self.pitch_angle = 0.0
+        self.yaw_angle = 0.0
 
-setup_camera()
+        self.gimbal = Entity(parent=self.entity, model='cube', color=color.red, scale=(0.1, 0.1, 0.5))
+        self.gimbal_position_offset = Vec3(0, -rocket_height_game / 2, 0)
+        self.gimbal.world_position = self.entity.world_position + self.gimbal_position_offset
+
+
+    def update(self):
+        self._adjust_gimbal_rotation()
+        self._calculate_thrust_direction()
+        self._apply_gravity()
+        self._consume_fuel_and_apply_thrust()
+        self._apply_drag_force()
+        self._update_position()
+
+    def _adjust_gimbal_rotation(self):
+        global held_keys
+
+        if held_keys['left arrow']:
+            self.yaw_angle += 1.0
+        if held_keys['right arrow']:
+            self.yaw_angle -= 1.0
+        if held_keys['up arrow']:
+            self.pitch_angle += 1.0
+        if held_keys['down arrow']:
+            self.pitch_angle -= 1.0
+
+        # Limit gimbal rotation angles within a range
+        self.pitch_angle = clamp(self.pitch_angle, -45.0, 45.0)
+        self.yaw_angle = clamp(self.yaw_angle, -45.0, 45.0)
+
+    def _calculate_thrust_direction(self):
+        pitch_radians = math.radians(self.pitch_angle)
+        yaw_radians = math.radians(self.yaw_angle)
+        
+        # Calculate the direction of thrust using both pitch and yaw adjustments.
+        # Note: The exact trigonometric transformations depend on how your 3D coordinate system is set up.
+        # Here's a common transformation for yaw and pitch:
+        x_dir = math.sin(pitch_radians) * math.cos(yaw_radians)
+        y_dir = math.cos(pitch_radians)
+        z_dir = math.sin(pitch_radians) * math.sin(yaw_radians)
+        
+        self.thrust_direction = Vec3(x_dir, y_dir, z_dir)
+
+    def _apply_gravity(self):
+        # Get the current altitude of the rocket
+        altitude = self.entity.world_position.y - earth_radius_game
+
+        # Calculate the new gravity based on altitude using a simplified formula
+        new_gravity = g * (earth_radius_game / (earth_radius_game + altitude))**2
+
+        # Set the new gravity
+        p.setGravity(0, -new_gravity, 0)
+
+    def _consume_fuel_and_apply_thrust(self):
+        global m, thrust_force, held_keys, button, oxygen_level, initial_fuel_mass
+
+        fuel_consumed_per_update = mass_flow_rate * time.dt
+        fuel_fraction_left = m / (V * density_RP1)  # fraction of initial fuel left
+
+        # Calculate the current total mass of the rocket (initial mass + remaining fuel)
+        current_total_mass = (rocket_mass_game * 0.2) + (m / initial_fuel_mass) * (rocket_mass_game)
+
+        # Update the bullet body mass
+        p.changeDynamics(self.rocket_body, -1, mass=current_total_mass)
+
+        # thrust_force_vector = Vec3(
+        #     self.thrust_direction.x * thrust_force,
+        #     self.thrust_direction.y * thrust_force,
+        #     self.thrust_direction.z * thrust_force
+        # )
+        thrust_force_vector = Vec3(
+                                    0,
+                                    thrust_force,
+                                    0
+        )
+        
+        if m > 0 and (held_keys['space'] or (button.hovered and held_keys['left mouse'])):
+            # Apply thrust force to the rocket's physics body
+            p.applyExternalForce(self.rocket_body, -1, thrust_force_vector, self.gimbal.world_position, p.LINK_FRAME)
+
+            # Decrease the oxygen level to reflect fuel consumption
+            oxygen_level.scale_x = fuel_fraction_left
+
+            # Reduce remaining fuel
+            m -= fuel_consumed_per_update
+
+    def _apply_drag_force(self):
+        # Calculate drag force
+        velocity = p.getBaseVelocity(self.rocket_body)[0]
+        velocity_magnitude = math.sqrt(velocity[0]**2 + velocity[1]**2 + velocity[2]**2)
+        drag_force = 0.5 * air_density * velocity_magnitude**2 * drag_coefficient * frontal_area
+
+        # Apply drag force in the opposite direction of velocity
+        drag_force_direction = (-velocity[0] / velocity_magnitude, -velocity[1] / velocity_magnitude, -velocity[2] / velocity_magnitude) if velocity_magnitude > 0 else (0, 0, 0)
+        drag_force_vec = (drag_force * drag_force_direction[0], drag_force * drag_force_direction[1], drag_force * drag_force_direction[2])
+        p.applyExternalForce(self.rocket_body, -1, drag_force_vec, rocket_position, p.LINK_FRAME)
+
+    def _update_position(self):
+        pos, _ = p.getBasePositionAndOrientation(self.rocket_body)
+        self.entity.world_position = pos
+        self.gimbal.world_position = self.entity.world_position + self.gimbal_position_offset
+
+
+class Moon:
+    def __init__(self):
+        self.entity = Entity(model='sphere', color=color.gray, scale=moon_radius_game)
+        self.entity.world_position = earth.entity.world_position + Vec3(0, moon_distance, 0)
+
+    def update(self):
+        pass
+
+class GameCamera:
+    def __init__(self):
+        self.entity = camera
+        self.original_rotation = self.entity.rotation
+        self.is_rocket_state = True  # default to rocket state
+
+    def update(self):
+        if held_keys['1']:
+            self.entity.fov = 10
+            self.is_rocket_state = True
+
+        if held_keys['2']:
+            self.entity.fov = 60
+            self.is_rocket_state = False
+
+        self._update_position_and_rotation()
+
+    def _update_position_and_rotation(self):
+        if self.is_rocket_state:
+            target_position = Vec3(rocket.entity.world_position.x - 50, rocket.entity.world_position.y, rocket.entity.world_position.z + 50)
+            target_rotation = self.original_rotation
+            self._set_camera(target_position, target_rotation)
+            self.entity.look_at(rocket.entity)
+        else:
+            camera_distance = (earth_radius_game + moon_distance) * 1.5
+            target_position = Vec3(camera_distance, 0, 0)
+            target_rotation = self.original_rotation
+            self._set_camera(target_position, target_rotation)
+            self.entity.look_at((earth.entity.world_position + moon.entity.world_position) / 2)
+
+    def _set_camera(self, position, rotation):
+        self.entity.position = position
+        self.entity.rotation = rotation
 
 
 def initialize_ui():
@@ -169,136 +300,25 @@ def setup_physics():
 
 setup_physics()
 
+global earth, rocket, moon
+earth = Earth()
+moon = Moon()
 
-original_camera_rotation = camera.rotation
+# After creating other instances
+rocket = Rocket(rocket_body)
 
+game_camera = GameCamera()
 
 # Update function
 def update():
-    global in_space, m, is_rocket_state, gimbal_rotation_angle
-
-    # Adjust gimbal rotation based on input
-    if held_keys['left arrow']:
-        gimbal_rotation_angle += 1.0
-    if held_keys['right arrow']:
-        gimbal_rotation_angle -= 1.0
-
-
-    # Limit gimbal rotation angle within a range
-    gimbal_rotation_angle = clamp(gimbal_rotation_angle, -45.0, 45.0)
-    
-    # Calculate the thrust direction based on gimbal rotation
-    gimbal_rotation_radians = math.radians(gimbal_rotation_angle)
-
-    # Rotate the thrust force vector based on gimbal rotation
-    thrust_direction = Vec3(0, math.cos(gimbal_rotation_radians), math.sin(gimbal_rotation_radians))
-
-
-    thrust_force_vector = Vec3(
-        thrust_direction.x * thrust_force,
-        thrust_direction.y * thrust_force,
-        thrust_direction.z * thrust_force
-    )
-
-    print(thrust_direction)
-    print(thrust_force_vector)
-
-    # Get the current altitude of the rocket
-    altitude = rocket.world_position.y - earth_radius_game
-
-    # Calculate the new gravity based on altitude using a simplified formula
-    new_gravity = g * (earth_radius_game / (earth_radius_game + altitude))**2
-
-    #print(new_gravity)
-
-    # Set the new gravity
-    p.setGravity(0, -new_gravity, 0)
-
-    earth.rotation_y += time.dt * 10
-
-    fuel_consumed_per_update = mass_flow_rate * time.dt
-    fuel_fraction_left = m / (V * density_RP1)  # fraction of initial fuel left
-
-    # Calculate the current total mass of the rocket (initial mass + remaining fuel)
-    current_total_mass = (rocket_mass_game * 0.2) + (m / initial_fuel_mass) * (rocket_mass_game)
-
-    # Update the bullet body mass
-    p.changeDynamics(rocket_body, -1, mass=current_total_mass)
-
-
-    if m > 0 and (held_keys['space'] or (button.hovered and held_keys['left mouse'])):
-        # Only apply thrust and burn fuel if there's fuel left
-
-        # Apply thrust force to the rocket's physics body
-        p.applyExternalForce(rocket_body, -1, thrust_force_vector, rocket_position, p.LINK_FRAME)
-
-        # Decrease the oxygen level to reflect fuel consumption
-        oxygen_level.scale_x = fuel_fraction_left
-
-        # Reduce remaining fuel
-        m -= fuel_consumed_per_update
-
-    if held_keys['1']:
-        camera.fov = 10
-        is_rocket_state = True
-
-    if held_keys['2']:
-        camera.fov = 60
-        is_rocket_state = False
-
-    if is_rocket_state:
-        target_position = Vec3(rocket.world_position.x - 100, rocket.world_position.y, rocket.world_position.z + 100)
-        target_rotation = original_camera_rotation
-        #update_camera_position_and_rotation(target_position, target_rotation)
-        camera.position = target_position
-        camera.rotation = target_rotation
-        camera.look_at(rocket)
-
-    else:
-        camera_distance = (earth_radius_game + moon_distance) * 1.5
-        target_position = Vec3(camera_distance, 0, 0)
-        target_rotation = original_camera_rotation
-        #update_camera_position_and_rotation(target_position, target_rotation)
-        camera.position = target_position
-        camera.rotation = target_rotation
-        camera.look_at((earth.world_position + moon.world_position) / 2)
-
-
-    # Calculate drag force
-    velocity = p.getBaseVelocity(rocket_body)[0]
-    velocity_magnitude = math.sqrt(velocity[0]**2 + velocity[1]**2 + velocity[2]**2)
-    drag_force = 0.5 * air_density * velocity_magnitude**2 * drag_coefficient * frontal_area
-
-    # Apply drag force in the opposite direction of velocity
-    drag_force_direction = (-velocity[0] / velocity_magnitude, -velocity[1] / velocity_magnitude, -velocity[2] / velocity_magnitude) if velocity_magnitude > 0 else (0, 0, 0)
-    drag_force_vec = (drag_force * drag_force_direction[0], drag_force * drag_force_direction[1], drag_force * drag_force_direction[2])
-    p.applyExternalForce(rocket_body, -1, drag_force_vec, rocket_position, p.LINK_FRAME)
-
-
-    pos, _ = p.getBasePositionAndOrientation(rocket_body)
-    rocket.world_position = pos
-
-    # Calculate gravitational force between Earth and Moon
-    earth_to_moon_vector = moon.world_position - earth.world_position
-    earth_to_moon_distance = earth_to_moon_vector.length()
-    earth_to_moon_direction = earth_to_moon_vector.normalized()
-#    gravitational_force = (g * (earth_mass_game * moon_mass_game) / (earth_to_moon_distance**2)) * earth_to_moon_direction
-
-    # Apply gravitational forces to the rocket and the moon
-#    p.applyExternalForce(rocket_body, -1, gravitational_force, rocket_position, p.LINK_FRAME)
-#    p.applyExternalForce(moon_body, -1, -gravitational_force, moon_position, p.LINK_FRAME)
-
-
-    #camera.position = Vec3(rocket.world_position.x - 100, rocket.world_position.y, rocket.world_position.z + 100)
-
+    rocket.update()
+    earth.update()
+    moon.update()
+    game_camera.update()
     p.stepSimulation()
+    
+    altitude = rocket.entity.world_position.y - earth_radius_game
 
-    # Check if rocket is above the thermosphere (last layer of atmosphere)
-    if pos[1] > thermosphere_radius:
-        in_space = True
-    
-    # Change the background color to black if in space
-    
     # Calculate the altitude ratios for each atmospheric layer
     if altitude < troposphere_radius - earth_radius_game:
         ratio = altitude / (troposphere_radius - earth_radius_game)
@@ -315,7 +335,5 @@ def update():
     
     window.color = current_color
 
-    distance_traversed = pos[1] - initial_vertical_position  # pos[1] gives the vertical position of the rocket
-    print("Distance Traversed KM:", distance_traversed / scale_factor * 0.1)
 
 app.run()
