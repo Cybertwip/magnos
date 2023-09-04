@@ -40,15 +40,15 @@ troposphere_color = color.rgb(0, 0, 255, 100)  # Blue with alpha
 stratosphere_color = color.rgb(150, 150, 255, 40)
 mesosphere_color = color.rgb(80, 80, 200, 30)
 thermosphere_color = color.rgb(40, 40, 150, 20)
+space_color = color.rgb(0, 0, 0)
 
 
 # Create atmospheric layers
 earth = Entity(model='sphere', color=color.rgb(139, 69, 19), scale=earth_radius_game)
-troposphere = Entity(model='sphere', color=troposphere_color, scale=troposphere_radius)
-stratosphere = Entity(model='sphere', color=stratosphere_color, scale=stratosphere_radius)
-mesosphere = Entity(model='sphere', color=mesosphere_color, scale=mesosphere_radius)
-thermosphere = Entity(model='sphere', color=thermosphere_color, scale=thermosphere_radius)
-
+# troposphere = Entity(model='sphere', color=troposphere_color, scale=troposphere_radius)
+# stratosphere = Entity(model='sphere', color=stratosphere_color, scale=stratosphere_radius)
+# mesosphere = Entity(model='sphere', color=mesosphere_color, scale=mesosphere_radius)
+# thermosphere = Entity(model='sphere', color=thermosphere_color, scale=thermosphere_radius)
 
 # Define the mass of Earth in your game's scale
 earth_mass_game = 5.972 * 10**24 * scale_factor
@@ -184,7 +184,7 @@ def update():
     # Calculate the new gravity based on altitude using a simplified formula
     new_gravity = g * (earth_radius_game / (earth_radius_game + altitude))**2
 
-    print(new_gravity)
+    #print(new_gravity)
 
     # Set the new gravity
     p.setGravity(0, -new_gravity, 0)
@@ -278,10 +278,22 @@ def update():
         in_space = True
     
     # Change the background color to black if in space
-    if in_space:
-        camera.background_color = color.black
+    
+    # Calculate the altitude ratios for each atmospheric layer
+    if altitude < troposphere_radius - earth_radius_game:
+        ratio = altitude / (troposphere_radius - earth_radius_game)
+        current_color = lerp(troposphere_color, stratosphere_color, ratio)
+    elif altitude < stratosphere_radius - earth_radius_game:
+        ratio = (altitude - (troposphere_radius - earth_radius_game)) / (stratosphere_radius - troposphere_radius)
+        current_color = lerp(stratosphere_color, mesosphere_color, ratio)
+    elif altitude < mesosphere_radius - earth_radius_game:
+        ratio = (altitude - (stratosphere_radius - earth_radius_game)) / (mesosphere_radius - stratosphere_radius)
+        current_color = lerp(mesosphere_color, thermosphere_color, ratio)
     else:
-        camera.background_color = color.blue
+        ratio = (altitude - (mesosphere_radius - earth_radius_game)) / (thermosphere_radius - mesosphere_radius)
+        current_color = thermosphere_color
+    
+    window.color = current_color
 
     distance_traversed = pos[1] - initial_vertical_position  # pos[1] gives the vertical position of the rocket
     print("Distance Traversed KM:", distance_traversed / scale_factor * 0.1)
