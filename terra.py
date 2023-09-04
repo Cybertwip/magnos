@@ -508,7 +508,7 @@ minimap_camera = Entity(
     parent=camera.ui,  # Attach to the UI for overlay
     model='quad',
     scale=(0.2, 0.2),  # Adjust the scale to control the size of the minimap
-    position=(0.4, 0.4),  # Adjust the position of the minimap
+    position=(0.65, -0.4),  # Adjust the position of the minimap
     color=color.gray,
 )
 
