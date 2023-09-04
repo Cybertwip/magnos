@@ -42,71 +42,14 @@ mesosphere_color = color.rgb(80, 80, 200, 30)
 thermosphere_color = color.rgb(40, 40, 150, 20)
 space_color = color.rgb(0, 0, 0)
 
-
-# Create atmospheric layers
-earth = Entity(model='sphere', color=color.rgb(139, 69, 19), scale=earth_radius_game)
-# troposphere = Entity(model='sphere', color=troposphere_color, scale=troposphere_radius)
-# stratosphere = Entity(model='sphere', color=stratosphere_color, scale=stratosphere_radius)
-# mesosphere = Entity(model='sphere', color=mesosphere_color, scale=mesosphere_radius)
-# thermosphere = Entity(model='sphere', color=thermosphere_color, scale=thermosphere_radius)
-
 # Define the mass of Earth in your game's scale
 earth_mass_game = 5.972 * 10**24 * scale_factor
 
 moon_radius_game = 1737.1 * scale_factor
 moon_mass_game = 7.35 * 10**22 * scale_factor**3
 
-# Create the moon
-moon = Entity(model='sphere', color=color.gray, scale=moon_radius_game)
-moon_distance = earth_radius_game + 384400.0 * scale_factor
-moon.world_position = earth.world_position + Vec3(0, moon_distance, 0)
-
-# Create the moon's collision shape and body
-moon_position = [moon.world_position.x, moon.world_position.y, moon.world_position.z]
-moon_shape = p.createCollisionShape(p.GEOM_SPHERE, radius=moon_radius_game)
-moon_body = p.createMultiBody(baseMass=moon_mass_game,
-                              baseCollisionShapeIndex=moon_shape,
-                              basePosition=moon_position)
-
-# Create the rocket
-rocket = Entity(parent=earth, model='soyuz-fg.glb', scale_y=rocket_height_game, scale_x=rocket_height_game, scale_z=rocket_height_game)
-
-rocket.scale *= 0.01
-rocket.world_position = earth.world_position + Vec3(0, earth_radius_game + rocket_height_game / 2, 0)
-
-# Camera setup
-camera.far = earth_radius_game * 10  # Adjusted far plane value for better visibility
-camera.near = 0.001
-camera.fov = 10
-camera.position = Vec3(rocket.world_position.x - 0.01, rocket.world_position.y, rocket.world_position.z + 0.1)
-
-
-# Initialize Ursina UI
-button = Button(text='Combust', color=color.green, scale=(0.1, 0.05), position=(-0.6, 0.4))
-
-# The black background container for the oxygen bar
-oxygen_bar = Entity(parent=camera.ui, model='quad', color=color.black, scale=(0.2, 0.05), position=(-0.6, -0.4))
-
-# The actual oxygen level (white) inside the container
-oxygen_level = Entity(parent=oxygen_bar, model='quad', color=color.white, scale=(1, 1), origin=(-0.5, 0), position=(-0.5, 0))
-
-earth_radius = earth_radius_game
-rocket_height = rocket_height_game
-
-# Create the Earth (Sphere)
-earth_position = [0, 0, 0]  # Earth is at the origin now
-earth_shape = p.createCollisionShape(p.GEOM_SPHERE, radius=earth_radius)
-earth_body = p.createMultiBody(baseMass=0,  # Static
-                               baseCollisionShapeIndex=earth_shape,
-                               basePosition=earth_position)
-
-# Create the Rocket (Box)
-rocket_start_height = earth_radius + rocket_height / 2  # Above Earth's surface + half rocket's height + a small gap
-rocket_position = [0, rocket_start_height, 0]
-rocket_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=[rocket_height/10, rocket_height/2, rocket_height/10])
-rocket_body = p.createMultiBody(baseMass=rocket_mass_game,
-                                baseCollisionShapeIndex=rocket_shape,
-                                basePosition=rocket_position)
+# Initial gimbal rotation angle (in degrees)
+gimbal_rotation_angle = 0.0
 
 
 rocket_diameter_game = 10.0 * scale_factor  # Assuming a diameter, adjust as needed
@@ -141,6 +84,15 @@ mass_flow_rate = m / T
 #thrust_force = Isp * g * mass_flow_rate
 
 
+earth_radius = earth_radius_game
+rocket_height = rocket_height_game
+
+# Create the Earth (Sphere)
+earth_position = [0, 0, 0]  # Earth is at the origin now
+
+rocket_start_height = earth_radius + rocket_height / 2  # Above Earth's surface + half rocket's height + a small gap
+rocket_position = [0, rocket_start_height, 0]
+
 initial_vertical_position = rocket_start_height
 
 # Define atmospheric drag constants
@@ -149,35 +101,108 @@ drag_coefficient = 0.47  # A typical drag coefficient for a streamlined object
 frontal_area = math.pi * (rocket_radius_game**2)  # Using math.pi for the calculation
 
 
+is_rocket_state = True
+transition_speed = 2.0  # Adjust the transition speed as needed
+
+moon_distance = earth_radius_game + 384400.0 * scale_factor
+
 # Calculate the initial total fuel volume
 initial_fuel_volume = math.pi * (rocket_radius_game**2) * rocket_height_game * fuel_percentage
 
 # Calculate total propellant mass
 initial_fuel_mass = initial_fuel_volume * density_RP1
 
-# Camera setup
-camera.far = (earth_radius_game + moon_distance) * 2 * 10  # Adjusted far plane value for better visibility
-camera.near = 0.001
-camera.fov = 10
 
-camera.position = Vec3(rocket.world_position.x - 100, rocket.world_position.y, rocket.world_position.z + 100)
+def create_entities():
+    global earth, moon, rocket, gimbal
 
-camera.look_at(rocket)  
+    earth = Entity(model='sphere', color=color.rgb(139, 69, 19), scale=earth_radius_game)
+    
+    moon = Entity(model='sphere', color=color.gray, scale=moon_radius_game)
+    moon_distance = earth_radius_game + 384400.0 * scale_factor
+    moon.world_position = earth.world_position + Vec3(0, moon_distance, 0)
+    
+    rocket = Entity(parent=earth, model='soyuz-fg.glb', scale_y=rocket_height_game, scale_x=rocket_height_game, scale_z=rocket_height_game)
+    rocket.scale *= 0.01
+    rocket.world_position = earth.world_position + Vec3(0, earth_radius_game + rocket_height_game / 2, 0)
+    
+    gimbal = Entity(parent=rocket, model='cube', color=color.red, scale=(0.1, 0.1, 0.5))
+    gimbal_position_offset = Vec3(0, -rocket_height_game / 2, 0)
+    gimbal.world_position = rocket.world_position + gimbal_position_offset
+
+create_entities()
+
+# ===== Camera Setup =====
+
+def setup_camera():
+    camera.far = (earth_radius_game + moon_distance) * 2 * 10
+    camera.near = 0.001
+    camera.fov = 10
+    camera.position = Vec3(rocket.world_position.x - 100, rocket.world_position.y, rocket.world_position.z + 100)
+    camera.look_at(rocket)
+
+setup_camera()
+
+
+def initialize_ui():
+    global button, oxygen_bar, oxygen_level
+
+    button = Button(text='Combust', color=color.green, scale=(0.1, 0.05), position=(-0.6, 0.4))
+    
+    oxygen_bar = Entity(parent=camera.ui, model='quad', color=color.black, scale=(0.2, 0.05), position=(-0.6, -0.4))
+    oxygen_level = Entity(parent=oxygen_bar, model='quad', color=color.white, scale=(1, 1), origin=(-0.5, 0), position=(-0.5, 0))
+
+initialize_ui()
+
+# ===== Physics Setup =====
+
+def setup_physics():
+    global earth_body, rocket_body
+    
+    earth_position = [0, 0, 0]
+    earth_shape = p.createCollisionShape(p.GEOM_SPHERE, radius=earth_radius_game)
+    earth_body = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=earth_shape, basePosition=earth_position)
+    
+    rocket_position = [0, rocket_start_height, 0]
+    rocket_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=[rocket_height_game/10, rocket_height_game/2, rocket_height_game/10])
+    rocket_body = p.createMultiBody(baseMass=rocket_mass_game, baseCollisionShapeIndex=rocket_shape, basePosition=rocket_position)
+
+setup_physics()
+
 
 original_camera_rotation = camera.rotation
-
-is_rocket_state = True
-transition_speed = 2.0  # Adjust the transition speed as needed
-
-def update_camera_position_and_rotation(target_position, target_rotation):
-    camera.position = lerp(camera.position, target_position, time.dt * transition_speed)
-    camera.rotation = slerp(camera.rotation, target_rotation, time.dt * transition_speed)
 
 
 # Update function
 def update():
-    global in_space, m, is_rocket_state
+    global in_space, m, is_rocket_state, gimbal_rotation_angle
+
+    # Adjust gimbal rotation based on input
+    if held_keys['left arrow']:
+        gimbal_rotation_angle += 1.0
+    if held_keys['right arrow']:
+        gimbal_rotation_angle -= 1.0
+
+
+    # Limit gimbal rotation angle within a range
+    gimbal_rotation_angle = clamp(gimbal_rotation_angle, -45.0, 45.0)
     
+    # Calculate the thrust direction based on gimbal rotation
+    gimbal_rotation_radians = math.radians(gimbal_rotation_angle)
+
+    # Rotate the thrust force vector based on gimbal rotation
+    thrust_direction = Vec3(0, math.cos(gimbal_rotation_radians), math.sin(gimbal_rotation_radians))
+
+
+    thrust_force_vector = Vec3(
+        thrust_direction.x * thrust_force,
+        thrust_direction.y * thrust_force,
+        thrust_direction.z * thrust_force
+    )
+
+    print(thrust_direction)
+    print(thrust_force_vector)
+
     # Get the current altitude of the rocket
     altitude = rocket.world_position.y - earth_radius_game
 
@@ -201,16 +226,11 @@ def update():
     p.changeDynamics(rocket_body, -1, mass=current_total_mass)
 
 
-    #print("MASS " + str(m))
-
-    #print("MASS " + str(current_total_mass / scale_factor))
-
-    
     if m > 0 and (held_keys['space'] or (button.hovered and held_keys['left mouse'])):
         # Only apply thrust and burn fuel if there's fuel left
 
         # Apply thrust force to the rocket's physics body
-        p.applyExternalForce(rocket_body, -1, thrust_force * thrust_direction, rocket_position, p.LINK_FRAME)
+        p.applyExternalForce(rocket_body, -1, thrust_force_vector, rocket_position, p.LINK_FRAME)
 
         # Decrease the oxygen level to reflect fuel consumption
         oxygen_level.scale_x = fuel_fraction_left
