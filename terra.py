@@ -1,4 +1,5 @@
 from ursina import *
+
 import pybullet as p
 
 app = Ursina()
@@ -53,7 +54,7 @@ exosphere_color = color.rgb(0, 0, 0)
 # Define the mass of Earth in your game's scale
 earth_mass_game = 5.972 * 10**24 * scale_factor
 
-moon_radius_game = 1737.1 * scale_factor
+moon_radius_game = 17371 * scale_factor
 moon_mass_game = 7.35 * 10**22 * scale_factor**3
 
 # Initial gimbal rotation angle (in degrees)
@@ -109,7 +110,7 @@ frontal_area = math.pi * (rocket_radius_game**2)  # Using math.pi for the calcul
 is_rocket_state = True
 transition_speed = 2.0  # Adjust the transition speed as needed
 
-moon_distance = earth_radius_game + 384400.0 * scale_factor
+moon_distance = earth_radius_game + 38440000.0 * scale_factor
 
 # Calculate the initial total fuel volume
 initial_fuel_volume = math.pi * (rocket_radius_game**2) * rocket_height_game * fuel_percentage
@@ -280,6 +281,7 @@ class Rocket:
 
             altitude_label.text = f"ALTITUDE: {altitude:.2f} KM"  # Rounded to two decimal places for display
             distance_label.text = f"DISTANCE: {self.traveled_distance:.2f} KM"  # Rounded to two decimal places for display
+
             fuel_label.text = f"FUEL: {fuel_percentage:.2f}%"  # Display the fuel percentage
         
             # To calculate the speed, we need the change in position divided by time.
@@ -346,7 +348,7 @@ class Rocket:
     def _consume_fuel_and_apply_thrust(self):
         global m, thrust_force, held_keys, oxygen_level, initial_fuel_mass
 
-        fuel_consumed_per_update = mass_flow_rate * time.dt
+        fuel_consumed_per_update = min(self.current_fuel_mass, mass_flow_rate * time.dt)
         fuel_fraction_left = m / (V * density_RP1)  # fraction of initial fuel left
 
 
@@ -376,10 +378,10 @@ class Rocket:
             if start_time is None:
                 start_time = time.time()  # Record the start time when space is first pressed
 
-            if start_time:
-                elapsed_time = time.time() - start_time
-                minutes, seconds = divmod(int(elapsed_time), 60)
-                timer_label.text = f"TIMER: {minutes:02}:{seconds:02}"
+        if start_time:
+            elapsed_time = time.time() - start_time
+            minutes, seconds = divmod(int(elapsed_time), 60)
+            timer_label.text = f"TIMER: {minutes:02}:{seconds:02}"
 
 
         self._update_mass()
@@ -430,19 +432,22 @@ class GameCamera:
     def _update_position_and_rotation(self):
         if self.is_rocket_state:
             target_position = Vec3(rocket.entity.world_position.x - 50, rocket.entity.world_position.y, rocket.entity.world_position.z + 50)
-            target_rotation = self.original_rotation
-            self._set_camera(target_position, target_rotation)
+            #target_rotation = self.original_rotation
+            self._set_camera(target_position)
             self.entity.look_at(rocket.entity)
         else:
-            camera_distance = (earth_radius_game + moon_distance) * 1.5
-            target_position = Vec3(camera_distance, 0, 0)
-            target_rotation = self.original_rotation
-            self._set_camera(target_position, target_rotation)
-            self.entity.look_at((earth.entity.world_position + moon.entity.world_position) / 2)
+            # Calculate the midpoint between Earth and Moon
+            midpoint = (earth.entity.world_position + moon.entity.world_position) / 2
 
-    def _set_camera(self, position, rotation):
+            # Set the camera's target position laterally so that it encompasses both Earth and Moon
+            target_position = Vec3(midpoint.y * 2, midpoint.x, midpoint.z)
+
+            self._set_camera(target_position)
+            self.entity.look_at(midpoint)
+
+    def _set_camera(self, position):
         self.entity.position = position
-        self.entity.rotation = rotation
+        #self.entity.rotation = rotation
 
 
 def initialize_ui():
@@ -488,6 +493,7 @@ def setup_physics():
 setup_physics()
 
 global earth, rocket, moon
+
 earth = Earth()
 moon = Moon()
 
@@ -496,14 +502,44 @@ rocket = Rocket(rocket_body)
 
 game_camera = GameCamera()
 
+
+# Create the minimap camera
+minimap_camera = Entity(
+    parent=camera.ui,  # Attach to the UI for overlay
+    model='quad',
+    scale=(0.2, 0.2),  # Adjust the scale to control the size of the minimap
+    position=(-0.4, 0.4),  # Adjust the position of the minimap
+    color=color.gray,
+)
+
+# Create a UI element to represent the player's position on the minimap
+player_marker = Entity(
+    parent=minimap_camera,
+    model='quad',
+    scale=0.02,
+    color=color.red,
+)
+
+# Update the position of the player marker on the minimap
+def update_minimap():
+    player_marker.world_position = Vec3(
+        rocket.entity.world_position.x * minimap_camera.scale_x,
+        rocket.entity.world_position.y * minimap_camera.scale_y,
+        0
+    )
+
+
+
 # Update function
 def update():
+
+    #update_minimap()
+
     rocket.update()
     earth.update()
     moon.update()
     game_camera.update()
 
-    p.stepSimulation()
 
     altitude = rocket.entity.world_position.y - earth_radius_game
 
@@ -523,6 +559,11 @@ def update():
         current_color = lerp(mesosphere_color, exosphere_color, ratio)
     else:
         current_color = exosphere_color
+
+
+    if altitude <= 384400:
+        p.stepSimulation()
+
 
     window.color = current_color
 
