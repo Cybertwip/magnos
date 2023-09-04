@@ -7,8 +7,16 @@ g = 9.81
 
 
 # Start PyBullet
-physicsClient = p.connect(p.DIRECT)  # Non-graphical mode
+
+physics_client = p.connect(p.DIRECT)
+
 p.setGravity(0, -g, 0)
+
+# Ensure connection was successful.
+if physics_client == -1:
+    print("Failed to connect to pybullet.")
+    exit()
+
 
 scale_factor = 0.01
 
@@ -18,10 +26,10 @@ rocket_mass_game = 305000 * scale_factor
 
 
 # Define the real-world distances for the atmospheric layers
-troposphere_distance_real = 12000.00  # in  m
-stratosphere_distance_real = 50000.00  # in  m
-mesosphere_distance_real = 85000.00  # in  m
-thermosphere_distance_real = 60000.00  # in m
+troposphere_distance_real = 1200.00  # in  m
+stratosphere_distance_real = 5000.00  # in  m
+mesosphere_distance_real = 8500.00  # in  m
+thermosphere_distance_real = 6000.00  # in m
 
 # Convert the real-world distances (now in km) to the game's scale
 troposphere_distance_game = troposphere_distance_real * scale_factor
@@ -40,7 +48,7 @@ troposphere_color = color.rgb(0, 0, 255, 100)  # Blue with alpha
 stratosphere_color = color.rgb(150, 150, 255, 40)
 mesosphere_color = color.rgb(80, 80, 200, 30)
 thermosphere_color = color.rgb(40, 40, 150, 20)
-space_color = color.rgb(0, 0, 0)
+exosphere_color = color.rgb(0, 0, 0)
 
 # Define the mass of Earth in your game's scale
 earth_mass_game = 5.972 * 10**24 * scale_factor
@@ -192,6 +200,7 @@ class Rocket:
         self.current_stage = 1  # Starting stage
 
         self.frame_counter = 0  # Counting frames since the last UI update
+        self.previous_velocity = (0, 0, 0)  # Assuming it starts at rest
 
     def jettison_first_stage(self):
         if self.first_stage:
@@ -220,38 +229,57 @@ class Rocket:
 
         self.frame_counter += 1
 
-        self.traveled_distance = distance(self.initial_position, self.entity.world_position)
         # Update the UI elements every 10 frames (or whatever number you prefer)
         if self.frame_counter % 6 == 0:
-            altitude = self.entity.world_position.y - earth_radius_game
-            
+            altitude = self.entity.world_position.y - earth_radius_game 
+            altitude = altitude / 1000 / scale_factor
             # Determine the current atmospheric layer
-            if altitude <= 120:
+            if altitude <= 12:
                 atmospheric_layer = "Troposphere"
-            elif altitude <= 500:
+            elif altitude <= 50:
                 atmospheric_layer = "Stratosphere"
-            elif altitude <= 850:
+            elif altitude <= 85:
                 atmospheric_layer = "Mesosphere"
-            elif altitude <= 6000:
+            elif altitude <= 600:
                 atmospheric_layer = "Thermosphere"
             else:
                 atmospheric_layer = "Exosphere"
 
             velocity = p.getBaseVelocity(self.rocket_body)[0]  # Assuming this returns a velocity vector
 
+            dt = time.dt
             speed = math.sqrt(velocity[0]**2 + velocity[1]**2 + velocity[2]**2) # Calculate the magnitude of the velocity vector
+
+            distance_traveled = speed * dt
+
+            self.traveled_distance += distance_traveled * scale_factor * 10
+
             self.previous_position = self.entity.world_position  # Store the current position for the next frame
 
             speed_label.text = f"SPEED: {speed:.2f} m/s" 
+
+            # Compute acceleration magnitude
+            acceleration = math.sqrt((velocity[0] - self.previous_velocity[0])**2 + 
+                                    (velocity[1] - self.previous_velocity[1])**2 + 
+                                    (velocity[2] - self.previous_velocity[2])**2) / dt
+
+
+            acceleration_label.text = f"ACCEL: {acceleration:.2f} m/s^2"
+
+            
+            self.previous_velocity = velocity  # Store current velocity for next frame
+
+
             atmospheric_layer_label.text = f"LAYER: {atmospheric_layer}"
 
 
-            altitude = self.entity.world_position.y  # Assuming y is the altitude (adjust accordingly)
+            altitude = self.entity.world_position.y - earth_radius_game 
+            altitude = altitude / 1000 / scale_factor
 
             fuel_percentage = (self.current_fuel_mass / initial_fuel_mass) * 100  # Calculate the percentage of fuel remaining
 
-            altitude_label.text = f"ALTITUDE: {altitude:.2f}"  # Rounded to two decimal places for display
-            distance_label.text = f"DISTANCE: {self.traveled_distance:.2f}"  # Rounded to two decimal places for display
+            altitude_label.text = f"ALTITUDE: {altitude:.2f} KM"  # Rounded to two decimal places for display
+            distance_label.text = f"DISTANCE: {self.traveled_distance:.2f} KM"  # Rounded to two decimal places for display
             fuel_label.text = f"FUEL: {fuel_percentage:.2f}%"  # Display the fuel percentage
         
             # To calculate the speed, we need the change in position divided by time.
@@ -313,7 +341,7 @@ class Rocket:
         current_total_mass = (self.current_mass * 0.2) + (m / initial_fuel_mass) * (rocket_mass_game)
 
         # Update the bullet body mass
-        p.changeDynamics(self.rocket_body, -1, mass=current_total_mass, linearDamping=0.0, angularDamping=0.0, maxJointVelocity = 7500)
+        p.changeDynamics(self.rocket_body, -1, mass=current_total_mass, linearDamping=0.0, angularDamping=0.0, maxJointVelocity = 726)
 
     def _consume_fuel_and_apply_thrust(self):
         global m, thrust_force, held_keys, oxygen_level, initial_fuel_mass
@@ -332,6 +360,7 @@ class Rocket:
                                     thrust_force,
                                     0
         )
+        global start_time
         
         if m > 0 and held_keys['space']:
             # Apply thrust force to the rocket's physics body
@@ -343,6 +372,15 @@ class Rocket:
             # Reduce remaining fuel
             m -= fuel_consumed_per_update
             self.current_fuel_mass -= fuel_consumed_per_update  # Decrease current fuel mass
+
+            if start_time is None:
+                start_time = time.time()  # Record the start time when space is first pressed
+
+            if start_time:
+                elapsed_time = time.time() - start_time
+                minutes, seconds = divmod(int(elapsed_time), 60)
+                timer_label.text = f"TIMER: {minutes:02}:{seconds:02}"
+
 
         self._update_mass()
 
@@ -408,7 +446,7 @@ class GameCamera:
 
 
 def initialize_ui():
-    global oxygen_bar, oxygen_level, altitude_label, distance_label, fuel_label, speed_label, current_stage_label, atmospheric_layer_label, mass_label
+    global oxygen_bar, oxygen_level, altitude_label, distance_label, fuel_label, speed_label, current_stage_label, atmospheric_layer_label, mass_label, timer_label, start_time, acceleration_label
 
     oxygen_bar = Entity(parent=camera.ui, model='quad', color=color.black, scale=(0.2, 0.05), position=(-0.6, -0.4))
     oxygen_level = Entity(parent=oxygen_bar, model='quad', color=color.white, scale=(1, 1), origin=(-0.5, 0), position=(-0.5, 0))
@@ -416,10 +454,16 @@ def initialize_ui():
     distance_label = Text(text="DISTANCE: 0", position=(-0.75, 0.4))
     fuel_label = Text(text="FUEL: 100%", position=(-0.75, 0.35))
     speed_label = Text(text="SPEED: 0 m/s", position=(-0.75, 0.3))
-    current_stage_label = Text(text="STAGE: 1", position=(-0.75, 0.25))  # Assuming you start with Stage 1
+    acceleration_label = Text(text="ACCEL: 0 m/s", position=(-0.75, 0.25))
+    current_stage_label = Text(text="STAGE: 1", position=(-0.75, 0.2))  # Assuming you start with Stage 1
 
-    atmospheric_layer_label = Text(text="LAYER: Troposphere", position=(-0.75, 0.2))
-    mass_label = Text(text="MASS: 0 kg", position=(-0.75, 0.15))  # Adjust the position as needed
+    atmospheric_layer_label = Text(text="LAYER: Troposphere", position=(-0.75, 0.15))
+    mass_label = Text(text="MASS: 0 kg", position=(-0.75, 0.10))  # Adjust the position as needed
+
+    timer_label = Text(text="TIMER: 00:00", position=(-0.75, 0.05))  # Adjust the position as needed
+
+    start_time = None  # Initialize the start time to None
+   
 
 
 initialize_ui()
@@ -458,24 +502,28 @@ def update():
     earth.update()
     moon.update()
     game_camera.update()
+
     p.stepSimulation()
-    
+
     altitude = rocket.entity.world_position.y - earth_radius_game
 
-    # Calculate the altitude ratios for each atmospheric layer
-    if altitude < troposphere_radius - earth_radius_game:
+    altitude = altitude / 1000 / scale_factor
+    # Determine the current atmospheric layer
+    if altitude <= 12:
         ratio = altitude / (troposphere_radius - earth_radius_game)
         current_color = lerp(troposphere_color, stratosphere_color, ratio)
-    elif altitude < stratosphere_radius - earth_radius_game:
+    elif altitude <= 50:
         ratio = (altitude - (troposphere_radius - earth_radius_game)) / (stratosphere_radius - troposphere_radius)
         current_color = lerp(stratosphere_color, mesosphere_color, ratio)
-    elif altitude < mesosphere_radius - earth_radius_game:
+    elif altitude <= 85:
         ratio = (altitude - (stratosphere_radius - earth_radius_game)) / (mesosphere_radius - stratosphere_radius)
         current_color = lerp(mesosphere_color, thermosphere_color, ratio)
-    else:
+    elif altitude <= 600:
         ratio = (altitude - (mesosphere_radius - earth_radius_game)) / (thermosphere_radius - mesosphere_radius)
-        current_color = thermosphere_color
-    
+        current_color = lerp(mesosphere_color, exosphere_color, ratio)
+    else:
+        current_color = exosphere_color
+
     window.color = current_color
 
 app.run()
