@@ -528,8 +528,6 @@ def update_minimap():
         0
     )
 
-
-
 # Update function
 def update():
 
