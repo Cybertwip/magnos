@@ -1,44 +1,54 @@
-import pybullet as p
-import time
+import math
 
-# Connect to PyBullet
-physicsClient = p.connect(p.GUI)  # GUI mode for visualization
 
-scale_factor = 0.01  # This will scale the Earth's radius down to 6.371 (from 6371)
+# Constants
+G = 6.674e-11
+#M = 5.972e24
+M = 7.342e22 * 0.022
+m = 1
+R_EARTH = 173710
+total_distance = 420
+r_initial = R_EARTH + total_distance 
+dt = 0.001
 
-# Set up the environment
-p.setGravity(0, -9.8, 0)
-p.setRealTimeSimulation(0)  # We will step the simulation ourselves
+MAX_THRUST = 82260000
 
-# Dimensions
-earth_radius = 6371000 * scale_factor
-rocket_height = 100 * scale_factor
+# Initialization
+r = r_initial
+v = -1500
+a = 0
 
-# Create the Earth (Sphere)
-earth_position = [0, 0, 0]  # Earth is at the origin now
-earth_shape = p.createCollisionShape(p.GEOM_SPHERE, radius=earth_radius)
-earth_body = p.createMultiBody(baseMass=0,  # Static
-                               baseCollisionShapeIndex=earth_shape,
-                               basePosition=earth_position)
+total_time = 0.0
 
-# Create the Rocket (Box)
-rocket_start_height = earth_radius + rocket_height / 2  # Above Earth's surface + half rocket's height + a small gap
-rocket_position = [0, rocket_start_height, 0]
-rocket_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=[rocket_height/10, rocket_height/2, rocket_height/10])
-rocket_body = p.createMultiBody(baseMass=1,
-                                baseCollisionShapeIndex=rocket_shape,
-                                basePosition=rocket_position)
+# Simulate the descent
+while r > R_EARTH:
+    gravitational_force = G * M * m / r**2
+    a_gravity = gravitational_force / m
+    total_time += dt
 
-p.resetDebugVisualizerCamera(cameraDistance=3 * earth_radius, cameraYaw=0, cameraPitch=90, cameraTargetPosition=[0, 0, 0])
+    remaining_distance = r - R_EARTH
+    required_deceleration = v**2 / (2 * remaining_distance)
 
-# Run simulation
-try:
-    while True:
-        pos, _ = p.getBasePositionAndOrientation(rocket_body)
+    # Calculate the actual thrust required to get the required deceleration
+    thrust_needed = (required_deceleration + a_gravity) * m
 
-        print(pos)
+    # Adjust thrust dynamically, but don't exceed MAX_THRUST
+    actual_thrust = min(thrust_needed, MAX_THRUST)
+    
+    a_thrust = actual_thrust / m
+    a = a_gravity - a_thrust
+    
+    v += a * dt
+    r += v * dt
 
-        p.stepSimulation()
-        time.sleep(1./240.)  # Running at 240hz real time
-except KeyboardInterrupt:
-    p.disconnect()
+    print(remaining_distance)
+    print(r - R_EARTH)
+    if r <= R_EARTH:
+        v = 0
+
+# Print the results
+distance_fallen = r_initial - r
+print(f"Distance Fallen: {distance_fallen:.2f} meters")
+print(f"Final velocity: {v:.2f} m/s")
+print(f"Total time: {total_time:.2f} seconds")
+print(f"Error margin: {total_distance - distance_fallen:.2f} meters")
