@@ -457,7 +457,7 @@ class Rocket:
         force_vector = direction.normalized() * force_magnitude
 
         # Computing gravitational acceleration g for the rocket at its position
-        g = (G * m_body) / (r**2)
+        g = force_magnitude / self.current_mass #(G * m_body) / (r**2)
 
         return force_vector, g
 
