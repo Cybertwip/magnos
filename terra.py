@@ -6,7 +6,6 @@ from ursina.ursinastuff import *
 import pybullet as p
 import numpy as np
 
-
 from scipy.spatial.transform import Rotation, Slerp
 
 def slerp_scipy(start, end, t):
@@ -17,7 +16,6 @@ def slerp_scipy(start, end, t):
 
 def degrees_to_radians(degrees):
     return degrees * (math.pi / 180)
-
 
 def radians_to_degrees(radians):
     return radians * (180 / math.pi)
@@ -31,9 +29,7 @@ def get_sign(number):
 # Increase the FPS limit, for example, set it to 120.
 window.vsync = False
 
-
 app = Ursina()
-
 
 def set_frame_rate(value):
     # Set the clock mode to limited (i.e., limit the frame rate)
@@ -46,7 +42,6 @@ def set_frame_rate(value):
 set_frame_rate(1200)
 
 # Start PyBullet
-
 physics_client = p.connect(p.DIRECT)
 
 p.setGravity(0, 0, 0)
@@ -59,9 +54,11 @@ if physics_client == -1:
 scale_radius = 0.0001
 
 earth_radius = 6371000
-moon_radius = 173710
+moon_radius = 173710 
 rocket_height = 42
 rocket_radius = 4
+
+#moon_distance = 384400e3
 moon_distance = (228440000) * 0.03
 
 earth_radius_game = earth_radius * scale_radius
@@ -73,7 +70,6 @@ rocket_radius_game = 50 * scale_radius
 
 earth_position = [0, 0, 0]
 moon_position = [0, moon_distance, 0]
-
 
 # Define the real-world distances for the atmospheric layers
 troposphere_distance = 120000 * 0.022 # in  m
@@ -87,8 +83,6 @@ stratosphere_distance_game = stratosphere_distance * scale_radius
 mesosphere_distance_game = mesosphere_distance * scale_radius
 thermosphere_distance_game = thermosphere_distance * scale_radius
 
-
-
 troposphere_color = color.rgb(0, 0, 255, 100)  # Blue with alpha
 stratosphere_color = color.rgb(150, 150, 255, 40)
 mesosphere_color = color.rgb(80, 80, 200, 30)
@@ -97,8 +91,8 @@ exosphere_color = color.rgb(0, 0, 0)
 
 # Define the mass of Earth in your game's scale
 earth_mass = 5.972e24  # Mass of Earth in kg
-#moon_mass = 7.342e22  # Mass of Moon in kg
-moon_mass = 7.342e22 * 0.022  # Mass of Moon in kg
+moon_mass = 7.342e22  # Mass of Moon in kg
+#moon_mass = 7.342e22 * 0.022  # Mass of Moon in kg
 
 # Initial gimbal rotation angle (in degrees)
 gimbal_rotation_angle = 0.0
@@ -117,7 +111,6 @@ earth_position = [0, 0, 0]  # Earth is at the origin now
 air_density = 1.225  # kg/m^3 (standard air density at sea level)
 drag_coefficient = 0.47  # A typical drag coefficient for a streamlined object
 frontal_area = math.pi * (rocket_radius**2)  # Using math.pi for the calculation
-
 
 is_rocket_state = True
 transition_speed = 2.0  # Adjust the transition speed as needed
@@ -150,7 +143,6 @@ mass_RP1 = total_propellant_mass - mass_LOX
 volume_LOX = mass_LOX / density_LOX
 volume_RP1 = mass_RP1 / density_RP1
 
-
 total_rocket_mass = dry_mass + total_propellant_mass
 
 # Constants
@@ -166,7 +158,6 @@ class Earth:
 
     def update(self):
         self.entity.rotation_y += time.dt * self.rotation_speed
-
 
 class Rocket:
     def __init__(self, body):
@@ -225,7 +216,6 @@ class Rocket:
         # If the height of self.entity is based on its y-scale, then:
         # self.second_stage.y = 0 
 
-
         # Set the parent at the time of creation.
         # self.third_stage = Entity(parent=self.entity,
         #                         model='cube', 
@@ -262,9 +252,6 @@ class Rocket:
         self.num_engines = 9
         self.altitude = 0
         self.rotated = False
-        self.lagrangian = False
-        self.landing = False
-        self.moonizage_distance = 0
 
     def adjust_valve_opening(self):
         # Use two keys to adjust the valve opening
@@ -372,7 +359,6 @@ class Rocket:
             acceleration_label.text = f"ACCEL: {acceleration:.2f} m/s^2"
 
             gravity_label.text = f"G: {total_gravity.y:.2f} m/s^2"
-            gravity_label.visible = False
             
             self.previous_velocity = velocity  # Store current velocity for next frame
 
@@ -393,9 +379,6 @@ class Rocket:
             info = p.getDynamicsInfo(self.rocket_body, -1)
             current_mass = info[0]
             mass_label.text = f"MASS: {current_mass:.2f} kg"
-
-            # roll, pitch, yaw = self.get_rocket_orientation()
-            # orientation_label.text = f"R: {math.degrees(roll):.2f}°, P: {math.degrees(pitch):.2f}°, Y: {math.degrees(yaw):.2f}°"
 
     def _adjust_gimbal_rotation(self):
         global held_keys
@@ -459,9 +442,7 @@ class Rocket:
         self.thrust_direction = rotation_matrix.xformVec(Vec3(0, 1, 0))
         self.thrust_direction.normalize()
 
-    def gravitational_force(self, celestial_body_position, r_body, m_body):
-        G = 6.67430e-11
-
+    def gravitational_force(self, celestial_body_position, m_rocket, m_body):
         rocket_position, _ = p.getBasePositionAndOrientation(self.rocket_body)
 
         direction = Vec3(*celestial_body_position) - Vec3(*rocket_position)
@@ -469,15 +450,14 @@ class Rocket:
         # Distance between rocket and celestial body
         r = direction.length()
 
-        # Magnitude of the gravitational force
-        # Magnitude of the gravitational force
-        force_magnitude = (G * r_body * m_body) / (r**2)
+        # Magnitude of the gravitational force on the rocket
+        force_magnitude = (G * m_rocket * m_body) / (r**2)
 
         # Gravitational force vector (magnitude * direction)
         force_vector = direction.normalized() * force_magnitude
 
         # Computing gravitational acceleration g for the rocket at its position
-        g = force_magnitude / r_body
+        g = (G * m_body) / (r**2)
 
         return force_vector, g
 
@@ -489,10 +469,10 @@ class Rocket:
         # Moon's data
         # Note: You'll need to update moon_position dynamically if the Moon orbits the Earth in your simulation.
         # For a static approximation, you can use a fixed position relative to Earth.
-        force_moon, _ = self.gravitational_force(moon_position, self.current_mass, moon_mass)
+        force_moon, _ = self.gravitational_force(Vec3(-moon_distance), self.current_mass, moon_mass)
 
         # Total gravitational force on the rocket
-        total_gravity_force = force_earth + force_moon
+        total_gravity_force = force_earth - force_moon
 
         g = total_gravity_force / self.current_mass
 
@@ -538,7 +518,7 @@ class Rocket:
         pos, _ = p.getBasePositionAndOrientation(self.rocket_body)
         velocity = p.getBaseVelocity(self.rocket_body)[0]
         v = -math.sqrt(velocity[0]**2 + velocity[1]**2 + velocity[2]**2)
-        dist_to_moon = Vec3(moon_distance - moon_radius - pos[1] + rocket_height / 2)
+        dist_to_moon = Vec3(moon_distance - moon_radius - pos[1] - rocket_height / 2)
 
         remaining_distance = dist_to_moon.y
 
@@ -547,8 +527,10 @@ class Rocket:
         gravitational_force = g.y
 
         a_gravity = gravitational_force / self.current_mass
+        required_deceleration = 0
 
-        required_deceleration = v**2 / (2 * remaining_distance)
+        if remaining_distance > 0:
+            required_deceleration = v**2 / (2 * remaining_distance)
 
         # Calculate the actual thrust required to get the required deceleration
         thrust_needed = (required_deceleration + a_gravity) * self.current_mass
@@ -563,18 +545,12 @@ class Rocket:
         global at_moon
         pos, _ = p.getBasePositionAndOrientation(self.rocket_body)
 
-        dist_to_moon = Vec3(moon_distance - moon_radius - pos[1] + rocket_height / 2)
+        dist_to_moon = Vec3(moon_distance - moon_radius - pos[1] - rocket_height / 2)
 
         if dist_to_moon.y < r_initial:
             effective_thrust = -self.compute_thrust_v2()
-            self.landing = True
         else:
             effective_thrust = self.thrust_force * self.num_engines
-
-        if dist_to_moon.y <= 42:
-            self.landing = False
-            effective_thrust = 0
-            at_moon = True
 
         thrust_force_vector = Vec3(0, effective_thrust, 0)
 
@@ -582,27 +558,14 @@ class Rocket:
 
     def _consume_fuel_and_apply_thrust(self):
         global held_keys, oxygen_level, total_rocket_mass
-
-
         thrust_force_vector = self.compute_thrust()
 
-        #print(LAGRANGE_DISTANCE - PROXIMITY_THRESHOLD)
         global start_time
 
-        if ((self.current_fuel_mass > 0) and held_keys['space']) or self.landing or held_keys['t']:
-        #if held_keys['space']:
-            rocket_position, _ = p.getBasePositionAndOrientation(self.rocket_body)
-
-            if self.landing or held_keys['t']:
-
-                #effective_thrust = self.thrust_force * self.num_engines
-
-                force_application_point = [0, rocket_height / 2, 0]
-                p.applyExternalForce(self.rocket_body, -1, thrust_force_vector, force_application_point, p.LINK_FRAME)
-            else:
-                force_application_point = [0, -rocket_height / 2, 0]
-                p.applyExternalForce(self.rocket_body, -1, thrust_force_vector, force_application_point, p.LINK_FRAME)
-
+        if ((self.current_fuel_mass > 0) and held_keys['space']):
+            force_application_point = [0, -rocket_height / 2, 0]
+            p.applyExternalForce(self.rocket_body, -1, thrust_force_vector, force_application_point, p.LINK_FRAME)
+            
             # Apply thrust force to the rocket's physics body
             g = self._apply_gravity()
             g0 = -g.y  # standard gravity in m/s^2
@@ -630,7 +593,6 @@ class Rocket:
             timer_label.text = f"TIMER: {minutes:02}:{seconds:02}"
 
         self._update_mass()
-
 
     def _apply_drag_force(self):
         # Calculate drag force
@@ -808,10 +770,7 @@ def rotation_test():
     rocket.entity.position = Vec3(0, pos[1] * scale_radius, 0)
     rocket.entity.rotation =  euler_to_degrees(new_euler)
 
-
     #rocket.entity.rotation = [0, 90, 90]
-
-
 
 def super_update(loop_time):
     for x in range (0, loop_time):
