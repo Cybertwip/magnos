@@ -296,10 +296,14 @@ E_total_100ML = E_pair * hydrogen_atoms_0_1L
 
 hydrogen_atoms_0_1L = hydrogen_atoms_per_liter * 0.001
 E_total_1ML = E_pair * hydrogen_atoms_0_1L
-print(f"The energy required to produce 1 liter of hydrogen is {E_total_1L} Joules.")
-print(f"The energy required to produce 100 milliliters of hydrogen is {E_total_100ML} Joules.")
 
+hydrogen_atoms_0_1L = hydrogen_atoms_per_liter * 0.000001
+E_total_0001ML = E_pair * hydrogen_atoms_0_1L
+
+print("TOTAL JOULES FOR 0.0001 MILLILITERS: " + str(E_total_0001ML))
 enough_energy = False
+
+total_time = 0
 
 # Main loop
 while True:
@@ -322,6 +326,12 @@ while True:
 
     if keys[pygame.K_q]:
         increase_power = True
+        # Calculate time difference since last frame
+
+        current_time = time.time()
+        time_difference = current_time - prev_time
+        total_time += time_difference  # Accumulate time_difference to total_time
+
     else:
         increase_power = False
 
@@ -360,15 +370,13 @@ while True:
     # Calculate the required input power to charge the magnets
     required_input_power = energy_used / time_difference
 
-    # Print the estimated electrical power, accumulated energy, and required input power
-    
     # Apply the total torque to the alternator
     if increase_power:
-        if (total_energy >= E_total_1ML).any():
+        if (total_energy >= E_total_0001ML).any():
             increase_power = False
             if not enough_energy:
                 print("Accumulated Energy: {} J".format(total_energy))
-                print("Enough for 100 milliliters of Hydrogen")
+                print("Total Time Taken: {} seconds".format(total_time))
                 enough_energy = True
         else:
             apply_magnetic_torque()
