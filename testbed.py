@@ -1,54 +1,56 @@
-import math
+import pybullet as p
+import time
+import numpy as np
 
+# 2. Define Rocket Parameters
+totalMass = 1
+dryMass = 0.906
+burnTime = 3.4
+totalImpulse = 49.6
+propellantMass = 0.064
 
-# Constants
-G = 6.674e-11
-#M = 5.972e24
-M = 7.342e22 * 0.022
-m = 1
-R_EARTH = 173710
-total_distance = 420
-r_initial = R_EARTH + total_distance 
-dt = 0.001
+# 3. Compute Rocket Dynamics
+## Calculate Average Thrust and Mass Flow Rate
+averageThrust = totalImpulse/burnTime
+massFlowRate = propellantMass/burnTime
 
-MAX_THRUST = 82260000
+t = np.linspace(0, 10, 100, False)
 
-# Initialization
-r = r_initial
-v = -1500
-a = 0
+## Calculate Thrust as a function of Time
+index = (np.abs(t - burnTime)).argmin() + 1
+thrust = np.append(np.repeat(averageThrust, index), np.repeat(0, len(t) - index))
 
-total_time = 0.0
+## Calculate Mass as a function of Time
+mass = np.append(np.repeat(totalMass, index) - t[0:index] * massFlowRate, np.repeat(dryMass, len(t) - index))
 
-# Simulate the descent
-while r > R_EARTH:
-    gravitational_force = G * M * m / r**2
-    a_gravity = gravitational_force / m
-    total_time += dt
+## Determine Acceleration, Velocity, and Displacement over Time
+acceleration = thrust/mass - 9.81
 
-    remaining_distance = r - R_EARTH
-    required_deceleration = v**2 / (2 * remaining_distance)
+# 1. Initialize PyBullet
+p.connect(p.GUI)
+p.setGravity(0, -9.81, 0)  # Gravity in negative y-direction
+p.setTimeStep(0.1)  # Simulation time step
 
-    # Calculate the actual thrust required to get the required deceleration
-    thrust_needed = (required_deceleration + a_gravity) * m
+# 2. Load Environment and Rocket
+planeID = p.createCollisionShape(p.GEOM_PLANE)
+p.createMultiBody(0, planeID)
 
-    # Adjust thrust dynamically, but don't exceed MAX_THRUST
-    actual_thrust = min(thrust_needed, MAX_THRUST)
-    
-    a_thrust = actual_thrust / m
-    a = a_gravity - a_thrust
-    
-    v += a * dt
-    r += v * dt
+rocketShape = p.createCollisionShape(p.GEOM_CAPSULE, radius=0.05, height=0.3, collisionFramePosition=[0, 0.15, 0])
+rocketMass = totalMass
+rocketID = p.createMultiBody(rocketMass, rocketShape)
 
-    print(remaining_distance)
-    print(r - R_EARTH)
-    if r <= R_EARTH:
-        v = 0
+# 3. Simulation Loop
+simulation_duration = len(t) 
+current_time = 0
 
-# Print the results
-distance_fallen = r_initial - r
-print(f"Distance Fallen: {distance_fallen:.2f} meters")
-print(f"Final velocity: {v:.2f} m/s")
-print(f"Total time: {total_time:.2f} seconds")
-print(f"Error margin: {total_distance - distance_fallen:.2f} meters")
+while current_time < simulation_duration:
+    t_index = int(current_time / 0.1)
+    if t_index < len(thrust) and thrust[t_index] > 0:
+        # Apply the thrust along the y-axis
+        p.applyExternalForce(rocketID, -1, [0, thrust[t_index], 0], [0, 0, 0], p.WORLD_FRAME)
+
+    p.stepSimulation()
+    time.sleep(0.01)  # Slow down the loop for visualization
+    current_time += 0.1
+
+p.disconnect()

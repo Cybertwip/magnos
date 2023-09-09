@@ -44,7 +44,7 @@ set_frame_rate(1200)
 # Start PyBullet
 physics_client = p.connect(p.DIRECT)
 
-p.setGravity(0, 0, 0)
+p.setGravity(0, -9.81, 0)
 
 # Ensure connection was successful.
 if physics_client == -1:
@@ -55,9 +55,9 @@ if physics_client == -1:
 #moon_scale_radius = 0.17828303850156088
 scale_radius = 0.0001
 
-thrust_multiplier = 0.1
+thrust_multiplier = 100
 #thrust_multiplier = 100
-isp_multiplier = 1000
+isp_multiplier = 1
 
 earth_radius = 6371000 
 moon_radius = 173710 
@@ -163,7 +163,8 @@ class Earth:
         self.rotation_speed = 10
 
     def update(self):
-        self.entity.rotation_y += time.dt * self.rotation_speed
+        pass
+        #self.entity.rotation_y += time.dt * self.rotation_speed
 
 class Rocket:
     def __init__(self, body):
@@ -213,11 +214,13 @@ class Rocket:
         scale_mult = 250
         self.first_stage = Entity(parent=self.entity, scale_y=rocket_radius_game * scale_mult / 4, scale_x=rocket_radius_game * scale_mult, scale_z=rocket_radius_game * scale_mult, color=color.black, model='cube')
         self.first_stage.position = Vec3(0, -0.4, 0)
-    
+        
         self.second_stage = Entity(parent=self.entity, scale_y=rocket_radius_game * scale_mult / 4, scale_x=rocket_radius_game * scale_mult, scale_z=rocket_radius_game * scale_mult, color=color.red, model='cube')
        
         self.second_stage.position = Vec3(0, 0, 0)
 
+        self.first_stage.visible = True
+        self.second_stage.visible = True
         # Position the second_stage just above the top of self.entity. 
         # If the height of self.entity is based on its y-scale, then:
         # self.second_stage.y = 0 
@@ -261,8 +264,8 @@ class Rocket:
         self.rotated = False
         self.gravity = 0
 
-        self.jettison_first_stage()
-        self.jettison_second_stage()
+        #self.jettison_first_stage()
+        #self.jettison_second_stage()
         self.mode = 'launch'
 
         self.modes = ['launch', 'update']
@@ -282,10 +285,10 @@ class Rocket:
 
     def adjust_valve_opening(self):
         # Use two keys to adjust the valve opening
-        if held_keys['v']:  # V for reducing valve opening
+        if held_keys['c']:  # V for reducing valve opening
             self.valve_multiplier = 0.01  # decrement by 1% (adjust as needed)
             self.valve_multiplier = max(0, self.valve_multiplier)  # limit to a minimum of 0
-        if held_keys['b']:  # B for increasing valve opening
+        if held_keys['v']:  # B for increasing valve opening
             self.valve_multiplier = 1  # increment by 1% (adjust as needed)
             self.valve_multiplier = min(1, self.valve_multiplier)  # limit to a maximum of 1
 
@@ -335,8 +338,8 @@ class Rocket:
         rotation = euler_to_degrees(new_euler)
         rotation = [round(rotation[0], 2), round(rotation[1], 2), round(rotation[2], 2)]
 
-        self.entity.world_position = Vec3(0, pos[1] * scale_radius, 0)
-        self.entity.rotation =  euler_to_degrees(rotation)
+        self.entity.position = Vec3(pos[0] * scale_radius, pos[1] * scale_radius, pos[2] * scale_radius)
+        self.entity.rotation =  rotation
 
     def update(self):
         self.select_mode()
@@ -344,6 +347,7 @@ class Rocket:
         effective_gravity = self.compute_effective_gravitational_acceleration()
         self._adjust_gimbal_rotation()
         self._calculate_thrust_direction()
+
         self._consume_fuel_and_apply_thrust()
         self._apply_drag_force()
         self._update_altitude()
@@ -413,52 +417,81 @@ class Rocket:
         global held_keys
 
         angle_change = 0.001 * time.dt
+        yaw_change = 0
+        pitch_change = 0
+        roll_change = 0
 
-        if held_keys['left arrow']:
-            self.yaw_angle += angle_change
-        elif held_keys['right arrow']:
-            self.yaw_angle -= angle_change
-        elif self.yaw_angle > 0:
-            self.yaw_angle -= angle_change
-        elif self.yaw_angle < 0:
-            self.yaw_angle += angle_change
+        if held_keys['down arrow']:
+            yaw_change += angle_change
+        elif held_keys['up arrow']:
+            yaw_change -= angle_change
 
-        if held_keys['up arrow']:
-            self.pitch_angle += angle_change
-        elif held_keys['down arrow']:
-            self.pitch_angle -= angle_change
-        elif self.pitch_angle > 0:
-            self.pitch_angle -= angle_change
-        elif self.pitch_angle < 0:
-            self.pitch_angle += angle_change
+        if held_keys['right arrow']:
+            pitch_change += angle_change
+        elif held_keys['left arrow']:
+            pitch_change -= angle_change
 
         if held_keys['q']:
-            self.roll_angle += angle_change
+            roll_change += angle_change
         elif held_keys['e']:
-            self.roll_angle -= angle_change
-        elif self.roll_angle > 0:
-            self.roll_angle -= angle_change
-        elif self.roll_angle < 0:
-            self.roll_angle += angle_change
+            roll_change -= angle_change
 
-        degree_clamp = 15
+        self.pitch_angle += pitch_change
+        self.yaw_angle += yaw_change
+        self.roll_angle += roll_change
+
+        degree_clamp = 1
         # Limit gimbal rotation angles within a range
         self.pitch_angle = clamp(self.pitch_angle, -degree_clamp, degree_clamp)
         self.yaw_angle = clamp(self.yaw_angle, -degree_clamp, degree_clamp)
         self.roll_angle = clamp(self.roll_angle, -degree_clamp, degree_clamp)
 
     def _calculate_thrust_direction(self):
-        pitch_radians = self.pitch_angle
-        yaw_radians = self.yaw_angle
-        roll_radians = self.roll_angle
+        angle_change = any([held_keys[key] for key in ['down arrow', 'up arrow', 'right arrow', 'left arrow', 'q', 'e']])
 
-        yaw_matrix = LMatrix4f.rotateMat(yaw_radians, Vec3(0, 0, 1))  # Using Vec3 to represent the forward direction
-        pitch_matrix = LMatrix4f.rotateMat(pitch_radians, Vec3(1, 0, 0))
-        roll_matrix = LMatrix4f.rotateMat(roll_radians, Vec3(0, 1, 0))  # Assuming roll around Y axis
 
-        rotation_matrix = yaw_matrix * pitch_matrix * roll_matrix
-        self.thrust_direction = rotation_matrix.xformVec(Vec3(0, 1, 0))
+        if angle_change:
+            # Compute thrust direction based on user inputs
+            pitch_matrix = LMatrix4f.rotateMat(self.pitch_angle, Vec3(1, 0, 0))
+            yaw_matrix = LMatrix4f.rotateMat(self.yaw_angle, Vec3(0, 0, 1))
+            roll_matrix = LMatrix4f.rotateMat(self.roll_angle, Vec3(0, 1, 0))
+            
+            rotation_matrix = yaw_matrix * pitch_matrix * roll_matrix
+            self.thrust_direction = rotation_matrix.xformVec(Vec3(0, 1, 0))
+
+        else:
+            # Compute thrust direction based on rocket's current orientation
+            pos, physics_rotation = p.getBasePositionAndOrientation(rocket.rocket_body)
+            new_euler = p.getEulerFromQuaternion(physics_rotation)
+            computed_euler = euler_to_degrees(new_euler)
+            
+            pitch_matrix = LMatrix4f.rotateMat(computed_euler[0], Vec3(1, 0, 0))
+            yaw_matrix = LMatrix4f.rotateMat(computed_euler[1], Vec3(0, 0, 1))
+            roll_matrix = LMatrix4f.rotateMat(computed_euler[2], Vec3(0, 1, 0))
+            
+            rotation_matrix = yaw_matrix * pitch_matrix * roll_matrix
+            self.thrust_direction = rotation_matrix.xformVec(Vec3(0, 1, 0))
+    
         self.thrust_direction.normalize()
+        print(self.thrust_direction)
+
+
+    def decompose_matrix_to_euler(self, mat):
+        # Extract the rotation matrix components
+        m00, m01, m02 = mat[0][0], mat[0][1], mat[0][2]
+        m10, m11, m12 = mat[1][0], mat[1][1], mat[1][2]
+        m20, m21, m22 = mat[2][0], mat[2][1], mat[2][2]
+        
+        # Calculate yaw, pitch, and roll in radians
+        yaw = math.atan2(m10, m00)
+        pitch = math.asin(-m20)
+        roll = math.atan2(m21, m22)
+        
+        return (roll, yaw, pitch) 
+               
+                
+    def _recalculate_thrust_direction(self):
+        pass
 
     def gravitational_force(self, object_position, celestial_body_position, m_rocket, m_body):
         direction = Vec3(*celestial_body_position) - Vec3(*object_position)
@@ -509,10 +542,11 @@ class Rocket:
 
         g = total_gravity_force / self.current_mass
 
+        
+
         force_application_point = [0, 0, 0]
 
         rg = self.compute_gravitational_force(g.y, self.current_mass)
-        
         #p.applyExternalForce(self.rocket_body, -1, [0, rg.y, 0], force_application_point, p.WORLD_FRAME)
             
         return g
@@ -626,8 +660,36 @@ class Rocket:
         # Adjust thrust dynamically, but don't exceed MAX_THRUST
         actual_thrust = min(thrust_needed, MAX_THRUST)
         
-        return thrust_needed
+        return actual_thrust
 
+
+    def compute_thrust_v3(self):
+        MAX_THRUST = self.thrust_force * self.num_engines
+
+        pos, _ = p.getBasePositionAndOrientation(self.rocket_body)
+        velocity = p.getBaseVelocity(self.rocket_body)[0]
+        v = -math.sqrt(velocity[0]**2 + velocity[1]**2 + velocity[2]**2)
+        dist_to_moon = Vec3(moon_distance - moon_radius - pos[1] - rocket_height / 2)
+
+        remaining_distance = dist_to_moon.y
+
+        g = self.gravity
+
+        
+
+        gravitational_force = g.y
+
+        a_gravity = gravitational_force / self.current_mass
+        required_deceleration = 0
+
+        if remaining_distance > 0:
+            required_deceleration = v**2 / (2 * remaining_distance)
+
+        # Calculate the actual thrust required to get the required deceleration
+        thrust_needed = (required_deceleration + a_gravity) * self.current_mass
+        actual_thrust = min(thrust_needed, MAX_THRUST)
+        
+        return actual_thrust
 
     def compute_thrust(self):
         global at_moon
@@ -636,26 +698,26 @@ class Rocket:
         dist_to_moon = Vec3(moon_distance - moon_radius - pos[1] - rocket_height / 2)
 
         if dist_to_moon.y < r_initial:
-            effective_thrust = -self.compute_thrust_v2()
+            effective_thrust = -self.compute_thrust_v3()
         else:
             effective_thrust = self.thrust_force * self.num_engines
 
-        thrust_force_vector = Vec3(0, effective_thrust, 0)
-
-        return thrust_force_vector
+        effective_thrust = effective_thrust * self.valve_multiplier
+        
+        return effective_thrust
 
     def _consume_fuel_and_apply_thrust(self):
         global held_keys, oxygen_level, total_rocket_mass
-        thrust_force_vector = self.compute_thrust()
+        thrust_magnitude = self.compute_thrust()
 
         global start_time
 
         if ((self.current_fuel_mass > 0) and held_keys['space']):
-            print(self.thrust_direction)
-            thrust_force_vector = self.thrust_direction * thrust_force_vector.y
+            thrust_force_vector = self.thrust_direction * thrust_magnitude
 
-            force_application_point = [0, -rocket_height / 2, 0]
-            p.applyExternalForce(self.rocket_body, -1, thrust_force_vector, force_application_point, p.LINK_FRAME)
+            #force_application_point = [0, -rocket_height / 2, 0]
+            force_application_point = [0, 0, 0]
+            p.applyExternalForce(self.rocket_body, -1, thrust_force_vector, force_application_point, p.WORLD_FRAME)
             
             # Apply thrust force to the rocket's physics body
             g = self.gravity 
@@ -686,29 +748,44 @@ class Rocket:
         self._update_mass()
 
     def _apply_drag_force(self):
+        pass
         # Calculate drag force
-        velocity = p.getBaseVelocity(self.rocket_body)[0]
-        velocity_magnitude = math.sqrt(velocity[0]**2 + velocity[1]**2 + velocity[2]**2)
-        drag_force = 0.5 * air_density * velocity_magnitude**2 * drag_coefficient * frontal_area
+        # velocity = p.getBaseVelocity(self.rocket_body)[0]
+        # velocity_magnitude = math.sqrt(velocity[0]**2 + velocity[1]**2 + velocity[2]**2)
+        # drag_force = 0.5 * air_density * velocity_magnitude**2 * drag_coefficient * frontal_area
 
         # Apply drag force in the opposite direction of velocity
-        drag_force_direction = (-velocity[0] / velocity_magnitude, -velocity[1] / velocity_magnitude, -velocity[2] / velocity_magnitude) if velocity_magnitude > 0 else (0, 0, 0)
-        drag_force_vec = (drag_force * drag_force_direction[0], drag_force * drag_force_direction[1], drag_force * drag_force_direction[2])
+        # drag_force_direction = (-velocity[0] / velocity_magnitude, -velocity[1] / velocity_magnitude, -velocity[2] / velocity_magnitude) if velocity_magnitude > 0 else (0, 0, 0)
+        # drag_force_vec = (drag_force * drag_force_direction[0], drag_force * drag_force_direction[1], drag_force * drag_force_direction[2])
 
-        rocket_position, _ = p.getBasePositionAndOrientation(self.rocket_body)
+        # rocket_position, _ = p.getBasePositionAndOrientation(self.rocket_body)
 
         #p.applyExternalForce(self.rocket_body, -1, drag_force_vec, rocket_position, p.LINK_FRAME)
+        
+    def compute_altitude(self, rocket_pos, earth_position, earth_radius):
+        # Compute the difference in position between the rocket and the center of the Earth
+        dx = rocket_pos[0] - earth_position[0]
+        dy = rocket_pos[1] - earth_position[1]
+        dz = rocket_pos[2] - earth_position[2]
 
+        # Compute the distance between the rocket and the center of the Earth
+        distance_to_center = math.sqrt(dx**2 + dy**2 + dz**2)
+
+        # Compute altitude by subtracting the Earth's radius from the distance to the center
+        altitude = distance_to_center - earth_radius
+
+        return altitude
 
     def _update_altitude(self):
         rocket_pos, _ = p.getBasePositionAndOrientation(self.rocket_body)
-        self.altitude = (rocket_pos[1] - earth_radius)
+        self.altitude = self.compute_altitude(rocket_pos, earth_position, earth_radius)
 
 
 class Moon:
     def __init__(self):
-        self.entity = Entity(model='sphere', color=color.gray, scale=moon_radius_game)
-        self.entity.world_position = earth.entity.world_position + Vec3(0, moon_distance_game, 0)
+        pass
+        #self.entity = Entity(model='sphere', color=color.gray, scale=moon_radius_game)
+        #self.entity.world_position = earth.entity.world_position + Vec3(0, moon_distance_game, 0)
 
     def update(self):
         pass
@@ -732,8 +809,8 @@ class GameCamera:
 
     def _update_position_and_rotation(self):
         if self.is_rocket_state:
-            self.entity.clip_plane_near = 0.01
-            self.entity.clip_plane_far = 100
+            self.entity.clip_plane_near = 0.001
+            self.entity.clip_plane_far = 10000
             self.entity.fov = 15
 
             target_position = rocket.entity.world_position + Vec3(0.4, 0, 0)
@@ -787,12 +864,70 @@ def setup_physics():
 
     # Calculate the rocket's initial position at the edge of the Earth's surface
     rocket_start_position = [0, earth_radius + rocket_height / 2, 0]
-    
+    shape_offset = [0, -rocket_height, 0]
+
     # Create the rocket
     rocket_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=[rocket_radius, rocket_height / 2, rocket_radius])
-    rocket_body = p.createMultiBody(baseMass=total_rocket_mass, baseCollisionShapeIndex=rocket_shape, basePosition=rocket_start_position)
+    rocket_body = p.createMultiBody(baseMass=total_rocket_mass, baseCollisionShapeIndex=rocket_shape, basePosition=rocket_start_position, baseInertialFramePosition=shape_offset)
 
 setup_physics()
+
+def setup_environment():
+    # Number of pyramids to populate
+    num_pyramids = 1
+
+    # Create a function to get a random point on a sphere's surface
+    def random_sphere_point(radius):
+        theta = 2 * math.pi * random.random()
+        phi = math.acos(2 * random.random() - 1)
+        x = radius * math.sin(phi) * math.cos(theta)
+        y = radius * math.sin(phi) * math.sin(theta)
+        z = radius * math.cos(phi)
+        return (x, y, z)
+
+
+    class CustomBox(Entity):
+        def __init__(self, **kwargs):
+            super().__init__()
+
+            # Each side of the cube is a quad with the texture applied
+            self.sides = []
+            for i in range(6):  # 6 sides for a cube
+                side = Entity(parent=self, model='quad', texture='camo.png')
+                if i == 0:  # front
+                    side.rotation_y = 0
+                    side.z = 0.5
+                if i == 1:  # right
+                    side.rotation_y = 90
+                    side.x = 0.5
+                if i == 2:  # back
+                    side.rotation_y = 180
+                    side.z = -0.5
+                if i == 3:  # left
+                    side.rotation_y = -90
+                    side.x = -0.5
+                if i == 4:  # top
+                    side.rotation_x = 90
+                    side.y = 0.5
+                if i == 5:  # bottom
+                    side.rotation_x = -90
+                    side.y = -0.5
+
+                self.sides.append(side)
+
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+    # Create pyramids at random points on the sphere's surface
+    for _ in range(num_pyramids):
+        position = random_sphere_point(earth_radius_game)
+        pyramid = CustomBox()
+        pyramid.position = position
+        pyramid.scale = 1
+        pyramid.look_at(Vec3(0,0,0))  # Make the pyramid point towards the sphere's center
+
+
+setup_environment()
 
 global earth, rocket, moon
 
@@ -831,7 +966,6 @@ def update_minimap():
     )
 
 def moon_landing():
-
     velocity = p.getBaseVelocity(self.rocket_body)[0]  # Assuming this returns a velocity vector
 
     dt = time.dt
@@ -853,7 +987,7 @@ def rotation_test():
     # 3. Convert the combined Euler angles back to a quaternion
     new_euler = p.getEulerFromQuaternion(combined_quaternion)
 
-    rocket.entity.position = Vec3(0, pos[1] * scale_radius, 0)
+    rocket.entity.position = Vec3(pos[0] * scale_radius, pos[1] * scale_radius, pos[2] * scale_radius)
     rocket.entity.rotation =  euler_to_degrees(new_euler)
 
     #rocket.entity.rotation = [0, 90, 90]
@@ -907,7 +1041,7 @@ class Terra(Entity):
         global at_moon
         if at_moon:
             return
-        super_update(32)
+        super_update(1)
 
         # while self.accumulated_time >= self.fixed_update_interval:
         #     self.accumulated_time -= self.fixed_update_interval

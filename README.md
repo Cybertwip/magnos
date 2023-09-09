@@ -15,6 +15,21 @@ pip3 install matplot
 
 pip3 install qutip
 
+--- pythia
+
+export PYTHON_CONFIG=/opt/homebrew/anaconda3/bin/python3-config 
+
+./configure --with-python
+
+make -j4
+
+(or your python3-config path)
+
+export PYTHONPATH=$PYTHONPATH:/path/to/your/pythia/directory/lib
+
+
+conda install -c conda-forge python-config       
+
 main.py is the main gimbalic diode
 lito.py is the defense system
 superport.py is the teleport system
