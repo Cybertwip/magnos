@@ -51,9 +51,6 @@ for magnet_body in magnet_bodies:
     )
     constraints.append(constraint)
 
-# Magnets power level
-magnet_power = 0.00001
-
 # Frame counter
 frame_counter = 0
 
@@ -67,24 +64,50 @@ prev_time = time.time()
 total_energy = 0.0
 total_torque = np.zeros(3)  # Initialize total_torque here
 
-# Calculate torque based on the magnetic interaction and apply to alternator
+# Magnets power level
+magnet_power = 0
+
+def calculate_torque(magnet_volume, magnetization, B_field):
+    return magnet_volume * magnetization * B_field
+
+# Example materials (these are just placeholders and should be replaced with actual values)
+Magnetization_Neodymium = 1.2e6  # A/m (example value for neodymium magnet)
+B_field_Iron = 0.002  # T (example value, assuming it gets magnetized by the magnet)
+
+magnet_width = 0.1  # meters
+magnet_length = 0.1  # meters
+magnet_height = 0.1  # meters
+magnet_volume = magnet_width * magnet_length * magnet_height * 6
+
 def apply_magnetic_torque():
-    total_torque = np.zeros(3)
-    
+    global total_torque
+
+    # 1. Determine the rotation direction of the alternator
+    _, angular_velocity = p.getBaseVelocity(alternator_body)
+
+    # Add a small value to avoid zero division or zero magnitude
+    angular_velocity = tuple(x + 0.00001 for x in angular_velocity)
+    rotation_direction_vector = np.sign(angular_velocity)
+
     for i, magnet_body in enumerate(magnet_bodies):
         magnet_position, _ = p.getBasePositionAndOrientation(magnet_body)
         alternator_position, _ = p.getBasePositionAndOrientation(alternator_body)
 
         # Calculate the normalized force vector
         force_vector = np.array(magnet_position) - np.array(alternator_position)
-        force_vector /= np.linalg.norm(force_vector)
+        force_vector_normalized = force_vector / np.linalg.norm(force_vector)
 
-        # Calculate the torque vector and accumulate the total torque
-        torque = np.cross(force_vector, alternator_position)
-        total_torque += magnet_power
+        # Determine if the magnet should apply torque
+        if np.dot(rotation_direction_vector, force_vector_normalized) > 0:
+            torque_magnitude = calculate_torque(magnet_volume, Magnetization_Neodymium, B_field_Iron)
+            torque_vector = torque_magnitude * force_vector_normalized
+            total_torque += torque_vector
+        else:
+            torque_magnitude = 0
+            torque_vector = [0, 0, 0]
 
     # Apply the total torque to the alternator
-    p.applyExternalTorque(alternator_body, -1, total_torque, p.LINK_FRAME)
+    p.applyExternalTorque(alternator_body, -1, total_torque, p.WORLD_FRAME)
 
     return total_torque
 
@@ -101,7 +124,6 @@ magnetic_field_change_rate = 0.0
 initial_position = np.array([0, 0, 0])
 previous_position = initial_position
 total_distance = 0.0
-
 
 # Main loop
 while True:
@@ -159,7 +181,7 @@ while True:
     # Print the estimated electrical power, accumulated energy, and required input power
     print("Estimated Electrical Power: {} W".format(electrical_power))
     print("Accumulated Energy: {} J".format(total_energy))
-    print("Required Input Power to Charge Magnets: {} W".format(required_input_power))
+    #print("Required Input Power to Charge Magnets: {} W".format(required_input_power))
 
     # Apply the total torque to the alternator
     if mouse_click:
