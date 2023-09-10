@@ -31,11 +31,6 @@ for position in magnet_positions:
     magnet_body = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=magnet_shape, basePosition=position[0], baseOrientation=position[1])
     magnet_bodies.append(magnet_body)
 
-
-# Create the spaceship cone as a bullet box shape
-cone_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=[0.5, 0.5, 0.5])
-cone_body = p.createMultiBody(baseMass=10, baseCollisionShapeIndex=cone_shape, basePosition=(0, 0, 2))
-
 # Create the alternator object as a bullet sphere
 alternator_shape = p.createCollisionShape(p.GEOM_SPHERE, radius=0.01)
 alternator_body = p.createMultiBody(baseMass=0.03298, baseCollisionShapeIndex=alternator_shape, basePosition=(0, 0, 0))
@@ -224,8 +219,34 @@ clock = pygame.time.Clock()
 adapter_hz = 79
 p.setTimeStep(1.0 / adapter_hz)  # Set a higher time step for more simulation iterations
 
+running = True
+
+def update_display(total_time, increase_power, total_energy):
+    if increase_power:
+        if (total_energy >= E_TOTAL_SLOW_CHARGER).any():
+            print("Accumulated Energy: {} J".format(total_energy))
+            print("Total Time Taken: {} seconds".format(total_time))
+            screen.fill((255,255,255))
+            pygame.draw.circle(screen, (255, 0, 0), (400, 300), 50)
+            pygame.display.flip()
+            total_energy = 0
+            total_time = 0
+            
+        avg_energy = np.mean(total_energy)
+        green_intensity = int((avg_energy / E_TOTAL_SLOW_CHARGER) * 255)
+        green_intensity = max(0, green_intensity)
+        screen.fill((255,255,255))
+        pygame.draw.circle(screen, (0, green_intensity, 0), (400, 300), 50)
+        pygame.display.flip()
+    else:
+        screen.fill((255,255,255))
+        pygame.draw.circle(screen, (0, 0, 0), (400, 300), 50)
+        pygame.display.flip()
+
+    return total_energy, total_time
+
 # Main loop
-while True:
+while running:
     # Update PyBullet
     p.stepSimulation()
 
@@ -270,31 +291,6 @@ while True:
             _, energy_output = apply_magnetic_torque(True)
             total_energy += energy_output
 
-    # Apply the total torque to the alternator
-    if increase_power:
-        if (total_energy >= E_TOTAL_SLOW_CHARGER).any():
-            print("Accumulated Energy: {} J".format(total_energy))
-            print("Total Time Taken: {} seconds".format(total_time))
-
-            screen.fill((255,255,255))
-            pygame.draw.circle(screen, (255, 0, 0), (400, 300), 50)
-            pygame.display.flip()
-
-            total_energy = 0
-            total_time = 0
-            
-    if increase_power:
-        avg_energy = np.mean(total_energy)
-        green_intensity = int((avg_energy / E_TOTAL_SLOW_CHARGER) * 255)
-
-        green_intensity = max(0, green_intensity)
-
-        screen.fill((255,255,255))
-        pygame.draw.circle(screen, (0, green_intensity, 0), (400, 300), 50)
-        pygame.display.flip()
-    else:
-        screen.fill((255,255,255))
-        pygame.draw.circle(screen, (0, 0, 0), (400, 300), 50)
-        pygame.display.flip()
+    total_energy, total_time = update_display(total_time, increase_power, total_energy)
 
     pygame.display.update()
