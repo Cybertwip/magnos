@@ -40,7 +40,7 @@ class Boat_Settings:
         self.current_A = 5
         self.spins = 2500
 
-class USB_C_Settings:
+class USB_C_Slow_Settings:
     def __init__(self):
         # Pygame
         self.screen_width = 800
@@ -73,6 +73,41 @@ class USB_C_Settings:
         self.current_A = 0.01
 
         self.spins = 70
+
+
+class USB_C_Fast_Settings:
+    def __init__(self):
+        # Pygame
+        self.screen_width = 800
+        self.screen_height = 600
+
+        # Energy
+        self.E_TOTAL_SLOW_CHARGER = 5
+        self.E_TOTAL_FAST_CHARGER = 29
+        self.E_TOTAL_BOAT_CHARGER = 87500
+        self.TARGET_ENERGY = self.E_TOTAL_FAST_CHARGER
+
+        # PID
+        self.kp = 1.44
+        self.ki = 0.96
+        self.kd = 0.54
+
+        # Initialize PyBullet
+        p.connect(p.DIRECT)
+        p.setGravity(0, 0, -9.81)
+
+        # PyBullet
+        self.adapter_hz = 60
+        p.setTimeStep(1.0 / self.adapter_hz)
+
+        # Alternator
+        self.core_type = IronBall
+        self.core_radius = 0.01
+        self.num_alternators = 2
+
+        self.current_A = 0.01
+
+        self.spins = 320     
 
 pygame.init()
 pygame.font.init()
@@ -293,7 +328,7 @@ class Alternator:
         return total_torque, energy_output
 
 if __name__ == "__main__":
-    settings = USB_C_Settings()
+    settings = USB_C_Fast_Settings()
 
     # Set up Pygame window
     screen = pygame.display.set_mode((settings.screen_width, settings.screen_height))
