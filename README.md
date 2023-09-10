@@ -15,6 +15,9 @@ pip3 install matplot
 
 pip3 install qutip
 
+pip3 install control
+
+
 --- pythia
 
 export PYTHON_CONFIG=/opt/homebrew/anaconda3/bin/python3-config 
