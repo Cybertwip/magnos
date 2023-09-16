@@ -6,7 +6,6 @@ import math
 import numpy as np
 import time
 
-
 class Boat_Settings:
     def __init__(self):
         # Pygame
