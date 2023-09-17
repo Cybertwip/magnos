@@ -1,17 +1,12 @@
 import poppy
 import numpy as np
 import pybullet as p
-import pygame
 import math
 import numpy as np
 import time
 
 class Boat_Settings:
     def __init__(self):
-        # Pygame
-        self.screen_width = 800
-        self.screen_height = 600
-
         # Energy
         self.E_TOTAL_SLOW_CHARGER = 5
         self.E_TOTAL_FAST_CHARGER = 29
@@ -41,10 +36,6 @@ class Boat_Settings:
 
 class USB_C_Slow_Settings:
     def __init__(self):
-        # Pygame
-        self.screen_width = 800
-        self.screen_height = 600
-
         # Energy
         self.E_TOTAL_SLOW_CHARGER = 5
         self.E_TOTAL_FAST_CHARGER = 29
@@ -75,10 +66,6 @@ class USB_C_Slow_Settings:
 
 class USB_C_Fast_Settings:
     def __init__(self):
-        # Pygame
-        self.screen_width = 800
-        self.screen_height = 600
-
         # Energy
         self.E_TOTAL_SLOW_CHARGER = 5
         self.E_TOTAL_FAST_CHARGER = 29
@@ -106,10 +93,6 @@ class USB_C_Fast_Settings:
         self.current_A = 0.01
 
         self.spins = 320     
-
-#pygame.init()
-#pygame.font.init()
-#font = pygame.font.SysFont(None, 25)  # Change 'None' to a font name if you have a preference.
 
 # Initialize variables for power and energy calculation
 prev_time = time.time()
@@ -159,29 +142,20 @@ class PIDController:
         self.prev_error = error
 
         return output
-    
-# Create a clock object to track time
-#clock = pygame.time.Clock()
 
 running = True
 
-def update_display(screen, total_energy):
+def update_energy(total_energy):
     global total_time, settings
     if (total_energy >= settings.TARGET_ENERGY).any():
         print("Accumulated Energy: {} J".format(total_energy))
         print("Total Time Taken: {} seconds".format(total_time))
-        #screen.fill((255, 255, 255))
-        #pygame.draw.circle(screen, (255, 0, 0), (400, 300), 50)
-        #pygame.display.flip()
         total_energy = np.zeros(3)
         total_time = 0
     else:
         avg_energy = np.mean(total_energy)
         green_intensity = int((avg_energy / settings.TARGET_ENERGY) * 255)
         green_intensity = max(0, green_intensity)
-        #screen.fill((255, 255, 255))
-        #pygame.draw.circle(screen, (0, green_intensity, 0), (400, 300), 50)
-        #pygame.display.flip()
 
     return total_energy
 
@@ -357,10 +331,6 @@ class Alternator:
 if __name__ == "__main__":
     settings = USB_C_Fast_Settings()
 
-    # Set up Pygame window
-    #screen = pygame.display.set_mode((settings.screen_width, settings.screen_height))
-    #pygame.display.set_caption('OLED Brightness Simulation')
-
     pid_controller = PIDController(settings.kp, settings.ki, settings.kd, output_limits=(-1, 1))
 
     alternators = [Alternator() for _ in range(settings.num_alternators)]
@@ -369,12 +339,6 @@ if __name__ == "__main__":
     while running:
         # Update PyBullet
         p.stepSimulation()
-
-        # for event in pygame.event.get():
-        #     if event.type == pygame.QUIT:
-        #         running = False
-        #         pygame.quit()
-        #         exit()
 
         dt = 1.0 / settings.adapter_hz
 
@@ -411,7 +375,5 @@ if __name__ == "__main__":
             total_energy += total_energy_output
 
 
-        total_energy = update_display(None, total_energy)
-
-        #pygame.display.update()
+        total_energy = update_energy(total_energy)
 
