@@ -24,12 +24,12 @@ class Boat_Settings:
         self.kd = 0.54
 
         # Initialize PyBullet
-        p.connect(p.DIRECT)
+        p.connect(p.GUI)
 
         p.setGravity(0, 0, -9.81)
 
         # PyBullet
-        self.adapter_hz = 840
+        self.adapter_hz = 840.0
         p.setTimeStep(1.0 / self.adapter_hz)  
 
         # Alternator
@@ -57,11 +57,11 @@ class USB_C_Slow_Settings:
         self.kd = 0.54
 
         # Initialize PyBullet
-        p.connect(p.DIRECT)
+        p.connect(p.GUI)
         p.setGravity(0, 0, -9.81)
 
         # PyBullet
-        self.adapter_hz = 60
+        self.adapter_hz = 60.0
         p.setTimeStep(1.0 / self.adapter_hz)
 
         # Alternator
@@ -72,7 +72,6 @@ class USB_C_Slow_Settings:
         self.current_A = 0.01
 
         self.spins = 70
-
 
 class USB_C_Fast_Settings:
     def __init__(self):
@@ -92,11 +91,11 @@ class USB_C_Fast_Settings:
         self.kd = 0.54
 
         # Initialize PyBullet
-        p.connect(p.DIRECT)
+        p.connect(p.GUI)
         p.setGravity(0, 0, -9.81)
 
         # PyBullet
-        self.adapter_hz = 60
+        self.adapter_hz = 60.0
         p.setTimeStep(1.0 / self.adapter_hz)
 
         # Alternator
@@ -108,9 +107,9 @@ class USB_C_Fast_Settings:
 
         self.spins = 320     
 
-pygame.init()
-pygame.font.init()
-font = pygame.font.SysFont(None, 25)  # Change 'None' to a font name if you have a preference.
+#pygame.init()
+#pygame.font.init()
+#font = pygame.font.SysFont(None, 25)  # Change 'None' to a font name if you have a preference.
 
 # Initialize variables for power and energy calculation
 prev_time = time.time()
@@ -162,7 +161,7 @@ class PIDController:
         return output
     
 # Create a clock object to track time
-clock = pygame.time.Clock()
+#clock = pygame.time.Clock()
 
 running = True
 
@@ -171,22 +170,20 @@ def update_display(screen, total_energy):
     if (total_energy >= settings.TARGET_ENERGY).any():
         print("Accumulated Energy: {} J".format(total_energy))
         print("Total Time Taken: {} seconds".format(total_time))
-        screen.fill((255, 255, 255))
-        pygame.draw.circle(screen, (255, 0, 0), (400, 300), 50)
-        pygame.display.flip()
+        #screen.fill((255, 255, 255))
+        #pygame.draw.circle(screen, (255, 0, 0), (400, 300), 50)
+        #pygame.display.flip()
         total_energy = np.zeros(3)
         total_time = 0
     else:
         avg_energy = np.mean(total_energy)
         green_intensity = int((avg_energy / settings.TARGET_ENERGY) * 255)
         green_intensity = max(0, green_intensity)
-        screen.fill((255, 255, 255))
-        pygame.draw.circle(screen, (0, green_intensity, 0), (400, 300), 50)
-        pygame.display.flip()
+        #screen.fill((255, 255, 255))
+        #pygame.draw.circle(screen, (0, green_intensity, 0), (400, 300), 50)
+        #pygame.display.flip()
 
     return total_energy
-
-
 
 class MagneticBall:
     def __init__(self, radius):
@@ -260,10 +257,16 @@ class Magnet:
 
 
 class Alternator:
+    COIL_AREA = 0.05  # Example value in square meters
+    COIL_TURNS = 500  # Number of turns in the coil
+    COIL_RESISTANCE = 1  # Example value in ohms, adjust as per your requirement
+    K_FLUX = 0.01  
+
     def __init__(self):
         self.core = SiliconSteelBall(0.05)
         self.magnet = Magnet(self.core)
         self.constraints = self.create_constraints()
+        self.previous_flux = 0
 
     def create_constraints(self):
         constraints = []
@@ -281,17 +284,29 @@ class Alternator:
             constraints.append(constraint)
         return constraints
 
+    @staticmethod
+    def calculate_emf(N, previous_flux, current_flux, dt):
+        delta_flux = current_flux - previous_flux
+        emf = -N * (delta_flux / dt)
+        return emf
 
-    def apply_magnetic_torque(self, apply):
+    @staticmethod
+    def compute_magnetic_flux(magnetic_field, coil_area):
+        return magnetic_field * coil_area
+
+    def apply_magnetic_torque(self, apply, dt):
         # Reset total torque at the start
         total_torque = np.zeros(3)
 
-        # 1. Determine the rotation direction of the alternator
+        # Determine the rotation direction of the alternator
         _, angular_velocity = p.getBaseVelocity(self.core.body)
 
         # Add a small value to avoid zero division or zero magnitude
         angular_velocity = tuple(x + 0.00001 for x in angular_velocity)
         rotation_direction_vector = np.sign(angular_velocity)
+        
+        # To store the total magnetic field encountered for the flux calculation
+        total_B_field = 0
     
         for i, magnet_body in enumerate(self.magnet.bodies):
             magnet_position, _ = p.getBasePositionAndOrientation(magnet_body)
@@ -308,6 +323,8 @@ class Alternator:
                 torque_vector = torque_magnitude * force_vector_normalized
                 total_torque += torque_vector
 
+                # Update total B_field for flux calculation
+                total_B_field += self.magnet.B_field_total_T
 
         # Assuming you have the moment of inertia for your alternator
         moment_of_inertia = self.core.inertia
@@ -322,16 +339,27 @@ class Alternator:
         # Calculate angular acceleration
         angular_acceleration = total_torque / moment_of_inertia  # Manually update angular velocity
 
-        # Calculate energy produced 
+        # Calculate angular acceleration
+        angular_acceleration = total_torque / self.core.inertia
+        # Calculate change in angular velocity
+        delta_angular_velocity = angular_acceleration * dt
+        # Estimate change in magnetic flux due to change in orientation
+        delta_flux = self.K_FLUX * delta_angular_velocity
+
+        # Calculate induced EMF
+        emf = -self.COIL_TURNS * delta_flux / dt
+
+        # Assuming energy_produced() is a function you already have
         energy_output = energy_produced(angular_velocity_magnitude, total_torque, angular_acceleration)
-        return total_torque, energy_output
+        
+        return total_torque, energy_output, emf
 
 if __name__ == "__main__":
     settings = USB_C_Fast_Settings()
 
     # Set up Pygame window
-    screen = pygame.display.set_mode((settings.screen_width, settings.screen_height))
-    pygame.display.set_caption('OLED Brightness Simulation')
+    #screen = pygame.display.set_mode((settings.screen_width, settings.screen_height))
+    #pygame.display.set_caption('OLED Brightness Simulation')
 
     pid_controller = PIDController(settings.kp, settings.ki, settings.kd, output_limits=(-1, 1))
 
@@ -342,19 +370,19 @@ if __name__ == "__main__":
         # Update PyBullet
         p.stepSimulation()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                pygame.quit()
-                exit()
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         running = False
+        #         pygame.quit()
+        #         exit()
 
-        dt = clock.tick(60)
-        keys = pygame.key.get_pressed()
+        dt = 1.0 / settings.adapter_hz
 
-        increase_power = keys[pygame.K_q]
+        keys = p.getKeyboardEvents()
+
+        increase_power = ord('q') in keys and keys[ord('q')] == 1
 
         if increase_power:
-
             # Calculate time difference since last frame
             current_time = time.time()
             time_difference = current_time - prev_time
@@ -365,7 +393,7 @@ if __name__ == "__main__":
             total_expected_next_energy = 0
             
             for alt in alternators:
-                _, expected_next_energy = alt.apply_magnetic_torque(False)
+                _, expected_next_energy, emf = alt.apply_magnetic_torque(False, dt)
                 total_expected_next_energy += expected_next_energy + total_energy
 
                 # Compute the error for the PID controller
@@ -377,13 +405,13 @@ if __name__ == "__main__":
                 avg_pid_output = np.mean(pid_output)
 
                 if np.all(avg_pid_output > 0):
-                    _, energy_output = alt.apply_magnetic_torque(True)
+                    _, energy_output, emf = alt.apply_magnetic_torque(True, dt)
                     total_energy_output += energy_output
 
             total_energy += total_energy_output
 
 
-        total_energy = update_display(screen, total_energy)
+        total_energy = update_display(None, total_energy)
 
-        pygame.display.update()
+        #pygame.display.update()
 
