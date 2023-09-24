@@ -160,10 +160,8 @@ def update_energy(total_energy):
     return total_energy
 
 class MagneticBall:
-    def __init__(self, radius):
+    def __init__(self, radius, position):
         self.radius = radius
-        self.shape = p.createCollisionShape(p.GEOM_SPHERE, radius=self.radius)
-        self.body = p.createMultiBody(baseMass=self.calculate_mass(), baseCollisionShapeIndex=self.shape, basePosition=(0, 0, 0))
         self.inertia = self.calculate_inertia()
         self.permeability = self.calculate_permeability()
 
@@ -196,18 +194,25 @@ class Magnet:
     def __init__(self, core):
         # Define magnet positions (up, down, left, right, front, back)
         self.core = core
+        #core_position, _ = p.getBasePositionAndOrientation(core.body)
+        #core_x, core_y, core_z = core_position
+
+        # Define magnet positions relative to the core
+        magnet_offset = 1  # Offset for magnet positions
+
         self.positions = [
-            ((0, 1, 0), (0, 0, 1)),
-            ((0, -1, 0), (0, 0, -1)),
-            ((-1, 0, 0), (1, 0, 0)),
-            ((1, 0, 0), (-1, 0, 0)),
-            ((0, 0, 1), (0, -1, 0)),
-            ((0, 0, -1), (0, 1, 0)),
+            ((0, magnet_offset, 0), (0, 0, magnet_offset)),
+            ((0, -magnet_offset, 0), (0, 0, -magnet_offset)),
+            ((-magnet_offset, 0, 0), (magnet_offset, 0, 0)),
+            ((magnet_offset, 0, 0), (-magnet_offset, 0, 0)),
+            ((0, 0, magnet_offset), (0, -magnet_offset, 0)),
+            ((0, 0, -magnet_offset), (0, magnet_offset, 0)),
             # ((1, 1, 1), (-1, -1, -1)),  # Corner 1
             # ((1, 1, -1), (-1, -1, 1)),  # Corner 2
             # ((1, -1, 1), (-1, 1, -1)),  # Corner 3
             # ((-1, 1, 1), (1, -1, -1))  # Corner 4
         ]
+
 
         self.bodies = self.create_magnet_bodies()
 
@@ -217,7 +222,7 @@ class Magnet:
         magnet_bodies = []
         for position in self.positions:
             magnet_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=[0.01, 0.01, 0.1])
-            magnet_body = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=magnet_shape, basePosition=position[0], baseOrientation=position[1])
+            magnet_body = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=magnet_shape, basePosition=position[0], baseOrientation=position[1],                 parentBodyUniqueId=self.core.body  )
             magnet_bodies.append(magnet_body)
         return magnet_bodies
     
@@ -236,8 +241,8 @@ class Alternator:
     COIL_RESISTANCE = 1  # Example value in ohms, adjust as per your requirement
     K_FLUX = 0.01  
 
-    def __init__(self):
-        self.core = SiliconSteelBall(0.05)
+    def __init__(self, position):
+        self.core = SiliconSteelBall(0.05, position)
         self.magnet = Magnet(self.core)
         self.constraints = self.create_constraints()
         self.previous_flux = 0
@@ -333,7 +338,7 @@ if __name__ == "__main__":
 
     pid_controller = PIDController(settings.kp, settings.ki, settings.kd, output_limits=(-1, 1))
 
-    alternators = [Alternator() for _ in range(settings.num_alternators)]
+    alternators = [Alternator(i) for i in range(settings.num_alternators)]
 
     # Main loop
     while running:
