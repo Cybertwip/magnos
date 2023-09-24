@@ -762,6 +762,7 @@ private:
 				this->current = 0;
 				calibration = false;
 				
+				std::string home = getenv("HOME");
 				savePIDToBinary(home + "/pid.bin");
 
 				desiredEMFPerSecond = calibration_voltage;
