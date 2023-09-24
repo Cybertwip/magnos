@@ -67,13 +67,15 @@ float quaternionDot(const Quaternion& q1, const Quaternion& q2) {
 	return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 }
 
-const float desired_voltage = 2.0f;
-const float calibration_voltage = 0.03f;
+const float desired_voltage = 9;
+const float calibration_voltage = 7;
 float error_trial = 0.0003f;
 const float global_timestep = 60.0f;
 const int calibration_steps = 5;
-const int calibration_time = 500;
+const int calibration_time = 1000;
 float global_delta = 1.0f / global_timestep;
+
+const bool adaptive_calibration = true;
 
 const float desired_voltage_per_second = desired_voltage;
 }
@@ -765,7 +767,9 @@ private:
 				std::string home = getenv("HOME");
 				savePIDToBinary(home + "/pid.bin");
 
-				desiredEMFPerSecond = calibration_voltage;
+				if(adaptive_calibration){
+					desiredEMFPerSecond = calibration_voltage;
+				}
 				
 				return;
 			}
@@ -783,26 +787,22 @@ private:
 				// Check if conditions are met to retrain
 				if(fabs(emfError) > error_trial) {
 					retrainModel();
-
-				} else {
-					// Create a column vector for input features
-					arma::mat input(3, 1);
-					input(0, 0) = emfError;            // This should be your new emfError value
-					input(1, 0) = desiredCurrent;         // Replace with your new desiredCurrent value
-					input(2, 0) = currentAdjustment;      // Replace with your new currentAdjustment value
-					
-					arma::rowvec output;  // Use rowvec instead of mat
-					mlModel->Predict(input, output);
-					
-					// Now `output` contains the predicted finalCurrent value
-					float predictedFinalCurrent = output(0, 0);
-					
-					this->current = predictedFinalCurrent;
-					currentAdjustment = this->current;
-					
 				}
-
+				// Create a column vector for input features
+				arma::mat input(3, 1);
+				input(0, 0) = emfError;            // This should be your new emfError value
+				input(1, 0) = desiredCurrent;         // Replace with your new desiredCurrent value
+				input(2, 0) = currentAdjustment;      // Replace with your new currentAdjustment value
 				
+				arma::rowvec output;  // Use rowvec instead of mat
+				mlModel->Predict(input, output);
+				
+				// Now `output` contains the predicted finalCurrent value
+				float predictedFinalCurrent = output(0, 0);
+				
+				this->current = predictedFinalCurrent;
+				currentAdjustment = this->current;
+
 
 			}
 		}
@@ -1660,9 +1660,9 @@ public:
 	std::unique_ptr<CoilSystem> outerCoilSystem =
 	std::make_unique<CoilSystem>(1.5f,
 								 1.0f, // resistance
-								 1.5f, // current
-								 33); // turns
-	AlternatorSystem alternator = AlternatorSystem(0.01f, 77);
+								 1.5, // current
+								 144); // turns
+	AlternatorSystem alternator = AlternatorSystem(0.01f, 144);
 	
 	std::unique_ptr<MagnetSystem> middleMagnetSystem = std::make_unique<MagnetSystem>();
 	
