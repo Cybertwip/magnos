@@ -762,7 +762,7 @@ private:
 				this->current = 0;
 				calibration = false;
 				
-				savePIDToBinary("/Users/victor.lopez1/Projects/magnetico/pid.bin");
+				savePIDToBinary(home + "/pid.bin");
 
 				desiredEMFPerSecond = calibration_voltage;
 				
@@ -782,35 +782,26 @@ private:
 				// Check if conditions are met to retrain
 				if(fabs(emfError) > error_trial) {
 					retrainModel();
-//					calibration = true;
-//					float kp = pidCurrent.kp;
-//					float ki = pidCurrent.ki;
-//					float kd = pidCurrent.kd;
-//
-//					pidCurrent = PIDController(kp, ki, kd);
-//					pidCurrent.startAutoTuning(maxCurrent, 0);
-//
-//					desiredEMFPerSecond = desired_voltage_per_second;
 
 				} else {
-					//desiredEMFPerSecond = desired_voltage_per_second;
+					// Create a column vector for input features
+					arma::mat input(3, 1);
+					input(0, 0) = emfError;            // This should be your new emfError value
+					input(1, 0) = desiredCurrent;         // Replace with your new desiredCurrent value
+					input(2, 0) = currentAdjustment;      // Replace with your new currentAdjustment value
+					
+					arma::rowvec output;  // Use rowvec instead of mat
+					mlModel->Predict(input, output);
+					
+					// Now `output` contains the predicted finalCurrent value
+					float predictedFinalCurrent = output(0, 0);
+					
+					this->current = predictedFinalCurrent;
+					currentAdjustment = this->current;
+					
 				}
 
 				
-				// Create a column vector for input features
-				arma::mat input(3, 1);
-				input(0, 0) = emfError;            // This should be your new emfError value
-				input(1, 0) = desiredCurrent;         // Replace with your new desiredCurrent value
-				input(2, 0) = currentAdjustment;      // Replace with your new currentAdjustment value
-				
-				arma::rowvec output;  // Use rowvec instead of mat
-				mlModel->Predict(input, output);
-				
-				// Now `output` contains the predicted finalCurrent value
-				float predictedFinalCurrent = output(0, 0);
-				
-				this->current = predictedFinalCurrent;
-				currentAdjustment = this->current;
 
 			}
 		}
