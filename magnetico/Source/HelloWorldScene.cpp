@@ -67,9 +67,9 @@ float quaternionDot(const Quaternion& q1, const Quaternion& q2) {
 	return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 }
 
-const float desired_voltage = 9;
-const float calibration_voltage = 7;
-float error_trial = 0.0003f;
+const float desired_voltage = 12.009;
+const float calibration_voltage = 11.99;
+float error_trial = 0.003f;
 const float global_timestep = 60.0f;
 const int calibration_steps = 5;
 const int calibration_time = 1000;
@@ -601,11 +601,16 @@ public:
 	}
 	
 	bool calibration = true;
-	
+	bool adaptive = adaptive_calibration;
+
 	bool calibrating() {
 		return calibration;
 	}
-	
+
+	bool adapting() {
+		return adaptive;
+	}
+
 private:
 	
 	struct DataPoint {
@@ -731,7 +736,8 @@ private:
 
 	PID_ATune tuner = PID_ATune(&processVariable, &controllerOutput);
 	PIDController pidCurrent = PIDController(1.0f, 0, 0);
-	
+	bool isCalibratingUpwards = true; // A flag to determine the calibration direction. Initialize as true if you start by calibrating upwards.
+
 	void adjustCurrentBasedOn(float dt) {
 		// Calculate desired current based on EMF error and resistance
 		float emfError = desiredEMFPerSecond - accumulatedEMF;
@@ -787,6 +793,23 @@ private:
 				// Check if conditions are met to retrain
 				if(fabs(emfError) > error_trial) {
 					retrainModel();
+					
+					if(adaptive_calibration){
+						// Calibration upwards
+						if(isCalibratingUpwards && accumulatedEMF + emfError >= calibration_voltage){
+							desiredEMFPerSecond = desired_voltage_per_second;
+							isCalibratingUpwards = false;  // Switch calibration direction
+							adaptive = true;
+						}
+						// Calibration downwards
+						else if(!isCalibratingUpwards && accumulatedEMF + emfError <= desired_voltage_per_second){
+							desiredEMFPerSecond = calibration_voltage;
+							isCalibratingUpwards = true;   // Switch calibration direction
+							adaptive = true;
+						}
+					}
+				} else {
+					adaptive = false;
 				}
 				// Create a column vector for input features
 				arma::mat input(3, 1);
@@ -1881,7 +1904,7 @@ void HelloWorld::onImGuiDraw()
 	
 	float inducedEMF = abs(magnos->getAlternatorSystem().emf);
 	
-	if(!magnos->getCoilSystem().calibrating()){
+	if(!magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting()){
 		accumulatedEMF = magnos->getCoilSystem().lastAccumulatedEMF;
 	}
 	
@@ -1892,7 +1915,7 @@ void HelloWorld::onImGuiDraw()
 	}
 	
 	if (guiEMF > peakEMF){
-		if(!magnos->getCoilSystem().calibrating()){
+		if(!magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting()){
 			peakEMF = guiEMF;
 		} else {
 			guiEMF = 0;
@@ -1901,7 +1924,7 @@ void HelloWorld::onImGuiDraw()
 		}
 	}
 	
-	if(magnos->getCoilSystem().calibrating()){
+	if(magnos->getCoilSystem().calibrating() && !magnos->getCoilSystem().adapting()){
 		deltaCounter = 0;
 		guiCounter = 0;
 		lastEMF = -1;
@@ -1912,7 +1935,13 @@ void HelloWorld::onImGuiDraw()
 		accumulatedEMF = 0;
 	}
 	
-	ImGui::Text("Status=%s", magnos->getCoilSystem().calibrating() ? "Calibrating" : "Running");
+	if(magnos->getCoilSystem().calibrating()){
+		ImGui::Text("Status=%s", "PID Calibration");
+	} else if(magnos->getCoilSystem().adapting()){
+		ImGui::Text("Status=%s", "Adaptive Calibration");
+	} else {
+		ImGui::Text("Status=%s", "Running");
+	}
 	ImGui::Text("Input Voltage=%.4f", 1.5f);
 	ImGui::Text("Peak Voltage=%.4f", peakEMF);
 	ImGui::Text("Measured Voltage Per Second=%.4f", guiEMF);
