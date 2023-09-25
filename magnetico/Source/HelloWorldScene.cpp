@@ -68,10 +68,10 @@ float quaternionDot(const Quaternion& q1, const Quaternion& q2) {
 }
 
 const float desired_voltage = 12.009;
-const float calibration_voltage = 11.99;
-float error_trial = 0.003f;
+const float calibration_voltage = 3;
+float error_trial = 0.005f;
 const float global_timestep = 60.0f;
-const int calibration_steps = 5;
+const int calibration_steps = 10;
 const int calibration_time = 1000;
 float global_delta = 1.0f / global_timestep;
 
