@@ -76,10 +76,10 @@ float global_delta = 1.0f / global_timestep;
 const bool adaptive_calibration = false;
 const bool data_collection_mode = false;
 
-const int cycles_per_collection = data_collection_mode ? 2048 : 1;
+const int cycles_per_collection = data_collection_mode ? 2000 : 1;
 
 const float desired_base_voltage = 1.5;
-float desired_voltage_increase_per_second = 5;
+float desired_voltage_increase_per_second = 12;
 const float adaptive_calibration_voltage = 3;
 }
 
@@ -815,7 +815,7 @@ private:
 			
 			dataCollection.push_back(point);
 			
-			if(dataCollection.size() * sizeof(DataPoint) >= 1000000000){
+			if(dataCollection.size() * sizeof(DataPoint) >= 16000 && data_collection_mode){
 				std::string home = getenv("HOME");
 				
 				saveDataToBinary(home + "/calibration.bin");
@@ -1049,7 +1049,7 @@ public:
 			
 			nowTime = epochTime;
 
-			adjustCurrentBasedOn(1000);
+			adjustCurrentBasedOn(16);
 			
 			accumulationTime = 0.0f;
 						
@@ -1073,6 +1073,8 @@ public:
 				lastRecycledEMF = recycledEMF;
 				
 				guiAccumulatedEMF = 0;
+				
+				accumulatedEMF = 0;
 			}
 
 		}
@@ -1880,8 +1882,8 @@ public:
 	std::make_unique<CoilSystem>(1.5f,
 								 1.0f, // resistance
 								 1.0f, // current
-								 480); // turns
-	AlternatorSystem alternator = AlternatorSystem(0.02f, 144);
+								 420); // turns
+	AlternatorSystem alternator = AlternatorSystem(0.02f, 69);
 	
 	std::unique_ptr<MagnetSystem> middleMagnetSystem = std::make_unique<MagnetSystem>();
 	
