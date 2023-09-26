@@ -67,17 +67,20 @@ float quaternionDot(const Quaternion& q1, const Quaternion& q2) {
 	return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 }
 
-const float desired_voltage = 12.009;
-const float calibration_voltage = 3;
-float error_trial = 0.005f;
+
+float error_trial = 0.0025f;
 const float global_timestep = 60.0f;
-const int calibration_steps = 10;
-const int calibration_time = 1000;
+const int calibration_steps = 4;
+const int calibration_time = 1.0f;
 float global_delta = 1.0f / global_timestep;
+const bool adaptive_calibration = false;
+const bool data_collection_mode = false;
 
-const bool adaptive_calibration = true;
+const int cycles_per_collection = data_collection_mode ? 2048 : 1;
 
-const float desired_voltage_per_second = desired_voltage;
+const float desired_base_voltage = 1.5;
+float desired_voltage_increase_per_second = 5;
+const float adaptive_calibration_voltage = 3;
 }
 
 class ElectromagneticEntity {
@@ -373,7 +376,7 @@ public:
 public:
 	CoilSystem(float voltage, float resistance, float current, float coilTurns)
 	: coilResistance(resistance), maxCurrent(current), turns(coilTurns){
-		setCurrentFromVoltage(voltage);
+		//setCurrentFromVoltage(voltage);
 		
 		// Configurations
 		tuner.SetOutputStep(15);
@@ -400,6 +403,14 @@ public:
 		loadPID(home + "/pid.bin");
 
 		pidCurrent.startAutoTuning(maxCurrent, 0);
+		
+		this->current = 0;
+	
+		filterIncrease.setOnCapacitorCharged([this](float charge){
+			if(!calibrating() && !adapting()){
+				this->recycledEMF += charge;
+			}
+		});
 
 	}
 	
@@ -513,8 +524,6 @@ public:
 		this->current = voltage / (coilResistance * numberOfCoils);
 		this->current = std::clamp(this->current, 0.0f, maxCurrent);  // Ensure it doesn't exceed maxCurrent
 	}
-
-	
 	
 	Vec3 computeMagneticField(AttachedEntity& coil, const Vec3& point, MagnetPolarity polarity) const {
 		Vec3 direction = (point).getNormalized();
@@ -684,12 +693,22 @@ private:
 					
 					if (oscillationsCount >= calibration_steps) {  // consider 5 oscillations for averaging
 						autoTuning = false;
-						period /= (oscillationsCount - 1);  // Average period
+						if(oscillationsCount == 1){
+							period = dt;
+						}
+						period /= (oscillationsCount == 1 ? 2 - 1 : oscillationsCount - 1);  // Average period
 						// Ziegler-Nichols method
 						kp = 0.6 * relayHigh / period;
 						ki = 2 * kp / period;
 						kd = kp * period / 8;
 					}
+				} else if (error == 0){
+					autoTuning = false;
+					period /= (oscillationsCount - 1);  // Average period
+					// Ziegler-Nichols method
+					kp = 0.6 * relayHigh / period;
+					ki = 2 * kp / period;
+					kd = kp * period / 8;
 				}
 			}
 			
@@ -720,12 +739,16 @@ private:
 		}
 	};
 
-	float desiredEMFPerSecond = desired_voltage_per_second;
+	float desiredEMFPerSecond = desired_voltage_increase_per_second;
 	const int numberOfCoils = 1;
 	const float totalResistance = coilResistance * numberOfCoils;
 	float accumulatedEMF = 0.0f;
+	float baseAccumulatedEMF = 0.0f;
 	float accumulationTime = 0.0f;
-
+	float guiBaseAccumulatedEMF = 0.0f;
+	float guiAccumulatedEMF = 0.0f;
+	float recycledEMF = 0;
+	float guiAccumulationTime = 0;
 	
 	double setPoint = 3.0f; // Desired value
 	double processVariable = 0; // Current value
@@ -739,8 +762,9 @@ private:
 	bool isCalibratingUpwards = true; // A flag to determine the calibration direction. Initialize as true if you start by calibrating upwards.
 
 	void adjustCurrentBasedOn(float dt) {
+		desiredEMFPerSecond = desired_voltage_increase_per_second;
 		// Calculate desired current based on EMF error and resistance
-		float emfError = desiredEMFPerSecond - accumulatedEMF;
+		float emfError = desired_voltage_increase_per_second - accumulatedEMF;
 		
 		// Get current time in seconds since epoch
 		auto now = std::chrono::system_clock::now();
@@ -755,7 +779,11 @@ private:
 
 		float currentAdjustment = 0;
 		
-		if(pidCurrent.calibrate(desiredCurrent, dt, epochTime)){
+		static long long simulatedEpoch = 0;
+		
+		simulatedEpoch += dt;
+		
+		if(pidCurrent.calibrate(desiredCurrent, dt, simulatedEpoch)){
 									
 			currentAdjustment = pidCurrent.getRelayState() ? maxCurrent : 0;
 			
@@ -766,18 +794,16 @@ private:
 			currentAdjustment = std::clamp(this->current + currentAdjustment, 0.0f, maxCurrent);
 
 			if(calibration){
-				currentAdjustment = 0;
-				this->current = 0;
 				calibration = false;
 				
 				std::string home = getenv("HOME");
 				savePIDToBinary(home + "/pid.bin");
 
 				if(adaptive_calibration){
-					desiredEMFPerSecond = calibration_voltage;
+					desiredEMFPerSecond = adaptive_calibration_voltage;
+				} else {
+					desiredEMFPerSecond = desired_voltage_increase_per_second;
 				}
-				
-				return;
 			}
 			
 			
@@ -789,21 +815,29 @@ private:
 			
 			dataCollection.push_back(point);
 			
-			if(hasML){
+			if(dataCollection.size() * sizeof(DataPoint) >= 1000000000){
+				std::string home = getenv("HOME");
+				
+				saveDataToBinary(home + "/calibration.bin");
+
+				exit(0);
+			}
+			
+			if(hasML && !data_collection_mode){
 				// Check if conditions are met to retrain
 				if(fabs(emfError) > error_trial) {
-					retrainModel();
+					//retrainModel();
 					
 					if(adaptive_calibration){
 						// Calibration upwards
-						if(isCalibratingUpwards && accumulatedEMF + emfError >= calibration_voltage){
-							desiredEMFPerSecond = desired_voltage_per_second;
+						if(isCalibratingUpwards && accumulatedEMF + emfError >= adaptive_calibration_voltage){
+							desiredEMFPerSecond = desired_voltage_increase_per_second;
 							isCalibratingUpwards = false;  // Switch calibration direction
 							adaptive = true;
 						}
 						// Calibration downwards
-						else if(!isCalibratingUpwards && accumulatedEMF + emfError <= desired_voltage_per_second){
-							desiredEMFPerSecond = calibration_voltage;
+						else if(!isCalibratingUpwards && accumulatedEMF + emfError <= desired_voltage_increase_per_second){
+							desiredEMFPerSecond = adaptive_calibration_voltage;
 							isCalibratingUpwards = true;   // Switch calibration direction
 							adaptive = true;
 						}
@@ -830,32 +864,178 @@ private:
 			}
 		}
 
-		
 		this->current = currentAdjustment;
-		this->current = std::clamp(this->current, 0.0f, maxCurrent);
 	}
 
 public:
 	float lastAccumulatedEMF = 0.0f;
+	float lastBaseAccumulatedEMF = 0.0f;
+	float lastRecycledEMF = 0.0f;
 	
 	void update(){
 		for(auto coil : coils){
 			coil->updatePositions();
 		}
 	}
-	
+
+	class VoltageController {
+	private:
+		class MovingAverageFilter {
+		private:
+			std::vector<float> buffer;
+			size_t windowSize;
+			
+		public:
+			MovingAverageFilter(size_t size) : windowSize(size) {}
+			
+			float filter(float inputValue) {
+				buffer.push_back(inputValue);
+				if (buffer.size() > windowSize) {
+					buffer.erase(buffer.begin());
+				}
+				
+				float sum = 0.0f;
+				for (const float& value : buffer) {
+					sum += value;
+				}
+				return sum / buffer.size();
+			}
+		};
+		
+		class Capacitor {
+		private:
+			float voltage; // Current voltage across the capacitor
+			float capacity; // Maximum capacity of the capacitor
+			
+		public:
+			Capacitor(float initialCapacity) : voltage(0.0f), capacity(initialCapacity) {}
+			
+			// Discharge the capacitor by a given amount
+			void discharge(float amount) {
+				voltage -= amount;
+				if (voltage < 0.0f) {
+					voltage = 0.0f;
+				}
+			}
+			
+			// Charge the capacitor by a given amount, up to its capacity
+			void charge(float amount) {
+				voltage += amount;
+				if (voltage > capacity) {
+					voltage = capacity;
+				}
+			}
+			
+			float getVoltage() const {
+				return voltage;
+			}
+
+			float getCapacity() const {
+				return capacity;
+			}
+		};
+		
+		MovingAverageFilter filter;
+		Capacitor capacitor;
+		float targetVoltage;
+		float accumulatedRemainder;
+		bool recycle;
+		
+	public:
+		VoltageController(size_t size, float target, float capacitorCapacity, bool recycleVoltage)
+		: filter(size), capacitor(capacitorCapacity), targetVoltage(target), accumulatedRemainder(0.0f), onCapacitorCharged(nullptr), recycle(recycleVoltage) {}
+
+		float controlVoltage(float inputValue) {
+			// Calculate the remainder from the previous step
+			if (inputValue <= targetVoltage) {
+				return inputValue;
+			}
+			
+			// Adjust the voltage to be no more than targetVoltage
+			if(recycle){
+				float adjustedValue = inputValue;
+				if (adjustedValue > targetVoltage) {
+					chargeCapacitor(adjustedValue - targetVoltage);
+					adjustedValue = targetVoltage;
+				}
+				
+				// Apply filtering
+				float filteredValue = filter.filter(adjustedValue);
+				
+				onVoltageFiltered();
+				
+				return filteredValue;
+
+			} else {
+				float adjustedValue = inputValue;
+				if (adjustedValue > targetVoltage) {
+					adjustedValue = targetVoltage;
+				}
+				
+				// Apply filtering
+				float filteredValue = filter.filter(adjustedValue);
+				
+				return filteredValue;
+
+			}
+		}
+		
+		void onVoltageFiltered(){
+			if (capacitor.getVoltage() >= capacitor.getCapacity()) {
+				dischargeCapacitor();
+			}
+		}
+		
+		// Charge the capacitor by a given amount and execute the onCapacitorCharged callback
+		void chargeCapacitor(float amount) {
+			capacitor.charge(amount);
+		}
+		
+		// Discharge the capacitor completely and execute the onCapacitorCharged callback
+		void dischargeCapacitor() {
+			float currentVoltage = capacitor.getVoltage();
+			capacitor.discharge(currentVoltage);
+			if (onCapacitorCharged) {
+				onCapacitorCharged(currentVoltage);
+			}
+		}
+		
+		// Get the current voltage of the capacitor
+		float getCapacitorVoltage() const {
+			return capacitor.getVoltage();
+		}
+		
+		// Set the callback for when the capacitor is fully charged
+		void setOnCapacitorCharged(std::function<void(float)> callback) {
+			onCapacitorCharged = callback;
+		}
+
+	private:
+		std::function<void(float)> onCapacitorCharged;
+	};
+
+	VoltageController filterBase = VoltageController(4, desired_base_voltage, desired_base_voltage, false);
+	VoltageController filterIncrease = VoltageController(4, desired_voltage_increase_per_second, desired_voltage_increase_per_second, true);
+
 	void update(float measuredEMF, float delta) {
 		accumulatedEMF += fabs(measuredEMF);
+		if(!calibrating() && !adapting()){
 
+			guiAccumulatedEMF += fabs(measuredEMF);
+			
+		}
+	
 		// Get current time in seconds since epoch
 		auto now = std::chrono::system_clock::now();
 		auto epochTime = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 		
-		previousTime = nowTime;
 		
-		nowTime = epochTime;
+		if(accumulationTime == 0){
+			previousTime = nowTime;
+		}
 
-		accumulationTime += nowTime - previousTime;
+		accumulationTime += delta;
+		guiAccumulationTime += delta;
 //
 //		if(accumulationTime >= global_timestep * calibration_time / global_timestep){
 //			adjustCurrentBasedOn(delta);
@@ -863,13 +1043,40 @@ public:
 //			accumulationTime = 0.0f;
 //		}
 		
-		if(accumulatedEMF >= desiredEMFPerSecond || ((accumulationTime >= global_timestep * calibration_time / global_timestep) && calibrating())){
-			adjustCurrentBasedOn(delta);
+		baseAccumulatedEMF = filterBase.controlVoltage(accumulatedEMF);
+
+		if(accumulatedEMF >= desiredEMFPerSecond || ((accumulationTime >= calibration_time) && calibrating())){
 			
-			lastAccumulatedEMF = accumulatedEMF;
-			accumulatedEMF = 0.0f;
+			nowTime = epochTime;
+
+			adjustCurrentBasedOn(1000);
+			
 			accumulationTime = 0.0f;
+						
+			if(!calibrating() && !adapting()){
+				accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
+			} else {
+				accumulatedEMF = 0;
+			}
+
 		}
+		
+		if(!calibrating() && !adapting()){
+			guiBaseAccumulatedEMF = baseAccumulatedEMF;
+			guiAccumulatedEMF = accumulatedEMF;
+			
+			if(guiAccumulatedEMF >= desiredEMFPerSecond){
+				
+				guiAccumulationTime = 0;
+				lastBaseAccumulatedEMF = guiBaseAccumulatedEMF;
+				lastAccumulatedEMF = guiAccumulatedEMF;
+				lastRecycledEMF = recycledEMF;
+				
+				guiAccumulatedEMF = 0;
+			}
+
+		}
+
 	}
 };
 
@@ -1483,60 +1690,48 @@ public:
 		return -coil.turns * (deltaPhi / delta);
 	}
 	
-	void update(float dt) override {
+	void update(float) override {
 		//global_delta = dt;
 		
-		middleMagnetSystem->update();
-		innerMagnetSystem->update();
-		outerCoilSystem->update();
-		alternator.update();
-		
-		auto ironBall = dynamic_cast<MagneticBall*>(pinball);
-		
-		applyMagneticImpulse(global_delta);
-		
-		// Compute flux for all coils
-		float totalEMF = 0.0f;
-		auto& outerEntities = middleMagnetSystem->getAttachedEntities();
-		auto& innerEntities = innerMagnetSystem->getAttachedEntities();
+		//desired_voltage_per_second = desired_voltage * dt;
 
-		auto& coils = alternator.getAttachedEntities();
-
-		for (auto& coil : coils) {
-			// Reset the coil's flux before summing from all entities
-			coil.previousFlux = coil.flux;
-			coil.flux = 0.0f;
+		for(int i = 0; i<cycles_per_collection; ++i){
 			
-			for (auto& entity : outerEntities) {
-				// Compute flux for the current coil based on each entity's position
-				calculateFlux(coil, entity.position);
+			middleMagnetSystem->update();
+			innerMagnetSystem->update();
+			outerCoilSystem->update();
+			alternator.update();
+			
+			auto ironBall = dynamic_cast<MagneticBall*>(pinball);
+			
+			applyMagneticImpulse(global_delta);
+			
+			// Compute flux for all coils
+			float totalEMF = 0.0f;
+			auto& outerEntities = middleMagnetSystem->getAttachedEntities();
+			auto& innerEntities = innerMagnetSystem->getAttachedEntities();
+			
+			auto& coils = alternator.getAttachedEntities();
+			
+			for (auto& coil : coils) {
+				// Reset the coil's flux before summing from all entities
+				coil.previousFlux = coil.flux;
+				coil.flux = 0.0f;
+				
+				for (auto& entity : outerEntities) {
+					// Compute flux for the current coil based on each entity's position
+					calculateFlux(coil, entity.position);
+				}
+				
+				// Compute the EMF for the coil after accounting for all entities
+				totalEMF += calculateCoilEMF(coil, global_delta);
 			}
+			// Compute total induced EMF in the alternator
+			alternator.emf = totalEMF;
 			
-			// Compute the EMF for the coil after accounting for all entities
-			totalEMF += calculateCoilEMF(coil, global_delta);
+			
+			outerCoilSystem->update(alternator.emf, global_delta);
 		}
-//
-//
-//		for (auto& coil : coils) {
-//			// Reset the coil's flux before summing from all entities
-//			coil.previousFlux = coil.flux;
-//			coil.flux = 0.0f;
-//
-//			for (auto& entity : innerEntities) {
-//				// Compute flux for the current coil based on each entity's position
-//				calculateFlux(coil, entity.position);
-//			}
-//
-//			// Compute the EMF for the coil after accounting for all entities
-//			totalEMF += calculateCoilEMF(coil, delta);
-//		}
-
-
-		// Compute total induced EMF in the alternator
-		alternator.emf = totalEMF;
-			
-
-		outerCoilSystem->update(alternator.emf, global_delta);
 
 	}
 	const float EARTH_MAGNETIC_FIELD_STRENGTH = 50e-6; // 50 microteslas as an average value
@@ -1577,7 +1772,8 @@ public:
 		float oldAngularSpeed = node->getAngularSpeed();
 		float newAngularSpeed = oldAngularSpeed + angularAcceleration * delta;
 				
-		newAngularSpeed *= 0.1f;
+		float damping = 0.1f;
+		newAngularSpeed *= damping;
 		node->setAngularSpeed(newAngularSpeed);
 		
 		// 5. Calculate the rotation angle based on the updated angular speed
@@ -1683,9 +1879,9 @@ public:
 	std::unique_ptr<CoilSystem> outerCoilSystem =
 	std::make_unique<CoilSystem>(1.5f,
 								 1.0f, // resistance
-								 1.5, // current
-								 144); // turns
-	AlternatorSystem alternator = AlternatorSystem(0.01f, 144);
+								 1.0f, // current
+								 480); // turns
+	AlternatorSystem alternator = AlternatorSystem(0.02f, 144);
 	
 	std::unique_ptr<MagnetSystem> middleMagnetSystem = std::make_unique<MagnetSystem>();
 	
@@ -1894,10 +2090,14 @@ void HelloWorld::onImGuiDraw()
 	static float guiCounter = 0;
 	static float lastEMF = -1;
 	static float lastMeasure = 0;
+	static float guiBaseEMF = 0;
 	static float guiEMF = 0;
 	static float guiMeasure = 0;
 	static float peakEMF = 0;
+	static float baseAccumulatedEMF = 0;
 	static float accumulatedEMF = 0;
+	static float recycledEMF = 0;
+	static float guiRecycledEMF = 0;
 
 	deltaCounter += deltaTime;
 	guiCounter += deltaTime;
@@ -1905,11 +2105,15 @@ void HelloWorld::onImGuiDraw()
 	float inducedEMF = abs(magnos->getAlternatorSystem().emf);
 	
 	if(!magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting()){
+		baseAccumulatedEMF = magnos->getCoilSystem().lastBaseAccumulatedEMF;
 		accumulatedEMF = magnos->getCoilSystem().lastAccumulatedEMF;
+		recycledEMF = magnos->getCoilSystem().lastRecycledEMF;
 	}
 	
 	if(guiCounter >= 1){
+		guiBaseEMF = baseAccumulatedEMF;
 		guiEMF = accumulatedEMF;
+		guiRecycledEMF = recycledEMF;
 		accumulatedEMF = 0;
 		guiCounter = 0;
 	}
@@ -1933,6 +2137,9 @@ void HelloWorld::onImGuiDraw()
 		guiMeasure = 0;
 		peakEMF = 0;
 		accumulatedEMF = 0;
+		recycledEMF = 0;
+		guiRecycledEMF = 0;
+		baseAccumulatedEMF = 0;
 	}
 	
 	if(magnos->getCoilSystem().calibrating()){
@@ -1944,7 +2151,10 @@ void HelloWorld::onImGuiDraw()
 	}
 	ImGui::Text("Input Voltage=%.4f", 1.5f);
 	ImGui::Text("Peak Voltage=%.4f", peakEMF);
-	ImGui::Text("Measured Voltage Per Second=%.4f", guiEMF);
+	ImGui::Text("Target Voltage=%.4f", desired_voltage_increase_per_second);
+	ImGui::Text("Base Voltage=%.4f", guiBaseEMF);
+	ImGui::Text("Base + Gain Voltage=%.4f", guiEMF);
+	ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF);
 
 	//ImGui::Text("Induced Current=%.4f", inducedCurrent);
 	ImGui::End();

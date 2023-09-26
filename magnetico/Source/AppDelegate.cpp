@@ -66,7 +66,7 @@ bool AppDelegate::applicationDidFinishLaunching()
 	
     // initialize director
 	Configuration::getInstance()->setValue("axmol.gl.projection", Value("3d"));
-	Configuration::getInstance()->setValue("axmol.fps", Value(240.0f * 10));
+	Configuration::getInstance()->setValue("axmol.fps", Value(60));
     auto director = Director::getInstance();
 	director->setDefaultValues();
 	
@@ -84,7 +84,7 @@ bool AppDelegate::applicationDidFinishLaunching()
     }
 
     // turn on display FPS
-    director->setStatsDisplay(true);
+    director->setStatsDisplay(false);
 
     // set FPS. the default value is 1.0/60 if you don't call this
     //director->setAnimationInterval(1.0f / 60.0f);
