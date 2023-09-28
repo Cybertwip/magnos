@@ -67,7 +67,7 @@ private:
 	bool calibration = true;
 	bool adaptive = adaptive_calibration;
 
-	float desiredEMFPerSecond = desired_voltage_increase_per_second;
+	float desiredEMFPerSecond = Settings::desired_voltage_increase_per_second;
 	const int numberOfCoils = 1;
 	const float totalResistance = coilResistance * numberOfCoils;
 	float accumulatedEMF = 0.0f;
@@ -89,7 +89,7 @@ private:
 	bool isCalibratingUpwards = true; // A flag to determine the calibration direction. Initialize as true if you start by calibrating upwards.
 
 	VoltageController filterBase = VoltageController(4, desired_base_voltage, desired_base_voltage, false);
-	VoltageController filterIncrease = VoltageController(4, desired_voltage_increase_per_second, desired_voltage_increase_per_second, true);
+	VoltageController filterIncrease = VoltageController(4, Settings::desired_voltage_increase_per_second, Settings::desired_voltage_increase_per_second, true);
 
 public:
 	float lastAccumulatedEMF = 0.0f;

@@ -29,6 +29,7 @@
 #include "ui/axmol-ui.h"
 
 #include "ImGui/ImGuiPresenter.h"
+#include "imgui/imgui_internal.h"
 
 #include <fstream>
 
@@ -191,7 +192,17 @@ void HelloWorld::onImGuiDraw()
 	}
 	ImGui::Text("Input Voltage=%.4f", 1.5f);
 	ImGui::Text("Peak Voltage=%.4f", peakEMF);
-	ImGui::Text("Target Voltage=%.4f", desired_voltage_increase_per_second);
+
+	ImGui::Text("Target Voltage:");
+
+	if((magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting())){
+		ImGui::BeginDisabled();
+		ImGui::SliderInt("Volts", &Settings::desired_voltage_increase_per_second, 5.0f, 24.0f);
+		ImGui::EndDisabled();
+	} else {
+		ImGui::SliderInt("Volts", &Settings::desired_voltage_increase_per_second, 5.0f, 24.0f);
+	}
+
 	ImGui::Text("Base Voltage=%.4f", guiBaseEMF);
 	ImGui::Text("Base + Gain Voltage=%.4f", guiEMF);
 	ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF);

@@ -225,9 +225,9 @@ bool CoilSystem::adapting() {
 }
 
 void CoilSystem::adjustCurrentBasedOn(float dt) {
-    desiredEMFPerSecond = desired_voltage_increase_per_second;
+    desiredEMFPerSecond = Settings::desired_voltage_increase_per_second;
     // Calculate desired current based on EMF error and resistance
-    float emfError = desired_voltage_increase_per_second - accumulatedEMF;
+    float emfError = Settings::desired_voltage_increase_per_second - accumulatedEMF;
     
     // Get current time in seconds since epoch
     auto now = std::chrono::system_clock::now();
@@ -265,7 +265,7 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
             if(adaptive_calibration){
                 desiredEMFPerSecond = adaptive_calibration_voltage;
             } else {
-                desiredEMFPerSecond = desired_voltage_increase_per_second;
+                desiredEMFPerSecond = Settings::desired_voltage_increase_per_second;
             }
         }
         
@@ -297,12 +297,12 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
                 if(adaptive_calibration){
                     // Calibration upwards
                     if(isCalibratingUpwards && accumulatedEMF + emfError >= adaptive_calibration_voltage){
-                        desiredEMFPerSecond = desired_voltage_increase_per_second;
+                        desiredEMFPerSecond = Settings::desired_voltage_increase_per_second;
                         isCalibratingUpwards = false;  // Switch calibration direction
                         adaptive = true;
                     }
                     // Calibration downwards
-                    else if(!isCalibratingUpwards && accumulatedEMF + emfError <= desired_voltage_increase_per_second){
+                    else if(!isCalibratingUpwards && accumulatedEMF + emfError <= Settings::desired_voltage_increase_per_second){
                         desiredEMFPerSecond = adaptive_calibration_voltage;
                         isCalibratingUpwards = true;   // Switch calibration direction
                         adaptive = true;
@@ -375,7 +375,13 @@ void CoilSystem::update(float measuredEMF, float delta) {
             accumulatedEMF = 0;
         }
 
-    }
+    } else if (accumulatedEMF < desiredEMFPerSecond && accumulationTime >= 1.0f){
+		if(!calibrating() && !adapting()){
+			adjustCurrentBasedOn(global_delta * calibration_time);
+			accumulationTime = 0.0f;
+			accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
+		}
+	}
     
     if(!calibrating() && !adapting()){
         guiBaseAccumulatedEMF = baseAccumulatedEMF;

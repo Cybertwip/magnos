@@ -12,7 +12,6 @@ const int data_collection_mode_cycles = 2400;
 int data_collection_bin_size = 1024 * 1000 * 24; // 5 mb
 
 const float desired_base_voltage = 1.5;
-float desired_voltage_increase_per_second = 24;
 const float adaptive_calibration_voltage = 3;
 }
 
@@ -20,4 +19,5 @@ class Settings {
 public:
 	static bool data_collection_mode;
 	static int cycles_per_collection;
+	static int desired_voltage_increase_per_second;
 };
