@@ -27,8 +27,6 @@ public:
 	
 	~CoilSystem();
 
-	// Function to retrain model
-	void retrainModel();
 	void saveDataToBinary(const std::string& filename);
 	void savePIDToBinary(const std::string& filename);
 	bool loadDataAndTrainModel(const std::string& filename);

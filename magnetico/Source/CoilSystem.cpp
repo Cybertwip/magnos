@@ -17,8 +17,12 @@ CoilSystem::CoilSystem(float voltage, float resistance, float current, float coi
     hasML = loadDataAndTrainModel(home + "/calibration.bin");
     
     if(!hasML){
-        saveDataToBinary(home + "/calibration.bin");
-    }
+		Settings::data_collection_mode = true;
+		Settings::cycles_per_collection = data_collection_mode_cycles;
+    } else {
+		Settings::data_collection_mode = false;
+		Settings::cycles_per_collection = 1;
+	}
 
     loadPID(home + "/pid.bin");
 
@@ -36,20 +40,7 @@ CoilSystem::CoilSystem(float voltage, float resistance, float current, float coi
 
 CoilSystem::~CoilSystem(){
     std::string home = getenv("HOME");
-
-    saveDataToBinary(home + "/calibration.bin");
     savePIDToBinary(home + "/pid.bin");
-}
-
-// Function to retrain model
-void CoilSystem::retrainModel() {
-    // Load new data
-    // This could be from a file, a stream, etc.
-    std::string home = getenv("HOME");
-    
-    saveDataToBinary(home + "/calibration.bin");
-
-    hasML = loadDataAndTrainModel(home + "/calibration.bin");
 }
 
 void CoilSystem::saveDataToBinary(const std::string& filename) {
@@ -253,7 +244,7 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
     
     static long long simulatedEpoch = 0;
     
-    simulatedEpoch += dt;
+    simulatedEpoch += 1000;
     
     if(pidCurrent.calibrate(desiredCurrent, dt, simulatedEpoch)){
                                 
@@ -279,23 +270,26 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
         }
         
         
-        DataPoint point;
-        point.emfError = emfError;
-        point.desiredCurrent = desiredCurrent;
-        point.currentAdjustment = currentAdjustment;
-        point.finalCurrent = this->current;
         
-        dataCollection.push_back(point);
-        
-        if(dataCollection.size() * sizeof(DataPoint) >= 16000 && data_collection_mode){
-            std::string home = getenv("HOME");
-            
-            saveDataToBinary(home + "/calibration.bin");
+        if(Settings::data_collection_mode && !calibrating() && !adapting()){
+			DataPoint point;
+			point.emfError = emfError;
+			point.desiredCurrent = desiredCurrent;
+			point.currentAdjustment = currentAdjustment;
+			point.finalCurrent = this->current;
+			
+			dataCollection.push_back(point);
 
-            exit(0);
+			if(dataCollection.size() * sizeof(DataPoint) >= data_collection_bin_size){
+				std::string home = getenv("HOME");
+				
+				saveDataToBinary(home + "/calibration.bin");
+				
+				exit(0);
+			}
         }
         
-        if(hasML && !data_collection_mode){
+        if(hasML && !Settings::data_collection_mode){
             // Check if conditions are met to retrain
             if(fabs(emfError) > error_trial) {
                 //retrainModel();
@@ -366,12 +360,12 @@ void CoilSystem::update(float measuredEMF, float delta) {
     guiAccumulationTime += delta;
 
     baseAccumulatedEMF = filterBase.controlVoltage(accumulatedEMF);
-
-    if(accumulatedEMF >= desiredEMFPerSecond || ((accumulationTime >= calibration_time) && calibrating())){
+	
+    if(accumulatedEMF >= desiredEMFPerSecond || ((accumulationTime >= 1.0f) && calibrating())){
         
         nowTime = epochTime;
 
-        adjustCurrentBasedOn(16);
+        adjustCurrentBasedOn(global_delta * calibration_time);
         
         accumulationTime = 0.0f;
                     
@@ -395,6 +389,8 @@ void CoilSystem::update(float measuredEMF, float delta) {
             lastRecycledEMF = recycledEMF;
             
             guiAccumulatedEMF = 0;
+			accumulatedEMF = 0;
+
             
             accumulatedEMF = 0;
         }

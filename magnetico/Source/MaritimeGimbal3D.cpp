@@ -341,8 +341,9 @@ void MaritimeGimbal3D::update(float) {
 	//global_delta = dt;
 	
 	//desired_voltage_per_second = desired_voltage * dt;
+	int updates = 0;
 	
-	for(int i = 0; i<cycles_per_collection; ++i){
+	do{
 		
 		middleMagnetSystem->update();
 		innerMagnetSystem->update();
@@ -378,7 +379,9 @@ void MaritimeGimbal3D::update(float) {
 		
 		
 		outerCoilSystem->update(alternator.emf, global_delta);
-	}
+		
+		updates++;
+	} while(updates < Settings::cycles_per_collection);
 	
 }
 float MaritimeGimbal3D::calculateEffectiveArea(const ax::Quaternion& rotation) {

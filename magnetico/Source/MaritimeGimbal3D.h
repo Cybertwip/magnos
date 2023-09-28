@@ -72,8 +72,8 @@ public:
 	std::make_unique<CoilSystem>(1.5f,
 								 1.0f, // resistance
 								 1.0f, // current
-								 144); // turns
-	AlternatorSystem alternator = AlternatorSystem(0.02f, 144);
+								 360); // turns
+	AlternatorSystem alternator = AlternatorSystem(0.02f, 360);
 	
 	std::unique_ptr<MagnetSystem> middleMagnetSystem = std::make_unique<MagnetSystem>();
 	
