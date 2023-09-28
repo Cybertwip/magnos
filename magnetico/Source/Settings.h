@@ -3,7 +3,7 @@
 namespace{
 float error_trial = 0.0025f;
 const float global_timestep = 60.0f;
-const int calibration_steps = 8;
+const int calibration_steps = 2;
 const int calibration_time = 1000;
 float global_delta = 1.0f / global_timestep;
 const bool adaptive_calibration = false;

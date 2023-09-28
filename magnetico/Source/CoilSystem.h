@@ -26,7 +26,8 @@ public:
 	CoilSystem(float voltage, float resistance, float current, float coilTurns);
 	
 	~CoilSystem();
-
+	
+	void recalibrate();
 	void saveDataToBinary(const std::string& filename);
 	void savePIDToBinary(const std::string& filename);
 	bool loadDataAndTrainModel(const std::string& filename);

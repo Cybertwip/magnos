@@ -43,6 +43,11 @@ CoilSystem::~CoilSystem(){
     savePIDToBinary(home + "/pid.bin");
 }
 
+void CoilSystem::recalibrate(){
+	pidCurrent.startAutoTuning(maxCurrent, 0);
+	calibration = true;
+}
+
 void CoilSystem::saveDataToBinary(const std::string& filename) {
     std::ofstream outFile(filename, std::ios::binary);
     
