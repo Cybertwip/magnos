@@ -39,7 +39,6 @@ void CoilSystem::recalibrate(){
 	pidCurrent.startAutoTuning(maxCurrent, 0);
 	calibration = true;
 	
-	
 	resetAccumulators();
 }
 
