@@ -210,7 +210,7 @@ bool CoilSystem::calibrating() {
 }
 
 bool CoilSystem::adapting() {
-    return adaptive;
+    return false;
 }
 
 void CoilSystem::adjustCurrentBasedOn(float dt) {
@@ -242,12 +242,8 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
         if(calibration){
             calibration = false;
             
-            if(adaptive_calibration){
-                desiredEMFPerSecond = adaptive_calibration_voltage;
-            } else {
-                desiredEMFPerSecond = Settings::desired_target_voltage;
-            }
-			
+			desiredEMFPerSecond = Settings::desired_target_voltage;
+
 			Settings::data_collection_mode = false;
 			Settings::cycles_per_collection = 1;
 
@@ -294,6 +290,9 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 				//Settings::schedule_recalibration_for_collection = true;
 				
             }
+			
+			desiredCurrent = std::clamp(desiredCurrent, 0.0f, maxCurrent);
+
             // Create a column vector for input features
             arma::mat input(3, 1);
             input(0, 0) = emfError;            // This should be your new emfError value

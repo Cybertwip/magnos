@@ -66,7 +66,6 @@ private:
 
 
 	bool calibration = true;
-	bool adaptive = adaptive_calibration;
 
 	float desiredEMFPerSecond = Settings::desired_target_voltage;
 	const int numberOfCoils = 1;
