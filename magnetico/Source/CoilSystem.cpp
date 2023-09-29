@@ -362,13 +362,15 @@ void CoilSystem::update(float measuredEMF, float delta) {
                             
     }
     
-	if(accumulationTime >= global_delta * 60){
+
+	if(accumulationTime == global_delta * 60){
 		accumulationTime = 0.0f;
 				
-		if(accumulatedEMF >= desiredEMFPerSecond && !calibrating()){
+		
+		if(!calibrating()){
 			accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
 		}
-		
+
 		lastBaseAccumulatedEMF = baseAccumulatedEMF;
 		lastAccumulatedEMF = accumulatedEMF;
 		lastRecycledEMF = recycledEMF;
