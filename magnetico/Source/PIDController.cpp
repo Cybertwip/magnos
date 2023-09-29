@@ -9,9 +9,14 @@ PIDController::PIDController(float kp, float ki, float kd)
 
 void PIDController::startAutoTuning(float relayHigh, float relayLow) {
 	autoTuning = true;
+	relayState = false;
 	relayState = !relayState;
 	this->relayHigh = relayHigh;
 	this->relayLow = relayLow;
+	oscillationsCount = 0;
+	period = 0;
+	prevSwitchTime = 0;
+	prev_error = 0;
 }
 
 bool PIDController::calibrating() {
@@ -38,22 +43,12 @@ bool PIDController::calibrate(float error, float dt, long long currentTime){
 			
 			if (oscillationsCount >= calibration_steps) {  // consider 5 oscillations for averaging
 				autoTuning = false;
-				if(oscillationsCount == 1){
-					period = dt;
-				}
-				period /= (oscillationsCount == 1 ? 2 - 1 : oscillationsCount - 1);  // Average period
+				period /= oscillationsCount - 1;  // Average period
 				// Ziegler-Nichols method
 				kp = 0.6 * relayHigh / period;
 				ki = 2 * kp / period;
 				kd = kp * period / 8;
 			}
-		} else if (error == 0){
-			autoTuning = false;
-			period /= (oscillationsCount - 1);  // Average period
-			// Ziegler-Nichols method
-			kp = 0.6 * relayHigh / period;
-			ki = 2 * kp / period;
-			kd = kp * period / 8;
 		}
 	}
 	
@@ -64,21 +59,21 @@ bool PIDController::calibrate(float error, float dt, long long currentTime){
 }
 
 float PIDController::compute(float error, float dt) {
-	
-// Proportional term
-float p = kp * error;
 
-// Integral term with consideration of dt
-integral += error * dt;
+	// Proportional term
+	float p = kp * error;
 
-// Derivative term and consider dt
-float d = kd * (error - prev_error) / dt;
+	// Integral term with consideration of dt
+	integral += error * dt;
 
-// Compute the output
-float output = p + ki * integral + d;
+	// Derivative term and consider dt
+	float d = kd * (error - prev_error) / dt;
 
-// Save the current error for the next iteration
-prev_error = error;
+	// Compute the output
+	float output = p + ki * integral + d;
 
-return output;
+	// Save the current error for the next iteration
+	prev_error = error;
+
+	return output;
 }

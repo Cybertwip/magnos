@@ -160,7 +160,7 @@ void HelloWorld::onImGuiDraw()
 	}
 	
 	if (guiEMF > peakEMF){
-		if(!magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting()){
+		if((!magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting()) && !Settings::data_collection_mode){
 			peakEMF = guiEMF;
 		} else {
 			guiEMF = 0;
@@ -169,7 +169,7 @@ void HelloWorld::onImGuiDraw()
 		}
 	}
 	
-	if(magnos->getCoilSystem().calibrating() && !magnos->getCoilSystem().adapting()){
+	if((magnos->getCoilSystem().calibrating() && !magnos->getCoilSystem().adapting()) || Settings::data_collection_mode){
 		deltaCounter = 0;
 		guiCounter = 0;
 		lastEMF = -1;
@@ -188,7 +188,11 @@ void HelloWorld::onImGuiDraw()
 	} else if(magnos->getCoilSystem().adapting()){
 		ImGui::Text("Status=%s", "Adaptive Calibration");
 	} else {
-		ImGui::Text("Status=%s", "Running");
+		if(Settings::data_collection_mode){
+			ImGui::Text("Status=%s", "Collecting Data");
+		} else {
+			ImGui::Text("Status=%s", "Running");
+		}
 	}
 	ImGui::Text("Input Voltage=%.4f", 1.5f);
 	ImGui::Text("Peak Voltage=%.4f", peakEMF);
@@ -198,12 +202,12 @@ void HelloWorld::onImGuiDraw()
 	static int last_voltage_increase = Settings::desired_voltage_increase_per_second;
 	
 	
-	if((magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting())){
+	if((magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting() || Settings::data_collection_mode)){
 		ImGui::BeginDisabled();
-		ImGui::SliderInt("Volts", &Settings::desired_voltage_increase_per_second, 5.0f, 24.0f);
+		ImGui::SliderInt("Volts", &Settings::desired_voltage_increase_per_second, 3.0f, 24.0f);
 		ImGui::EndDisabled();
 	} else {
-		ImGui::SliderInt("Volts", &Settings::desired_voltage_increase_per_second, 5.0f, 24.0f);
+		ImGui::SliderInt("Volts", &Settings::desired_voltage_increase_per_second, 3.0f, 24.0f);
 	}
 	
 	if(last_voltage_increase != Settings::desired_voltage_increase_per_second){
@@ -216,6 +220,27 @@ void HelloWorld::onImGuiDraw()
 	ImGui::Text("Base Voltage=%.4f", guiBaseEMF);
 	ImGui::Text("Base + Gain Voltage=%.4f", guiEMF);
 	ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF);
+	
+	if(Settings::data_collection_mode || (magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting())){
+		ImGui::BeginDisabled();
+		ImGui::Button("Collect Data");
+		ImGui::EndDisabled();
+	} else {
+		bool collectDataButtonPressed = false;
+		
+		if (ImGui::Button("Collect Data")) {
+			collectDataButtonPressed = true;
+		}
+		
+		if (collectDataButtonPressed) {
+			collectDataButtonPressed = false;
+			magnos->getCoilSystem().recalibrate();
+
+			Settings::schedule_data_collection_mode = true;
+			
+		}
+	}
+
 
 	//ImGui::Text("Induced Current=%.4f", inducedCurrent);
 	ImGui::End();

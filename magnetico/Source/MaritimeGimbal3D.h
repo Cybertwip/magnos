@@ -73,6 +73,7 @@ public:
 								 1.0f, // resistance
 								 1.0f, // current
 								 360); // turns
+	
 	AlternatorSystem alternator = AlternatorSystem(0.025f, 420);
 	
 	std::unique_ptr<MagnetSystem> middleMagnetSystem = std::make_unique<MagnetSystem>();

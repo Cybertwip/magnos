@@ -352,7 +352,7 @@ void MaritimeGimbal3D::update(float) {
 		
 		auto ironBall = dynamic_cast<MagneticBall*>(pinball);
 		
-		applyMagneticImpulse(global_delta);
+		applyMagneticImpulse(fixed_delta);
 		
 		// Compute flux for all coils
 		float totalEMF = 0.0f;
@@ -372,7 +372,7 @@ void MaritimeGimbal3D::update(float) {
 			}
 			
 			// Compute the EMF for the coil after accounting for all entities
-			totalEMF += calculateCoilEMF(coil, global_delta);
+			totalEMF += calculateCoilEMF(coil, fixed_delta);
 		}
 		// Compute total induced EMF in the alternator
 		alternator.emf = totalEMF;
@@ -471,10 +471,10 @@ void MaritimeGimbal3D::applyMagneticImpulse(float delta) {
 	float r = 1; // This value should be set based on your system
 	
 	ax::Vec3 torqueInner = r * ironBallForces;
-	applyTorqueAndRotate(innerNode, torqueInner, global_delta, ax::Vec3(1, 0, 0));
+	applyTorqueAndRotate(innerNode, torqueInner, fixed_delta, ax::Vec3(1, 0, 0));
 	
 	ax::Vec3 torqueMiddle = r * middleForces;
-	applyTorqueAndRotate(middleNode, torqueMiddle, global_delta, ax::Vec3(0, 1, 0));
+	applyTorqueAndRotate(middleNode, torqueMiddle, fixed_delta, ax::Vec3(0, 1, 0));
 }
 
 AlternatorSystem& MaritimeGimbal3D::getAlternatorSystem() { return alternator; }

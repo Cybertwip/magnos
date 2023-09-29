@@ -28,11 +28,10 @@ public:
 	~CoilSystem();
 	
 	void recalibrate();
+	void resetAccumulators();
 	void saveDataToBinary(const std::string& filename);
-	void savePIDToBinary(const std::string& filename);
 	bool loadDataAndTrainModel(const std::string& filename);
-	bool loadPID(const std::string& filename);
-	void setCurrentFromVoltage(float voltage);	
+	void setCurrentFromVoltage(float voltage);
 	ax::Vec3 computeMagneticField(AttachedEntity& coil, const ax::Vec3& point, MagnetPolarity polarity) const;
 	ax::Vec3 combineFieldsOrForces() override;
 
@@ -48,6 +47,7 @@ private:
 		float desiredCurrent;
 		float currentAdjustment;
 		float finalCurrent;
+		float deltaTime;
 	};
 	
 	struct PID {
@@ -82,9 +82,6 @@ private:
 	double setPoint = 3.0f; // Desired value
 	double processVariable = 0; // Current value
 	double controllerOutput = 0; // PID output
-	
-	long long previousTime = 0;
-	long long nowTime = 0;
 
 	PIDController pidCurrent = PIDController(1.0f, 0, 0);
 	bool isCalibratingUpwards = true; // A flag to determine the calibration direction. Initialize as true if you start by calibrating upwards.
