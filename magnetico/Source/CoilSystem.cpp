@@ -286,25 +286,10 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
         
         if(hasML && !Settings::data_collection_mode){
             // Check if conditions are met to retrain
-            if(fabs(emfError) > error_trial) {
-                //retrainModel();
+            if(fabs(emfError) > error_trial && !Settings::schedule_data_collection_mode) {
                 
-                if(adaptive_calibration){
-                    // Calibration upwards
-                    if(isCalibratingUpwards && accumulatedEMF + emfError >= adaptive_calibration_voltage){
-                        desiredEMFPerSecond = Settings::desired_target_voltage;
-                        isCalibratingUpwards = false;  // Switch calibration direction
-                        adaptive = true;
-                    }
-                    // Calibration downwards
-                    else if(!isCalibratingUpwards && accumulatedEMF + emfError <= Settings::desired_target_voltage){
-                        desiredEMFPerSecond = adaptive_calibration_voltage;
-                        isCalibratingUpwards = true;   // Switch calibration direction
-                        adaptive = true;
-                    }
-                }
-            } else {
-                adaptive = false;
+				//Settings::schedule_recalibration_for_collection = true;
+				
             }
             // Create a column vector for input features
             arma::mat input(3, 1);
@@ -318,10 +303,11 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
             // Now `output` contains the predicted finalCurrent value
             float predictedFinalCurrent = output(0, 0);
             
+			predictedFinalCurrent = std::clamp(predictedFinalCurrent, 0.0f, maxCurrent);
+
             this->current = predictedFinalCurrent;
-            currentAdjustment = this->current;
-
-
+			
+			currentAdjustment = this->current;
         }
 		
     }

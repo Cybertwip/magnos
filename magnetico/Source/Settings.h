@@ -1,7 +1,7 @@
 #pragma once
 
 namespace{
-float error_trial = 0.0025f;
+float error_trial = 0.25f;
 const int calibration_steps = 2;
 float global_delta = 16;
 float fixed_delta = 1.0f / 60.0f;
