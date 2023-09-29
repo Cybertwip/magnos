@@ -28,6 +28,7 @@
 
 #include "axmol.h"
 
+class Car;
 
 class HelloWorld : public ax::Scene
 {
@@ -72,6 +73,22 @@ private:
 	
 	std::string emf;
 	std::string current;
+	
+	Car* car;
+	
+	float sensitivity = 0.01f;
+	float cursorDeltaX = 0;
+	float cursorDeltaY = 0;
+
+	float cursorX = 0;
+	float cursorY = 0;
+	float prevCursorX = 0;
+	float prevCursorY = 0;
+
+	ax::Quaternion cameraRotation;
+	float horizontalAngle = 0.0f; // Initialize horizontal angle
+	float verticalAngle = 0.0f;   // Initialize vertical angle
+
 
 };
 

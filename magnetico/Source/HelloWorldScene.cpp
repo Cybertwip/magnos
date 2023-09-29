@@ -78,7 +78,7 @@ bool HelloWorld::init()
 	this->_defaultCamera->setPosition3D(Vec3(1.5f, 1.5f, -1.5f));
 	this->_defaultCamera->setRotation3D(Vec3(0, 0, 0));
 	
-	auto car = Car::create();
+	car = Car::create();
 	this->addChild(car);
 
 	gimbals = car->getGimbals();
@@ -346,46 +346,16 @@ void HelloWorld::onMouseUp(Event* event)
 void HelloWorld::onMouseMove(Event* event)
 {
 	EventMouse* e = static_cast<EventMouse*>(event);
-	
-	float sensitivity = 0.005f;
-
 	// Get the cursor delta since the last frame
-	float cursorDeltaX = e->getCursorX();
-	float cursorDeltaY = e->getCursorY();
 	
-	// Calculate new camera rotation angles based on normalized cursor deltas
-	float horizontalAngle = _defaultCamera->getRotation3D().y + cursorDeltaX;
-	float verticalAngle = _defaultCamera->getRotation3D().x - cursorDeltaY;
-
+	prevCursorX = cursorX;
+	prevCursorY = cursorY;
 	
-	// Define the vertical angle constraints (adjust as needed)
-	float minVerticalAngle = AX_DEGREES_TO_RADIANS(-15); // Minimum vertical angle (degrees)
-	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(60.0f);  // Maximum vertical angle (degrees)
+	cursorX = e->getDelta().x;
+	cursorY = e->getDelta().y;
 	
-	// Clamp the vertical angle within the specified range
-	
-	verticalAngle *= sensitivity;
-	horizontalAngle *= sensitivity;
-
-	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
-
-	// Create quaternions for camera rotation
-	Quaternion xRotation;
-	xRotation.set(Vec3(1.0f, 0.0f, 0.0f), verticalAngle);
-	Quaternion yRotation;
-	yRotation.set(Vec3(0.0f, 1.0f, 0.0f), horizontalAngle);
-	
-	// Combine rotations to get the final orientation
-	Quaternion newRotation = yRotation * xRotation;
-	
-	// Calculate the new camera position based on rotation angles
-	float distanceFromCenter = (_defaultCamera->getPosition3D() - Vec3(0, 0, 0)).length();
-	Vec3 newPosition = newRotation * Vec3(0, 0, -distanceFromCenter);
-	
-	// Set the camera's new position and look-at point
-	_defaultCamera->setPosition3D(newPosition);
-	_defaultCamera->lookAt(Vec3(0, 0, 0));
-
+	cursorDeltaX = cursorX - prevCursorX;
+	cursorDeltaY = cursorY - prevCursorY;
 }
 
 void HelloWorld::onMouseScroll(Event* event)
@@ -397,7 +367,7 @@ void HelloWorld::onMouseScroll(Event* event)
 void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 {
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
-		
+		car->accelerate(1);
 	}
 }
 
@@ -411,60 +381,41 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 
 void HelloWorld::update(float delta)
 {
-    switch (_gameState)
-    {
-    case ExampleGameState::init:
-    {
-        _gameState = ExampleGameState::update;
-        break;
-    }
+	car->updateMotion(delta);
+	
+	// Get the car's position
+	Vec3 carPosition = car->getPosition3D();
 
-    case ExampleGameState::update:
-    {
-        /////////////////////////////
-        // Add your codes below...like....
-        // 
-        // UpdateJoyStick();
-        // UpdatePlayer();
-        // UpdatePhysics();
-        // ...
-        break;
-    }
-
-    case ExampleGameState::pause:
-    {
-        /////////////////////////////
-        // Add your codes below...like....
-        //
-        // anyPauseStuff()
-
-        break;
-    }
-
-    case ExampleGameState::menu1:
-    {    /////////////////////////////
-        // Add your codes below...like....
-        // 
-        // UpdateMenu1();
-        break;
-    }
-
-    case ExampleGameState::menu2:
-    {    /////////////////////////////
-        // Add your codes below...like....
-        // 
-        // UpdateMenu2();
-        break;
-    }
-
-    case ExampleGameState::end:
-    {    /////////////////////////////
-        // Add your codes below...like....
-        // 
-        // CleanUpMyCrap();
-        break;
-    }
-
-    } //switch
+	// Calculate new camera rotation angles based on normalized cursor deltas
+	horizontalAngle += cursorDeltaX * sensitivity;
+	verticalAngle -= cursorDeltaY * sensitivity;
+	
+	// Define the vertical angle constraints (adjust as needed)
+	float minVerticalAngle = AX_DEGREES_TO_RADIANS(0); // Minimum vertical angle (degrees)
+	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(60.0f); // Maximum vertical angle (degrees)
+	
+	// Clamp the vertical angle within the specified range
+	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
+	
+	// Calculate the new camera position relative to the car
+	float distanceFromCar = 5.0f; // Adjust the distance as needed
+	float cameraHeight = 2.0f;   // Adjust the height as needed
+	
+	// Calculate the camera's offset from the car based on angles
+	float horizontalOffset = distanceFromCar * sinf(horizontalAngle);
+	float verticalOffset = distanceFromCar * cosf(horizontalAngle) * sinf(verticalAngle);
+	float depthOffset = distanceFromCar * cosf(horizontalAngle) * cosf(verticalAngle);
+	
+	Vec3 cameraOffset(horizontalOffset, cameraHeight + verticalOffset, depthOffset);
+	
+	// Calculate the new camera position
+	Vec3 newPosition = carPosition + cameraOffset;
+	
+	// Set the camera's new position and look-at point
+	_defaultCamera->setPosition3D(newPosition);
+	_defaultCamera->lookAt(carPosition);
+	
+	cursorDeltaX = 0;
+	cursorDeltaY = 0;
 }
 

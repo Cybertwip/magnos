@@ -1,22 +1,37 @@
 #pragma once
+#include "CustomNode.h"
+
 #include <axmol.h>
+
+#include <vector>
 
 class Car : public ax::Node {
 private:
 	ax::Node* carBody;
 	ax::Node* gearBox;
 	std::vector<ax::Node*> gimbals;
-	// Other member variables for acceleration, friction, etc.
+	CustomNode* frontLeftWheel;
+	CustomNode* frontRightWheel;
+	CustomNode* rearLeftWheel;
+	CustomNode* rearRightWheel;
 	
+
+	// Member variables for acceleration and friction
+	float acceleration;
+	float maxSpeed;
+	float friction;
+	
+
 public:
 	Car();
 	virtual ~Car();
 	
 	std::vector<ax::Node*> getGimbals() const;
 	
-	CREATE_FUNC(Car);
+	void accelerate(float value);
+	void applyFriction();
+	void updateMotion(float deltaTime);
 
-	
-	// Define member functions for acceleration, friction, etc.
+	CREATE_FUNC(Car);
 };
 

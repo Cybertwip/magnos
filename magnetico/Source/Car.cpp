@@ -10,9 +10,17 @@ MaritimeGimbal3D* createGimbal(ax::Node* parent, ax::Vec3 position){
 	return gimbal;
 }
 
-Car::Car() {
+Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f) {
 	// Create car's body, gear box, and gimbals
-	carBody = createCarWithWheels(1.25f, 0.1f, 0.2f);
+	std::vector<CustomNode*> wheelsContainer;
+	
+	carBody = createCarWithWheels(1.25f, 0.1f, 0.2f, wheelsContainer);
+	
+	frontLeftWheel = wheelsContainer[0];
+	frontRightWheel = wheelsContainer[1];
+	rearLeftWheel = wheelsContainer[2];
+	rearRightWheel = wheelsContainer[3];
+
 	auto gearBoxMesh = createCube(0.45f);
 	auto gearBoxRenderer = ax::MeshRenderer::create();
 	gearBoxRenderer->addMesh(gearBoxMesh);
@@ -49,4 +57,47 @@ Car::~Car() {
 
 std::vector<ax::Node*> Car::getGimbals() const {
 	return this->gimbals;
+}
+
+
+void Car::accelerate(float value) {
+	acceleration = value;
+}
+
+void Car::applyFriction() {
+	// Apply friction to slow down the car's speed
+	if (acceleration > 0.0f) {
+		// Apply friction when accelerating forward
+		acceleration -= friction;
+		if (acceleration < 0.0f) {
+			acceleration = 0.0f;  // Ensure acceleration doesn't go negative
+		}
+	} else if (acceleration < 0.0f) {
+		// Apply friction when accelerating backward
+		acceleration += friction;
+		if (acceleration > 0.0f) {
+			acceleration = 0.0f;  // Ensure acceleration doesn't go positive
+		}
+	}
+	
+	// Ensure the car's speed does not exceed the maximum speed
+	if (acceleration > maxSpeed) {
+		acceleration = maxSpeed;
+	} else if (acceleration < -maxSpeed) {
+		acceleration = -maxSpeed;
+	}
+}
+
+void Car::updateMotion(float deltaTime) {
+	applyFriction();
+	
+	// Calculate the car's new position based on acceleration and time
+	// You can use a physics engine or simple equations to update the position and speed.
+	// For simplicity, let's assume constant velocity for this example.
+	float velocity = acceleration * deltaTime;
+	ax::Vec3 newPosition = this->getPosition3D() + ax::Vec3(velocity, 0, 0);
+	
+	// Update the car's position
+	this->setPosition3D(newPosition);
+
 }

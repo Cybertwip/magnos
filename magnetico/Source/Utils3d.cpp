@@ -320,7 +320,7 @@ ax::Node* createCarWindows(float carDimension, float roofHeight) {
 	return carWindowsNode;
 }
 
-ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheelWidth) {
+ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheelWidth, std::vector<CustomNode*>& wheelsContainer) {
 	// Create the car body, roof, and windows as separate meshes
 	ax::Node* carBody = createCarBody(carDimension);
 	//ax::Node* roof = createCarRoof(carDimension, 1); // You may need to define roofHeight
@@ -356,6 +356,11 @@ ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheel
 	carNode->addChild(frontRightWheel);
 	carNode->addChild(rearLeftWheel);
 	carNode->addChild(rearRightWheel);
+	
+	wheelsContainer.push_back(frontLeftWheel);
+	wheelsContainer.push_back(frontRightWheel);
+	wheelsContainer.push_back(rearLeftWheel);
+	wheelsContainer.push_back(rearRightWheel);
 	
 	// Attach roof and windows to the car body
 	//carBody->addChild(roof);
