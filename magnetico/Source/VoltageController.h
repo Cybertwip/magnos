@@ -26,7 +26,8 @@ public:
 	void dischargeCapacitor();
 	
 	// Get the current voltage of the capacitor
-	float getCapacitorVoltage() const ;
+	float getCapacitorVoltage() const;
+	float consumeFromCapacitor(float amount);
 	
 	// Set the callback for when the capacitor is fully charged
 	void setOnCapacitorCharged(std::function<void(float)> callback);

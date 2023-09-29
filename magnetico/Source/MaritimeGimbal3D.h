@@ -71,10 +71,10 @@ public:
 	std::unique_ptr<CoilSystem> outerCoilSystem =
 	std::make_unique<CoilSystem>(1.5f,
 								 1.0f, // resistance
-								 5.0f, // current
+								 1.0f, // current
 								 360); // turns
 	
-	AlternatorSystem alternator = AlternatorSystem(0.025f, 420);
+	AlternatorSystem alternator = AlternatorSystem(0.025f, 510);
 	
 	std::unique_ptr<MagnetSystem> middleMagnetSystem = std::make_unique<MagnetSystem>();
 	

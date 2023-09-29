@@ -36,6 +36,8 @@ void CoilSystem::recalibrate(){
 	pidCurrent.startAutoTuning(maxCurrent, 0);
 	calibration = true;
 	
+	filterBase = VoltageController(4, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
+
 	filterIncrease = VoltageController(4, Settings::desired_target_voltage, Settings::desired_target_voltage, true);
 	
 	resetAccumulators();
@@ -313,15 +315,6 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
     }
 
     this->current = currentAdjustment;
-	
-	
-	if(Settings::schedule_recalibration_for_collection){
-		Settings::schedule_recalibration_for_collection = false;
-		Settings::schedule_data_collection_mode = true;
-		Settings::data_collection_mode = false;
-		
-		this->recalibrate();
-	}
 }
 
 void CoilSystem::update(){
@@ -342,13 +335,32 @@ void CoilSystem::update(float measuredEMF, float delta) {
 	}
 		
 
+	if(accumulatedEMF > desiredEMFPerSecond){
+		
+		if(!calibrating()){
+			accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
+		}
+		
+	} else if (accumulatedEMF < desiredEMFPerSecond){
+		float storedVoltage = filterIncrease.getCapacitorVoltage();
+		
+		// try to keep up
+		float recycledConsumption = filterIncrease.consumeFromCapacitor(std::min(storedVoltage, desiredEMFPerSecond - accumulatedEMF));
+		
+		accumulatedEMF += recycledConsumption;
+	}
+
 	if((accumulatedEMF != desiredEMFPerSecond && !calibrating()) || (calibrating() && accumulationTime >= global_delta * 60)){
 
         adjustCurrentBasedOn(accumulationTime);
                             
-    }
+    } else {
+		if(Settings::data_collection_mode){
+			adjustCurrentBasedOn(accumulationTime);
+		}
+	}
     
-
+	
 	if(accumulationTime == global_delta * 60){
 		accumulationTime = 0.0f;
 				
@@ -364,7 +376,15 @@ void CoilSystem::update(float measuredEMF, float delta) {
 		if(accumulatedEMF == desiredEMFPerSecond || (accumulatedEMF >= desiredEMFPerSecond && calibrating())){
 			accumulatedEMF = 0;
 		}
-		
 	}
+
 	
+	if(Settings::schedule_recalibration_for_collection){
+		Settings::schedule_recalibration_for_collection = false;
+		Settings::schedule_data_collection_mode = true;
+		Settings::data_collection_mode = false;
+		
+		this->recalibrate();
+	}
+
 }

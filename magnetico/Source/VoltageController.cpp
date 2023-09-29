@@ -19,9 +19,7 @@ VoltageController::VoltageController(size_t size, float target, float capacitorC
 			
 			// Apply filtering
 			float filteredValue = filter.filter(adjustedValue);
-			
-			onVoltageFiltered();
-			
+						
 			return filteredValue;
 
 		} else {
@@ -63,6 +61,11 @@ VoltageController::VoltageController(size_t size, float target, float capacitorC
 		return capacitor.getVoltage();
 	}
 	
+	float VoltageController::consumeFromCapacitor(float amount) {
+		capacitor.discharge(amount);
+		return amount;
+	}
+
 	// Set the callback for when the capacitor is fully charged
 	void VoltageController::setOnCapacitorCharged(std::function<void(float)> callback) {
 		onCapacitorCharged = callback;
