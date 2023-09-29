@@ -10,6 +10,9 @@ const bool adaptive_calibration = false;
 const int data_collection_mode_cycles = 2048;
 int data_collection_bin_size = 1 /* mb */ * 1000 * 1024 ;
 
+const int min_voltage = 5;
+const int max_voltage = 12;
+
 const float adaptive_calibration_voltage = 3;
 }
 

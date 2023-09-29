@@ -207,10 +207,10 @@ void HelloWorld::onImGuiDraw()
 	
 	if((magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting() || Settings::data_collection_mode)){
 		ImGui::BeginDisabled();
-		ImGui::SliderInt("Volts", &desired_voltage, 3, 24);
+		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
 		ImGui::EndDisabled();
 	} else {
-		ImGui::SliderInt("Volts", &desired_voltage, 3, 24);
+		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
 	}
 	
 	if(last_voltage_increase != Settings::desired_target_voltage){
