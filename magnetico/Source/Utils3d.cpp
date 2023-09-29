@@ -1,4 +1,5 @@
 #include "Utils3d.h"
+#include "CustomNode.h"
 
 ax::Mesh* createCube(float dimension){
 	
@@ -87,18 +88,22 @@ ax::Mesh* createCuboid(float width, float height, float depth) {
 		0, 0, -1,
 		0, 0, -1
 	};
+	// Calculate texture coordinates based on the size of each face
+	float texCoordX = 1;
+	float texCoordY = 1;
 	
 	// Texture coordinates for the cuboid
 	std::vector<float> texs = {
 		0, 0,
-		1, 0,
-		1, 1,
-		0, 1,
+		texCoordX, 0,
+		texCoordX, texCoordY,
+		0, texCoordY,
 		0, 0,
-		1, 0,
-		1, 1,
-		0, 1
+		texCoordX, 0,
+		texCoordX, texCoordY,
+		0, texCoordY
 	};
+
 	
 	// Indices for the cuboid
 	std::vector<unsigned short> indices = {
@@ -117,6 +122,54 @@ ax::Mesh* createCuboid(float width, float height, float depth) {
 	}
 	
 	// Create mesh and attach to Sprite3D
+	return ax::Mesh::create(positions, normals, texs, indexArray);
+}
+
+ax::Mesh* createPlane(float width, float depth, int texRepeatX, int texRepeatY) {
+	// Calculate half-dimensions for convenience
+	float halfWidth = width / 2.0f;
+	float halfDepth = depth / 2.0f;
+	
+	// Vertices for a plane
+	std::vector<float> positions = {
+		-halfWidth, 0.0f, halfDepth,
+		halfWidth, 0.0f, halfDepth,
+		halfWidth, 0.0f, -halfDepth,
+		-halfWidth, 0.0f, -halfDepth,
+	};
+	
+	// Normals for the plane (all pointing up)
+	std::vector<float> normals = {
+		0, 1, 0,
+		0, 1, 0,
+		0, 1, 0,
+		0, 1, 0,
+	};
+	
+	// Calculate texture coordinates based on the size of the plane
+	float texCoordX = width * texRepeatX / 16.0f;
+	float texCoordY = depth * texRepeatY / 16.0f;
+	
+	// Texture coordinates for the plane
+	std::vector<float> texs = {
+		0, 0,
+		texCoordX, 0,
+		texCoordX, texCoordY,
+		0, texCoordY,
+	};
+	
+	// Indices for the plane
+	std::vector<unsigned short> indices = {
+		0, 1, 2, 0, 2, 3,
+	};
+	
+	ax::IndexArray indexArray;
+	
+	for (auto index : indices) {
+		indexArray.emplace_back(index);
+	}
+	
+	// Create mesh and return it
 	return ax::Mesh::create(positions, normals, texs, indexArray);
 }
 ax::Mesh* createTorus(float majorRadius, float minorRadius, int majorSegments, int minorSegments) {
@@ -279,10 +332,10 @@ ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheel
 	ax::Mesh* rearLeftWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
 	ax::Mesh* rearRightWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
 	
-	ax::MeshRenderer* frontLeftWheel = ax::MeshRenderer::create();
-	ax::MeshRenderer* frontRightWheel = ax::MeshRenderer::create();
-	ax::MeshRenderer* rearLeftWheel = ax::MeshRenderer::create();
-	ax::MeshRenderer* rearRightWheel = ax::MeshRenderer::create();
+	CustomNode* frontLeftWheel = CustomNode::create();
+	CustomNode* frontRightWheel = CustomNode::create();
+	CustomNode* rearLeftWheel = CustomNode::create();
+	CustomNode* rearRightWheel = CustomNode::create();
 	
 	frontLeftWheel->addMesh(frontLeftWheelMesh);
 	frontRightWheel->addMesh(frontRightWheelMesh);

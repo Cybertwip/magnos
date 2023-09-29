@@ -25,6 +25,7 @@
 
 #include "HelloWorldScene.h"
 #include "MaritimeGimbal3D.h"
+#include "Car.h"
 #include "Utils3d.h"
 
 #include "ui/axmol-ui.h"
@@ -57,14 +58,6 @@ static void problemLoading(const char* filename)
         "HelloWorldScene.cpp\n");
 }
 
-MaritimeGimbal3D* createGimbal(ax::Node* parent, ax::Vec3 position){
-	auto gimbal = MaritimeGimbal3D::create();
-	gimbal->setPosition3D(position);
-	parent->addChild(gimbal);
-	gimbal->attachPinball();
-	return gimbal;
-}
-
 // on "init" you need to initialize your instance
 bool HelloWorld::init()
 {
@@ -84,32 +77,12 @@ bool HelloWorld::init()
 	this->_defaultCamera->setZoom(1);
 	this->_defaultCamera->setPosition3D(Vec3(1.5f, 1.5f, -1.5f));
 	this->_defaultCamera->setRotation3D(Vec3(0, 0, 0));
-		
-	auto gearBox = createCube(0.45f);
-	auto gearBoxRenderer = ax::MeshRenderer::create();
-	gearBoxRenderer->addMesh(gearBox);
-	gearBoxRenderer->setPosition3D(ax::Vec3(0.65f, 0, 0));
-	gearBoxRenderer->setRotation3D(Vec3(0, 180, 0));
-	gearBoxRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-	gearBoxRenderer->setTexture("kitty.jpg");
-	gearBoxRenderer->setOpacity(50);
-	gearBoxRenderer->setScaleX(0.75f);
-	gearBoxRenderer->setScaleY(0.75f);
-	gearBoxRenderer->setScaleZ(0.75f);
 	
-	
-	gimbals.push_back(createGimbal(gearBoxRenderer, ax::Vec3(-0.25, 0, 0)));
-	gimbals.push_back(createGimbal(gearBoxRenderer, ax::Vec3(0.25, 0, 0)));
-	gimbals.push_back(createGimbal(gearBoxRenderer, ax::Vec3(0, 0, -0.25)));
-	gimbals.push_back(createGimbal(gearBoxRenderer, ax::Vec3(0, 0, 0.25)));
-	
-
-	
-	auto car = createCarWithWheels(1, 0.1, 0.2);
-	this->addChild(gearBoxRenderer);
-	
+	auto car = Car::create();
 	this->addChild(car);
 
+	gimbals = car->getGimbals();
+	
 	for(auto gimbal : gimbals){
 		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
 
@@ -141,6 +114,48 @@ bool HelloWorld::init()
 	auto director = Director::getInstance();
 
 	director->setClearColor(Color4F(0.0f, 1.0f, 0.0f, 1.0f));
+
+	auto plane = createPlane(1024, 1024, 1, 1);
+	
+	ax::MeshRenderer* planeRenderer = ax::MeshRenderer::create();
+	planeRenderer->addMesh(plane);
+	auto material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false);
+	
+	Texture2D::TexParams tRepeatParams;  // set texture parameters
+	tRepeatParams.magFilter = tRepeatParams.minFilter = backend::SamplerFilter::NEAREST;
+	tRepeatParams.sAddressMode                        = backend::SamplerAddressMode::REPEAT;
+	tRepeatParams.tAddressMode                        = backend::SamplerAddressMode::REPEAT;
+
+	auto checkerTexture = Director::getInstance()->getTextureCache()->addImage("checker.png");
+	
+	checkerTexture->setTexParameters(tRepeatParams);
+	
+	planeRenderer->setMaterial(material);
+	planeRenderer->setTexture(checkerTexture);
+	planeRenderer->setPositionY(-1.25f / 2 - 0.3f);
+	this->addChild(planeRenderer);
+	
+	//@TODO Terrain
+//	float terrainSize = 100.0f; // Adjust the size as needed
+//	const std::string heightmapImage = "racing.png"; // Replace with your heightmap image file
+//	const std::string texImage = "kitty.png"; // Replace with your heightmap image file
+//	const std::string detailmapImage = "racing_detail.png"; // Replace with your heightmap image file
+//
+//	const std::string alphamapImage = "racing_alpha.png"; // Replace with your heightmap image file
+//
+//	ax::Terrain::DetailMap detailMap(detailmapImage);
+//	ax::Terrain::TerrainData data(heightmapImage, texImage);
+//
+//	data._detailMapAmount = 1;
+//	data._detailMaps[0]._detailMapSrc = detailmapImage;
+//
+//	data._alphaMapSrc = alphamapImage;
+//
+//	auto terrain = Terrain::create(data);
+//
+//	// Example positioning and adding terrain to the scene
+//	terrain->setPosition3D(Vec3(0, 0, 0)); // Adjust the position as needed
+//	this->addChild(terrain); // Add the terrain to your scene
 
 	return true;
 }
@@ -331,7 +346,6 @@ void HelloWorld::onMouseUp(Event* event)
 void HelloWorld::onMouseMove(Event* event)
 {
 	EventMouse* e = static_cast<EventMouse*>(event);
-	AXLOG("Mouse move detected, X:%f  Y:%f", e->getCursorX(), e->getCursorY());
 	
 	float sensitivity = 0.005f;
 
@@ -343,11 +357,10 @@ void HelloWorld::onMouseMove(Event* event)
 	float horizontalAngle = _defaultCamera->getRotation3D().y + cursorDeltaX;
 	float verticalAngle = _defaultCamera->getRotation3D().x - cursorDeltaY;
 
-
 	
 	// Define the vertical angle constraints (adjust as needed)
-	float minVerticalAngle = AX_DEGREES_TO_RADIANS(-10); // Minimum vertical angle (degrees)
-	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(45.0f);  // Maximum vertical angle (degrees)
+	float minVerticalAngle = AX_DEGREES_TO_RADIANS(-15); // Minimum vertical angle (degrees)
+	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(60.0f);  // Maximum vertical angle (degrees)
 	
 	// Clamp the vertical angle within the specified range
 	
@@ -383,11 +396,17 @@ void HelloWorld::onMouseScroll(Event* event)
 
 void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 {
-	
+	if(code == EventKeyboard::KeyCode::KEY_SPACE){
+		
+	}
 }
 
 void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 {
+	if(code == EventKeyboard::KeyCode::KEY_SPACE){
+		
+	}
+
 }
 
 void HelloWorld::update(float delta)
