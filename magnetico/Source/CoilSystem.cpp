@@ -246,6 +246,9 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
                 desiredEMFPerSecond = Settings::desired_target_voltage;
             }
 			
+			Settings::data_collection_mode = false;
+			Settings::cycles_per_collection = 1;
+
 			if(!hasML || Settings::schedule_data_collection_mode){
 				Settings::schedule_data_collection_mode = false;
 				Settings::data_collection_mode = true;
@@ -350,11 +353,7 @@ void CoilSystem::update(float measuredEMF, float delta) {
 
         adjustCurrentBasedOn(accumulationTime);
                             
-    } else {
-		if(Settings::data_collection_mode){
-			adjustCurrentBasedOn(accumulationTime);
-		}
-	}
+    } 
     
 	
 	if(accumulationTime == global_delta * 60){
