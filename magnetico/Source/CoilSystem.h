@@ -68,16 +68,14 @@ private:
 	bool calibration = true;
 	bool adaptive = adaptive_calibration;
 
-	float desiredEMFPerSecond = Settings::desired_voltage_increase_per_second;
+	float desiredEMFPerSecond = Settings::desired_target_voltage;
 	const int numberOfCoils = 1;
 	const float totalResistance = coilResistance * numberOfCoils;
 	float accumulatedEMF = 0.0f;
 	float baseAccumulatedEMF = 0.0f;
 	float accumulationTime = 0.0f;
 	float guiBaseAccumulatedEMF = 0.0f;
-	float guiAccumulatedEMF = 0.0f;
 	float recycledEMF = 0;
-	float guiAccumulationTime = 0;
 	
 	double setPoint = 3.0f; // Desired value
 	double processVariable = 0; // Current value
@@ -86,8 +84,8 @@ private:
 	PIDController pidCurrent = PIDController(1.0f, 0, 0);
 	bool isCalibratingUpwards = true; // A flag to determine the calibration direction. Initialize as true if you start by calibrating upwards.
 
-	VoltageController filterBase = VoltageController(4, desired_base_voltage, desired_base_voltage, false);
-	VoltageController filterIncrease = VoltageController(4, Settings::desired_voltage_increase_per_second, Settings::desired_voltage_increase_per_second, true);
+	VoltageController filterBase = VoltageController(4, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
+	VoltageController filterIncrease = VoltageController(4, Settings::desired_target_voltage, Settings::desired_target_voltage, true);
 
 public:
 	float lastAccumulatedEMF = 0.0f;

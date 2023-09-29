@@ -199,22 +199,26 @@ void HelloWorld::onImGuiDraw()
 
 	ImGui::Text("Target Voltage:");
 
-	static int last_voltage_increase = Settings::desired_voltage_increase_per_second;
+	
+	static int desired_voltage = Settings::desired_target_voltage;
+	
+	static int last_voltage_increase = desired_voltage;
 	
 	
 	if((magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting() || Settings::data_collection_mode)){
 		ImGui::BeginDisabled();
-		ImGui::SliderInt("Volts", &Settings::desired_voltage_increase_per_second, 3.0f, 24.0f);
+		ImGui::SliderInt("Volts", &desired_voltage, 3, 24);
 		ImGui::EndDisabled();
 	} else {
-		ImGui::SliderInt("Volts", &Settings::desired_voltage_increase_per_second, 3.0f, 24.0f);
+		ImGui::SliderInt("Volts", &desired_voltage, 3, 24);
 	}
 	
-	if(last_voltage_increase != Settings::desired_voltage_increase_per_second){
+	if(last_voltage_increase != Settings::desired_target_voltage){
+		Settings::desired_target_voltage = last_voltage_increase;
 		magnos->getCoilSystem().recalibrate();
 	}
 	   
-   	last_voltage_increase = Settings::desired_voltage_increase_per_second;
+   	last_voltage_increase = desired_voltage;
 
 
 	ImGui::Text("Base Voltage=%.4f", guiBaseEMF);
@@ -234,9 +238,8 @@ void HelloWorld::onImGuiDraw()
 		
 		if (collectDataButtonPressed) {
 			collectDataButtonPressed = false;
-			magnos->getCoilSystem().recalibrate();
 
-			Settings::schedule_data_collection_mode = true;
+			Settings::schedule_recalibration_for_collection = true;
 			
 		}
 	}

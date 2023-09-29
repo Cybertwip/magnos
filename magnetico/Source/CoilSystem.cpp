@@ -1,6 +1,7 @@
 #include "CoilSystem.h"
 
-static long long simulatedEpoch = 0;
+static long long timePrev = 0;
+static long long timeNow = 0;
 
 CoilSystem::CoilSystem(float voltage, float resistance, float current, float coilTurns)
 	: coilResistance(resistance), maxCurrent(current), turns(coilTurns){
@@ -14,7 +15,7 @@ CoilSystem::CoilSystem(float voltage, float resistance, float current, float coi
 		Settings::cycles_per_collection = 1;
     }
 
-    pidCurrent.startAutoTuning(maxCurrent, 0);
+    this->recalibrate();
     
     //this->current = 0;
 
@@ -35,18 +36,20 @@ void CoilSystem::recalibrate(){
 	pidCurrent.startAutoTuning(maxCurrent, 0);
 	calibration = true;
 	
-	filterIncrease = VoltageController(4, Settings::desired_voltage_increase_per_second, Settings::desired_voltage_increase_per_second, true);
-
+	filterIncrease = VoltageController(4, Settings::desired_target_voltage, Settings::desired_target_voltage, true);
+	
+	resetAccumulators();
 }
 
 void CoilSystem::resetAccumulators(){
-	
+	accumulationTime = 0.0f;
 	accumulatedEMF = 0;
 	baseAccumulatedEMF = 0;
 	lastBaseAccumulatedEMF = 0;
 	lastAccumulatedEMF = 0;
 	
-	simulatedEpoch = 0;
+	timePrev = 0;
+	timeNow = 0;
 }
 
 void CoilSystem::saveDataToBinary(const std::string& filename) {
@@ -85,19 +88,18 @@ bool CoilSystem::loadDataAndTrainModel(const std::string& filename) {
     dataCollection = loadedData;
     
     // Convert loadedData to arma::mat format for mlpack
-    arma::mat dataset(5, loadedData.size());
+    arma::mat dataset(4, loadedData.size());
     
     for (size_t i = 0; i < loadedData.size(); i++) {
         dataset(0, i) = loadedData[i].emfError;
         dataset(1, i) = loadedData[i].desiredCurrent;
         dataset(2, i) = loadedData[i].currentAdjustment;
-		dataset(3, i) = loadedData[i].deltaTime;
-		dataset(4, i) = loadedData[i].finalCurrent;
+		dataset(3, i) = loadedData[i].finalCurrent;
     }
     
     // Assuming last row (currentAdjustment) as labels and others as features
-    arma::mat labels = dataset.row(4);
-    dataset.shed_row(4);
+    arma::mat labels = dataset.row(3);
+    dataset.shed_row(3);
     
     // Train a linear regression model
     mlModel = std::make_unique<mlpack::regression::LinearRegression>(dataset, labels);
@@ -212,12 +214,14 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 
     float currentAdjustment = 0;
     
-    
-    simulatedEpoch += (dt / global_delta) / 60 * 1000;
-    
-	float fixedDelta = (dt / (global_delta * 60.0f));
+
+	//timePrev = timeNow;
+
+	timeNow += dt;
+
+	float fixedDelta = dt / 1000.0f;
 	
-    if(pidCurrent.calibrate(desiredCurrent, fixedDelta, simulatedEpoch)){
+    if(pidCurrent.calibrate(desiredCurrent, fixedDelta, timeNow)){
                                 
         currentAdjustment = pidCurrent.getRelayState() ? maxCurrent : 0;
         
@@ -233,7 +237,7 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
             if(adaptive_calibration){
                 desiredEMFPerSecond = adaptive_calibration_voltage;
             } else {
-                desiredEMFPerSecond = Settings::desired_voltage_increase_per_second;
+                desiredEMFPerSecond = Settings::desired_target_voltage;
             }
 			
 			if(!hasML || Settings::schedule_data_collection_mode){
@@ -245,8 +249,7 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 
 			}
         }
-        
-        
+		
         
         if(Settings::data_collection_mode && !calibrating() && !adapting()){
 			DataPoint point;
@@ -254,7 +257,6 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 			point.desiredCurrent = desiredCurrent;
 			point.currentAdjustment = currentAdjustment;
 			point.finalCurrent = this->current;
-			point.deltaTime = fixedDelta;
 			
 			dataCollection.push_back(point);
 
@@ -273,7 +275,6 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 				accumulatedEMF = 0;
 				baseAccumulatedEMF = 0;
 				accumulationTime = 0;
-				recalibrate();
 				
 				ax::Configuration::getInstance()->setValue("axmol.fps", ax::Value(60));
 				auto director = ax::Director::getInstance();
@@ -291,12 +292,12 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
                 if(adaptive_calibration){
                     // Calibration upwards
                     if(isCalibratingUpwards && accumulatedEMF + emfError >= adaptive_calibration_voltage){
-                        desiredEMFPerSecond = Settings::desired_voltage_increase_per_second;
+                        desiredEMFPerSecond = Settings::desired_target_voltage;
                         isCalibratingUpwards = false;  // Switch calibration direction
                         adaptive = true;
                     }
                     // Calibration downwards
-                    else if(!isCalibratingUpwards && accumulatedEMF + emfError <= Settings::desired_voltage_increase_per_second){
+                    else if(!isCalibratingUpwards && accumulatedEMF + emfError <= Settings::desired_target_voltage){
                         desiredEMFPerSecond = adaptive_calibration_voltage;
                         isCalibratingUpwards = true;   // Switch calibration direction
                         adaptive = true;
@@ -306,11 +307,10 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
                 adaptive = false;
             }
             // Create a column vector for input features
-            arma::mat input(4, 1);
+            arma::mat input(3, 1);
             input(0, 0) = emfError;            // This should be your new emfError value
             input(1, 0) = desiredCurrent;         // Replace with your new desiredCurrent value
 			input(2, 0) = currentAdjustment;      // Replace with your new currentAdjustment value
-			input(3, 0) = fixedDelta;      // Replace with your new currentAdjustment value
 
             arma::rowvec output;  // Use rowvec instead of mat
             mlModel->Predict(input, output);
@@ -323,9 +323,19 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 
 
         }
+		
     }
 
     this->current = currentAdjustment;
+	
+	
+	if(Settings::schedule_recalibration_for_collection){
+		Settings::schedule_recalibration_for_collection = false;
+		Settings::schedule_data_collection_mode = true;
+		Settings::data_collection_mode = false;
+		
+		this->recalibrate();
+	}
 }
 
 void CoilSystem::update(){
@@ -335,62 +345,38 @@ void CoilSystem::update(){
 }
 
 void CoilSystem::update(float measuredEMF, float delta) {
-	desiredEMFPerSecond = Settings::desired_voltage_increase_per_second;
+	desiredEMFPerSecond = Settings::desired_target_voltage;
 
     accumulatedEMF += fabs(measuredEMF);
-    if(!calibrating() && !adapting()){
-
-        guiAccumulatedEMF += fabs(measuredEMF);
-        
-    }
 	
 	accumulationTime += delta;
-	guiAccumulationTime += delta;
 	
-    baseAccumulatedEMF = filterBase.controlVoltage(accumulatedEMF);
+	if(!calibrating()){
+		baseAccumulatedEMF = filterBase.controlVoltage(accumulatedEMF);
+	}
 		
-	if(((accumulatedEMF >= desiredEMFPerSecond && !calibrating()) || (accumulationTime >= global_delta * 60  && calibrating()))){
-        
+
+	if((accumulatedEMF != desiredEMFPerSecond && !calibrating()) || (calibrating() && accumulationTime >= global_delta * 60)){
+
         adjustCurrentBasedOn(accumulationTime);
                             
-        if(!calibrating() && !adapting() && !Settings::data_collection_mode){
-            accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
-        }
-
-    } 
+    }
     
-    if(!calibrating() && !adapting() && !Settings::data_collection_mode){
-        guiBaseAccumulatedEMF = baseAccumulatedEMF;
-        guiAccumulatedEMF = accumulatedEMF;
-        
-        if(guiAccumulatedEMF >= desiredEMFPerSecond){
-            guiAccumulationTime = 0;
-            lastBaseAccumulatedEMF = guiBaseAccumulatedEMF;
-            lastAccumulatedEMF = guiAccumulatedEMF;
-            lastRecycledEMF = recycledEMF;
-            
-            guiAccumulatedEMF = 0;
+	if(accumulationTime >= global_delta * 60){
+		accumulationTime = 0.0f;
+				
+		if(accumulatedEMF >= desiredEMFPerSecond && !calibrating()){
+			accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
+		}
+		
+		lastBaseAccumulatedEMF = baseAccumulatedEMF;
+		lastAccumulatedEMF = accumulatedEMF;
+		lastRecycledEMF = recycledEMF;
+		
+		if(accumulatedEMF == desiredEMFPerSecond || (accumulatedEMF >= desiredEMFPerSecond && calibrating())){
 			accumulatedEMF = 0;
-
-			accumulationTime = 0.0f;
-
-            accumulatedEMF = 0;
-        }
-    } else {
-		if(((accumulationTime >= global_delta * 60) && (calibrating() || Settings::data_collection_mode))){
-			accumulationTime = 0.0f;
-			
-			if(accumulatedEMF >= desiredEMFPerSecond){
-				accumulatedEMF = 0.0f;
-			}
-		} else if((accumulationTime >= global_delta * 60)){
-			accumulationTime = 0.0f;
-			
-			if(accumulatedEMF >= desiredEMFPerSecond){
-				accumulatedEMF = 0.0f;
-			}
-
 		}
 		
 	}
+	
 }
