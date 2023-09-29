@@ -84,9 +84,8 @@ private:
 	PIDController pidCurrent = PIDController(1.0f, 0, 0);
 	bool isCalibratingUpwards = true; // A flag to determine the calibration direction. Initialize as true if you start by calibrating upwards.
 
-	VoltageController filterBase = VoltageController(4, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
-	VoltageController filterIncrease = VoltageController(4, Settings::desired_target_voltage, Settings::desired_target_voltage, true);
-
+	VoltageController filterBase;
+	VoltageController filterIncrease;
 public:
 	float lastAccumulatedEMF = 0.0f;
 	float lastBaseAccumulatedEMF = 0.0f;

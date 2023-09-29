@@ -4,7 +4,10 @@ static long long timePrev = 0;
 static long long timeNow = 0;
 
 CoilSystem::CoilSystem(float voltage, float resistance, float current, float coilTurns)
-	: coilResistance(resistance), maxCurrent(current), turns(coilTurns){
+	: coilResistance(resistance), maxCurrent(current), turns(coilTurns),
+filterBase(VoltageController(32, Settings::desired_base_voltage, Settings::desired_base_voltage, false)),
+filterIncrease(VoltageController(32, Settings::desired_target_voltage, Settings::desired_target_voltage, true)){
+		
     setCurrentFromVoltage(voltage);
 	std::string home = getenv("HOME");
 
@@ -50,9 +53,9 @@ void CoilSystem::resetAccumulators(){
 	timePrev = 0;
 	timeNow = 0;
 	
-	filterBase = VoltageController(4, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
+	filterBase = VoltageController(32, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
 	
-	filterIncrease = VoltageController(4, Settings::desired_target_voltage, Settings::desired_target_voltage, true);
+	filterIncrease = VoltageController(32, Settings::desired_target_voltage, Settings::desired_target_voltage, true);
 	
 	this->current = 0;
 
@@ -329,46 +332,38 @@ void CoilSystem::update(float measuredEMF, float delta) {
 	
 	accumulationTime += delta;
 	
-	if(!calibrating()){
+	if(!calibrating() && !Settings::data_collection_mode){
 		baseAccumulatedEMF = filterBase.controlVoltage(accumulatedEMF);
 	}
-		
-
-	if(accumulatedEMF > desiredEMFPerSecond){
-		
-		if(!calibrating()){
-			accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
-		}
-		
-	} else if (accumulatedEMF < desiredEMFPerSecond){
-		float storedVoltage = filterIncrease.getCapacitorVoltage();
-		
-		// try to keep up
-		float recycledConsumption = filterIncrease.consumeFromCapacitor(std::min(storedVoltage, desiredEMFPerSecond - accumulatedEMF));
-		
-		accumulatedEMF += recycledConsumption;
-	}
-
+	
 	if((accumulatedEMF != desiredEMFPerSecond && !calibrating()) || (calibrating() && accumulationTime >= global_delta * 60)){
-
         adjustCurrentBasedOn(accumulationTime);
-                            
-    } 
-    
+    }
 	
 	if(accumulationTime == global_delta * 60){
 		accumulationTime = 0.0f;
-				
-		
-		if(!calibrating()){
-			accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
+
+		if(accumulatedEMF > desiredEMFPerSecond){
+			
+			if(!calibrating() && !Settings::data_collection_mode){
+				accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
+			}
+			
+		} else if (accumulatedEMF < desiredEMFPerSecond && !calibrating() && !Settings::data_collection_mode){
+			float storedVoltage = filterIncrease.getCapacitorVoltage();
+			
+			// try to keep up
+			float recycledConsumption = filterIncrease.consumeFromCapacitor(std::min(storedVoltage, desiredEMFPerSecond - accumulatedEMF));
+			
+			accumulatedEMF += recycledConsumption;
 		}
 
 		lastBaseAccumulatedEMF = baseAccumulatedEMF;
 		lastAccumulatedEMF = accumulatedEMF;
 		lastRecycledEMF = recycledEMF;
 		
-		if(accumulatedEMF == desiredEMFPerSecond || (accumulatedEMF >= desiredEMFPerSecond && calibrating())){
+		if(accumulatedEMF >= desiredEMFPerSecond || (accumulatedEMF >= desiredEMFPerSecond && calibrating())){
+
 			accumulatedEMF = 0;
 		}
 	}
