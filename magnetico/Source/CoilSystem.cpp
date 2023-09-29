@@ -36,9 +36,6 @@ void CoilSystem::recalibrate(){
 	pidCurrent.startAutoTuning(maxCurrent, 0);
 	calibration = true;
 	
-	filterBase = VoltageController(4, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
-
-	filterIncrease = VoltageController(4, Settings::desired_target_voltage, Settings::desired_target_voltage, true);
 	
 	resetAccumulators();
 }
@@ -52,6 +49,13 @@ void CoilSystem::resetAccumulators(){
 	
 	timePrev = 0;
 	timeNow = 0;
+	
+	filterBase = VoltageController(4, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
+	
+	filterIncrease = VoltageController(4, Settings::desired_target_voltage, Settings::desired_target_voltage, true);
+	
+	this->current = 0;
+
 }
 
 void CoilSystem::saveDataToBinary(const std::string& filename) {
@@ -272,16 +276,8 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 				hasML = loadDataAndTrainModel(home + "/calibration.bin");
 
 				Settings::cycles_per_collection = 1;
-				
-				recycledEMF = 0;
-				accumulatedEMF = 0;
-				baseAccumulatedEMF = 0;
-				accumulationTime = 0;
-				
-				ax::Configuration::getInstance()->setValue("axmol.fps", ax::Value(60));
-				auto director = ax::Director::getInstance();
-				director->setDefaultValues();
-				director->setAnimationInterval(1.0f / 60.0f);
+
+				this->resetAccumulators();
 
 			}
         }
