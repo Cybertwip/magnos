@@ -47,7 +47,6 @@ private:
 		float desiredCurrent;
 		float currentAdjustment;
 		float finalCurrent;
-		float deltaTime;
 	};
 	
 	struct PID {

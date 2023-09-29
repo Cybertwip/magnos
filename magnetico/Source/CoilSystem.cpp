@@ -221,12 +221,8 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
     float desiredCurrent = emfError / totalResistance;
 
     float currentAdjustment = 0;
-    
-	//timePrev = timeNow;
 
-	timeNow += dt;
-
-	float fixedDelta = dt / 1000.0f;
+	float fixedDelta = (timeNow - timePrev) / 1000.0f;
 	
     if(pidCurrent.calibrate(desiredCurrent, fixedDelta, timeNow)){
                                 
@@ -250,42 +246,18 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 				Settings::schedule_data_collection_mode = false;
 				Settings::data_collection_mode = true;
 				Settings::cycles_per_collection = data_collection_mode_cycles;
+			
+				this->resetAccumulators();
+
 			}
 			
-			this->resetAccumulators();
 			
-			this->current = currentAdjustment;
+			this->current = 0;
 
-			
 			return;
 
         }
 		
-        
-        if(Settings::data_collection_mode && !calibrating() && !adapting()){
-			DataPoint point;
-			point.emfError = emfError;
-			point.desiredCurrent = desiredCurrent;
-			point.currentAdjustment = currentAdjustment;
-			point.finalCurrent = this->current;
-			
-			dataCollection.push_back(point);
-
-			if((dataCollection.size() * sizeof(DataPoint)) % data_collection_bin_size == 0){
-				std::string home = getenv("HOME");
-				
-				saveDataToBinary(home + "/calibration.bin");
-				
-				Settings::data_collection_mode = false;
-				
-				hasML = loadDataAndTrainModel(home + "/calibration.bin");
-
-				Settings::cycles_per_collection = 1;
-
-				this->resetAccumulators();
-
-			}
-        }
         
         if(hasML && !Settings::data_collection_mode){
             // Check if conditions are met to retrain
@@ -334,24 +306,80 @@ void CoilSystem::update(float measuredEMF, float delta) {
 	
 	accumulationTime += delta;
 	
-	if(!calibrating() && !Settings::data_collection_mode){
+	if(!calibrating()){
 		baseAccumulatedEMF = filterBase.controlVoltage(accumulatedEMF);
 	}
 	
+
+	timePrev = timeNow;
+	
+	timeNow += delta;
+
 	if((accumulatedEMF != desiredEMFPerSecond && !calibrating()) || (calibrating() && accumulationTime >= global_delta * 60)){
-        adjustCurrentBasedOn(accumulationTime);
+		if(!Settings::data_collection_mode){
+			adjustCurrentBasedOn(accumulationTime);
+		}
     }
+	
+	
+	if(Settings::data_collection_mode && !calibrating() && !adapting()){
+		
+		// Calculate desired current based on EMF error and resistance
+		float emfError = desiredEMFPerSecond - accumulatedEMF;
+		
+		if(emfError != 0.0f){
+			
+			// Compute error for the PID
+			float desiredCurrent = emfError / totalResistance;
+			
+			float currentAdjustment = 0;
+			
+			float fixedDelta = (timeNow - timePrev) / 1000.0f;
+			
+			currentAdjustment = pidCurrent.compute(desiredCurrent, fixedDelta);
+			
+			currentAdjustment = std::clamp(this->current + currentAdjustment, 0.0f, maxCurrent);
+			
+			DataPoint point;
+			point.emfError = emfError;
+			point.desiredCurrent = desiredCurrent;
+			point.currentAdjustment = currentAdjustment;
+			point.finalCurrent = this->current;
+			
+			dataCollection.push_back(point);
+			
+			if((dataCollection.size() * sizeof(DataPoint)) % data_collection_bin_size == 0){
+				std::string home = getenv("HOME");
+				
+				saveDataToBinary(home + "/calibration.bin");
+				
+				Settings::data_collection_mode = false;
+				
+				hasML = loadDataAndTrainModel(home + "/calibration.bin");
+				
+				Settings::cycles_per_collection = 1;
+				
+				this->recalibrate();
+				
+				return;
+				
+			}
+			
+			this->current = currentAdjustment;
+		}
+		
+	}
 	
 	if(accumulationTime == global_delta * 60){
 		accumulationTime = 0.0f;
 
 		if(accumulatedEMF > desiredEMFPerSecond){
 			
-			if(!calibrating() && !Settings::data_collection_mode){
+			if(!calibrating()){
 				accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
 			}
 			
-		} else if (accumulatedEMF < desiredEMFPerSecond && !calibrating() && !Settings::data_collection_mode){
+		} else if (accumulatedEMF < desiredEMFPerSecond && !calibrating()){
 			float storedVoltage = filterIncrease.getCapacitorVoltage();
 			
 			// try to keep up
