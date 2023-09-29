@@ -250,10 +250,10 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 				Settings::schedule_data_collection_mode = false;
 				Settings::data_collection_mode = true;
 				Settings::cycles_per_collection = data_collection_mode_cycles;
-				
-				this->resetAccumulators();
-
 			}
+			
+			this->resetAccumulators();
+
         }
 		
         
