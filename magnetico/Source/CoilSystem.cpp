@@ -222,7 +222,6 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 
     float currentAdjustment = 0;
     
-
 	//timePrev = timeNow;
 
 	timeNow += dt;
@@ -241,7 +240,7 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 
         if(calibration){
             calibration = false;
-            
+			            
 			desiredEMFPerSecond = Settings::desired_target_voltage;
 
 			Settings::data_collection_mode = false;
@@ -254,6 +253,11 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 			}
 			
 			this->resetAccumulators();
+			
+			this->current = currentAdjustment;
+
+			
+			return;
 
         }
 		
