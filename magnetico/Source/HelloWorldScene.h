@@ -67,7 +67,7 @@ public:
 private:
     ExampleGameState _gameState = ExampleGameState::init;
 	
-	Node* gimbal;
+	std::vector<Node*> gimbals;
 	
 	
 	std::string emf;

@@ -91,5 +91,5 @@ public:
 	
 	bool init() override;
 	
-	void attachPinball(ax::Scene* scene);
+	void attachPinball();
 };

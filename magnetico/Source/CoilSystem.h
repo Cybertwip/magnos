@@ -36,7 +36,9 @@ public:
 	ax::Vec3 combineFieldsOrForces() override;
 
 	bool calibrating();
-	bool adapting();
+	void setDesignedEMFPerSecond(float desiredEMF);
+	void setOnVoltagePeakCallback(std::function<void(float)> onVoltagePeak);
+
 	void adjustCurrentBasedOn(float dt);
 	void attachToDisk(ax::Node* node, float radius, MagnetDirection direction, MagnetPolarity polarity) override;	
 
@@ -84,6 +86,10 @@ private:
 
 	VoltageController filterBase;
 	VoltageController filterIncrease;
+	
+	float designedEMFPerSecond;
+	std::function<void(float)> onVoltagePeak = nullptr;
+	
 public:
 	float lastAccumulatedEMF = 0.0f;
 	float lastBaseAccumulatedEMF = 0.0f;

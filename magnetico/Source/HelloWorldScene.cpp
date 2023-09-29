@@ -25,6 +25,7 @@
 
 #include "HelloWorldScene.h"
 #include "MaritimeGimbal3D.h"
+#include "Utils3d.h"
 
 #include "ui/axmol-ui.h"
 
@@ -56,6 +57,14 @@ static void problemLoading(const char* filename)
         "HelloWorldScene.cpp\n");
 }
 
+MaritimeGimbal3D* createGimbal(ax::Node* parent, ax::Vec3 position){
+	auto gimbal = MaritimeGimbal3D::create();
+	gimbal->setPosition3D(position);
+	parent->addChild(gimbal);
+	gimbal->attachPinball();
+	return gimbal;
+}
+
 // on "init" you need to initialize your instance
 bool HelloWorld::init()
 {
@@ -71,27 +80,60 @@ bool HelloWorld::init()
 	
 	this->_defaultCamera->setNearPlane(0.01f);
 	this->_defaultCamera->setFarPlane(10000);
-	this->_defaultCamera->setFOV(60);
+	this->_defaultCamera->setFOV(90);
 	this->_defaultCamera->setZoom(1);
-	this->_defaultCamera->setPosition3D(Vec3(0.15f, 0.15f, -0.3f));
+	this->_defaultCamera->setPosition3D(Vec3(1.5f, 1.5f, -1.5f));
 	this->_defaultCamera->setRotation3D(Vec3(0, 0, 0));
 		
-	auto magnosGimbal = MaritimeGimbal3D::create();
-	gimbal = magnosGimbal;
-	gimbal->setPosition3D(ax::Vec3(0, 0, 0));
-	this->addChild(gimbal);
+	auto gearBox = createCube(0.45f);
+	auto gearBoxRenderer = ax::MeshRenderer::create();
+	gearBoxRenderer->addMesh(gearBox);
+	gearBoxRenderer->setPosition3D(ax::Vec3(0.65f, 0, 0));
+	gearBoxRenderer->setRotation3D(Vec3(0, 180, 0));
+	gearBoxRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	gearBoxRenderer->setTexture("kitty.jpg");
+	gearBoxRenderer->setOpacity(50);
+	gearBoxRenderer->setScaleX(0.75f);
+	gearBoxRenderer->setScaleY(0.75f);
+	gearBoxRenderer->setScaleZ(0.75f);
 	
-	magnosGimbal->attachPinball(this);
 	
-	//gimbal->addRodsToIronBall(dynamic_cast<IronBall*>(pinball), 0.0494f, 0.0005f); // Assuming a rod radius of 0.0005f
+	gimbals.push_back(createGimbal(gearBoxRenderer, ax::Vec3(-0.25, 0, 0)));
+	gimbals.push_back(createGimbal(gearBoxRenderer, ax::Vec3(0.25, 0, 0)));
+	gimbals.push_back(createGimbal(gearBoxRenderer, ax::Vec3(0, 0, -0.25)));
+	gimbals.push_back(createGimbal(gearBoxRenderer, ax::Vec3(0, 0, 0.25)));
+	
 
+	
+	auto car = createCarWithWheels(1, 0.1, 0.2);
+	this->addChild(gearBoxRenderer);
+	
+	this->addChild(car);
 
-	this->_defaultCamera->lookAt(gimbal->getPosition3D());
+	for(auto gimbal : gimbals){
+		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+
+		magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::desired_target_voltage / number_of_gimbals);
+	}
+
+	this->_defaultCamera->lookAt(Vec3(0, 0, 0));
 
 	auto keyboardListener           = EventListenerKeyboard::create();
 	keyboardListener->onKeyPressed  = AX_CALLBACK_2(HelloWorld::onKeyPressed, this);
 	keyboardListener->onKeyReleased = AX_CALLBACK_2(HelloWorld::onKeyReleased, this);
 	_eventDispatcher->addEventListenerWithFixedPriority(keyboardListener, 11);
+
+	// Create a listener for mouse move events
+	auto mouseListener = EventListenerMouse::create();
+	
+	// Set the callback function for mouse move events
+	mouseListener->onMouseMove = AX_CALLBACK_1(HelloWorld::onMouseMove, this); // Assuming you're in the HelloWorld class
+	
+	// Register the mouse listener with the event dispatcher
+	_eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
+	
+	// Enable mouse input (optional, if not already enabled)
+	_director->getOpenGLView()->setCursorVisible(true);
 
     // scheduleUpdate() is required to ensure update(float) is called on every loop
     scheduleUpdate();
@@ -124,69 +166,68 @@ void HelloWorld::onImGuiDraw()
 {
 	ImGui::Begin("window");
 	
-	auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
 	
 	float deltaTime = ImGui::GetIO().DeltaTime;
-	static float deltaCounter = 0;
 	static float guiCounter = 0;
-	static float lastEMF = -1;
-	static float lastMeasure = 0;
 	static float guiBaseEMF = 0;
 	static float guiEMF = 0;
-	static float guiMeasure = 0;
 	static float peakEMF = 0;
-	static float baseAccumulatedEMF = 0;
-	static float accumulatedEMF = 0;
-	static float recycledEMF = 0;
-	static float guiRecycledEMF = 0;
+	//static float recycledEMF = 0; // @TODO
+	//static float guiRecycledEMF = 0;
 
-	deltaCounter += deltaTime;
 	guiCounter += deltaTime;
-	
-	float inducedEMF = abs(magnos->getAlternatorSystem().emf);
-	
-	if(!magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting()){
-		baseAccumulatedEMF = magnos->getCoilSystem().lastBaseAccumulatedEMF;
-		accumulatedEMF = magnos->getCoilSystem().lastAccumulatedEMF;
-		recycledEMF = magnos->getCoilSystem().lastRecycledEMF;
+
+	float baseAccumulatedEMF = 0;
+	float accumulatedEMF = 0;
+
+	bool any_calibration = false;
+
+	for(auto gimbal : gimbals){
+		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+
+		float inducedEMF = abs(magnos->getAlternatorSystem().emf);
+		
+		if(!magnos->getCoilSystem().calibrating()){
+			baseAccumulatedEMF += magnos->getCoilSystem().lastBaseAccumulatedEMF;
+			accumulatedEMF += magnos->getCoilSystem().lastAccumulatedEMF;
+			//		recycledEMF = magnos->getCoilSystem().lastRecycledEMF;
+		}
+
+		if(magnos->getCoilSystem().calibrating()){
+			any_calibration = true;
+		}
 	}
+
 	
 	if(guiCounter >= 1){
 		guiBaseEMF = baseAccumulatedEMF;
 		guiEMF = accumulatedEMF;
-		guiRecycledEMF = recycledEMF;
+//		guiRecycledEMF = recycledEMF;
 		accumulatedEMF = 0;
 		guiCounter = 0;
 	}
 	
 	if (guiEMF > peakEMF){
-		if((!magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting()) && !Settings::data_collection_mode){
+		if((!any_calibration) && !Settings::data_collection_mode){
 			peakEMF = guiEMF;
 		} else {
 			guiEMF = 0;
-			guiMeasure = 0;
 			peakEMF = 0;
 		}
 	}
 	
-	if((magnos->getCoilSystem().calibrating() && !magnos->getCoilSystem().adapting()) || Settings::data_collection_mode){
-		deltaCounter = 0;
+	if(any_calibration || Settings::data_collection_mode){
 		guiCounter = 0;
-		lastEMF = -1;
-		lastMeasure = 0;
 		guiEMF = 0;
-		guiMeasure = 0;
 		peakEMF = 0;
 		accumulatedEMF = 0;
-		recycledEMF = 0;
-		guiRecycledEMF = 0;
+//		recycledEMF = 0;
+//		guiRecycledEMF = 0;
 		baseAccumulatedEMF = 0;
 	}
 	
-	if(magnos->getCoilSystem().calibrating()){
+	if(any_calibration){
 		ImGui::Text("Status=%s", "PID Calibration");
-	} else if(magnos->getCoilSystem().adapting()){
-		ImGui::Text("Status=%s", "Adaptive Calibration");
 	} else {
 		if(Settings::data_collection_mode){
 			ImGui::Text("Status=%s", "Collecting Data");
@@ -199,13 +240,10 @@ void HelloWorld::onImGuiDraw()
 
 	ImGui::Text("Target Voltage:");
 
-	
 	static int desired_voltage = Settings::desired_target_voltage;
-	
 	static int last_voltage_increase = desired_voltage;
-	
-	
-	if((magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting() || Settings::data_collection_mode)){
+		
+	if(any_calibration || Settings::data_collection_mode){
 		ImGui::BeginDisabled();
 		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
 		ImGui::EndDisabled();
@@ -215,17 +253,21 @@ void HelloWorld::onImGuiDraw()
 	
 	if(last_voltage_increase != Settings::desired_target_voltage){
 		Settings::desired_target_voltage = last_voltage_increase;
-		magnos->getCoilSystem().recalibrate();
+		for(auto gimbal : gimbals){
+			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+			magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::desired_target_voltage / number_of_gimbals);
+			magnos->getCoilSystem().recalibrate();
+		}
+		
 	}
 	   
    	last_voltage_increase = desired_voltage;
 
-
 	ImGui::Text("Base Voltage=%.4f", guiBaseEMF);
 	ImGui::Text("Base + Gain Voltage=%.4f", guiEMF);
-	ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF);
+	//ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF); // @TODO maximize voltage
 	
-	if(Settings::data_collection_mode || (magnos->getCoilSystem().calibrating() || magnos->getCoilSystem().adapting())){
+	if(Settings::data_collection_mode || any_calibration){
 		ImGui::BeginDisabled();
 		ImGui::Button("Collect Data");
 		ImGui::EndDisabled();
@@ -288,8 +330,49 @@ void HelloWorld::onMouseUp(Event* event)
 
 void HelloWorld::onMouseMove(Event* event)
 {
-    EventMouse* e = static_cast<EventMouse*>(event);
-    AXLOG("onMouseMove detected, X:%f  Y:%f", e->getCursorX(), e->getCursorY());
+	EventMouse* e = static_cast<EventMouse*>(event);
+	AXLOG("Mouse move detected, X:%f  Y:%f", e->getCursorX(), e->getCursorY());
+	
+	float sensitivity = 0.005f;
+
+	// Get the cursor delta since the last frame
+	float cursorDeltaX = e->getCursorX();
+	float cursorDeltaY = e->getCursorY();
+	
+	// Calculate new camera rotation angles based on normalized cursor deltas
+	float horizontalAngle = _defaultCamera->getRotation3D().y + cursorDeltaX;
+	float verticalAngle = _defaultCamera->getRotation3D().x - cursorDeltaY;
+
+
+	
+	// Define the vertical angle constraints (adjust as needed)
+	float minVerticalAngle = AX_DEGREES_TO_RADIANS(-10); // Minimum vertical angle (degrees)
+	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(45.0f);  // Maximum vertical angle (degrees)
+	
+	// Clamp the vertical angle within the specified range
+	
+	verticalAngle *= sensitivity;
+	horizontalAngle *= sensitivity;
+
+	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
+
+	// Create quaternions for camera rotation
+	Quaternion xRotation;
+	xRotation.set(Vec3(1.0f, 0.0f, 0.0f), verticalAngle);
+	Quaternion yRotation;
+	yRotation.set(Vec3(0.0f, 1.0f, 0.0f), horizontalAngle);
+	
+	// Combine rotations to get the final orientation
+	Quaternion newRotation = yRotation * xRotation;
+	
+	// Calculate the new camera position based on rotation angles
+	float distanceFromCenter = (_defaultCamera->getPosition3D() - Vec3(0, 0, 0)).length();
+	Vec3 newPosition = newRotation * Vec3(0, 0, -distanceFromCenter);
+	
+	// Set the camera's new position and look-at point
+	_defaultCamera->setPosition3D(newPosition);
+	_defaultCamera->lookAt(Vec3(0, 0, 0));
+
 }
 
 void HelloWorld::onMouseScroll(Event* event)

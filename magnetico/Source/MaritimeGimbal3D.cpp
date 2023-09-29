@@ -509,7 +509,6 @@ bool MaritimeGimbal3D::init() {
 	outerCoilSystem->attachToDisk(outerNode, outerRingRadius + 0.0024f, MagnetDirection::EAST, MagnetPolarity::NORTH);
 	outerCoilSystem->attachToDisk(outerNode, outerRingRadius + 0.0024f, MagnetDirection::WEST, MagnetPolarity::SOUTH);
 	
-	
 	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::NORTHEAST, MagnetPolarity::SOUTH);
 	
 	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::SOUTHEAST, MagnetPolarity::SOUTH);
@@ -518,12 +517,9 @@ bool MaritimeGimbal3D::init() {
 	
 	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::SOUTHWEST, MagnetPolarity::SOUTH);
 	
+//	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::FRONT, MagnetPolarity::SOUTH);
 	
-	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::FRONT, MagnetPolarity::SOUTH);
-	
-	
-	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::BACK, MagnetPolarity::SOUTH);
-	
+//	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::BACK, MagnetPolarity::SOUTH);
 	
 	middleMagnetSystem->attachToDisk(middleNode, middleRingRadius + 0.0016f, MagnetDirection::WEST, MagnetPolarity::SOUTH);
 	middleMagnetSystem->attachToDisk(middleNode, (baseDistanceOffset - 0.01f) + 0.0016f, MagnetDirection::EAST, MagnetPolarity::NORTH);
@@ -551,7 +547,7 @@ bool MaritimeGimbal3D::init() {
 	return true;
 }
 
-void MaritimeGimbal3D::attachPinball(ax::Scene* scene) {
+void MaritimeGimbal3D::attachPinball() {
 	
 	pinball = IronBall::create(0.04f);
 	

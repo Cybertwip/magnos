@@ -1,4 +1,5 @@
 #include "AlternatorSystem.h"
+#include "Utils3d.h"
 
 AlternatorSystem::AlternatorSystem(float coilArea, float coilTurns)
 : area(coilArea), turns(coilTurns){

@@ -1,5 +1,5 @@
 #include "MagnetSystem.h"
-
+#include "Utils3d.h"
 
 MagnetSystem::MagnetSystem() {
 }

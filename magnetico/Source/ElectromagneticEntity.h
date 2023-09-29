@@ -2,7 +2,6 @@
 
 #include <axmol.h>
 
-
 // Define direction flags
 enum class MagnetDirection {
 	NORTH,
@@ -22,10 +21,7 @@ enum class MagnetPolarity {
 	SOUTH
 };
 
-class ElectromagneticEntity {
-protected:
-	ax::Mesh* createCube(float dimension);
-	
+class ElectromagneticEntity {	
 public:
 	virtual ax::Vec3 combineFieldsOrForces() = 0;
 	virtual void attachToDisk(ax::Node* disk, float radius, MagnetDirection direction, MagnetPolarity polarity) = 0;

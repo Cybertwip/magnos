@@ -1,4 +1,5 @@
 #include "CoilSystem.h"
+#include "Utils3d.h"
 
 static long long timePrev = 0;
 static long long timeNow = 0;
@@ -6,7 +7,7 @@ static long long timeNow = 0;
 CoilSystem::CoilSystem(float voltage, float resistance, float current, float coilTurns)
 	: coilResistance(resistance), maxCurrent(current), turns(coilTurns),
 filterBase(VoltageController(32, Settings::desired_base_voltage, Settings::desired_base_voltage, false)),
-filterIncrease(VoltageController(32, Settings::desired_target_voltage, Settings::desired_target_voltage, true)){
+filterIncrease(VoltageController(32, Settings::desired_capacitor_voltage, Settings::desired_capacitor_voltage, true)){
 		
     setCurrentFromVoltage(voltage);
 	std::string home = getenv("HOME");
@@ -20,14 +21,11 @@ filterIncrease(VoltageController(32, Settings::desired_target_voltage, Settings:
 
     this->recalibrate();
     
-    //this->current = 0;
-
     filterIncrease.setOnCapacitorCharged([this](float charge){
-        if(!calibrating() && !adapting()){
+        if(!calibrating()){
             this->recycledEMF += charge;
         }
     });
-
 }
 
 CoilSystem::~CoilSystem(){
@@ -42,6 +40,15 @@ void CoilSystem::recalibrate(){
 	resetAccumulators();
 }
 
+void CoilSystem::setDesignedEMFPerSecond(float desiredEMF){
+	designedEMFPerSecond = desiredEMF;
+	resetAccumulators();
+}
+
+void CoilSystem::setOnVoltagePeakCallback(std::function<void(float)> onVoltagePeak){
+	this->onVoltagePeak = onVoltagePeak;
+}
+
 void CoilSystem::resetAccumulators(){
 	accumulationTime = 0.0f;
 	accumulatedEMF = 0;
@@ -54,7 +61,7 @@ void CoilSystem::resetAccumulators(){
 	
 	filterBase = VoltageController(32, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
 	
-	filterIncrease = VoltageController(32, Settings::desired_target_voltage, Settings::desired_target_voltage, true);
+	filterIncrease = VoltageController(32, designedEMFPerSecond, Settings::desired_capacitor_voltage, true);
 	
 	this->current = 0;
 
@@ -209,10 +216,6 @@ bool CoilSystem::calibrating() {
     return calibration;
 }
 
-bool CoilSystem::adapting() {
-    return false;
-}
-
 void CoilSystem::adjustCurrentBasedOn(float dt) {
     // Calculate desired current based on EMF error and resistance
     float emfError = desiredEMFPerSecond - accumulatedEMF;
@@ -237,7 +240,7 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
         if(calibration){
             calibration = false;
 			            
-			desiredEMFPerSecond = Settings::desired_target_voltage;
+			desiredEMFPerSecond = designedEMFPerSecond;
 
 			Settings::data_collection_mode = false;
 			Settings::cycles_per_collection = 1;
@@ -264,7 +267,6 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
             if(fabs(emfError) > error_trial && !Settings::schedule_data_collection_mode) {
                 
 				//Settings::schedule_recalibration_for_collection = true;
-				
             }
 			
 			desiredCurrent = std::clamp(desiredCurrent, 0.0f, maxCurrent);
@@ -300,7 +302,7 @@ void CoilSystem::update(){
 }
 
 void CoilSystem::update(float measuredEMF, float delta) {
-	desiredEMFPerSecond = Settings::desired_target_voltage;
+	desiredEMFPerSecond = designedEMFPerSecond;
 
     accumulatedEMF += fabs(measuredEMF);
 	
@@ -322,7 +324,7 @@ void CoilSystem::update(float measuredEMF, float delta) {
     }
 	
 	
-	if(Settings::data_collection_mode && !calibrating() && !adapting()){
+	if(Settings::data_collection_mode && !calibrating()){
 		
 		// Calculate desired current based on EMF error and resistance
 		float emfError = desiredEMFPerSecond - accumulatedEMF;
@@ -394,7 +396,12 @@ void CoilSystem::update(float measuredEMF, float delta) {
 		
 		if(accumulatedEMF >= desiredEMFPerSecond || (accumulatedEMF >= desiredEMFPerSecond && calibrating())){
 
+			if(onVoltagePeak){
+				onVoltagePeak(accumulatedEMF);
+			}
+			
 			accumulatedEMF = 0;
+			
 		}
 	}
 
