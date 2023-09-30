@@ -129,11 +129,11 @@ void Car::updateMotion(float deltaTime) {
 	// Calculate angular velocity for each wheel
 	float wheelRadius = 0.2f; // Adjust the wheel radius as needed
 	float baseAngularVelocity = velocity / wheelRadius;
-	float frontLeftAngularVelocity = baseAngularVelocity * (1.0f - steeringAngle);
-	float frontRightAngularVelocity = baseAngularVelocity * (1.0f + steeringAngle);
+	float frontLeftAngularVelocity = baseAngularVelocity * (1.0f + steeringAngle);
+	float frontRightAngularVelocity = baseAngularVelocity * (1.0f - steeringAngle);
 	
 	// Apply rotations to the wheels
-	rotationAngle -= AX_RADIANS_TO_DEGREES(baseAngularVelocity);
+	rotationAngle += AX_RADIANS_TO_DEGREES(baseAngularVelocity);
 	
 	// Calculate the rotation quaternions for the wheels
 	ax::Quaternion frontLeftRotation;
@@ -155,8 +155,8 @@ void Car::updateMotion(float deltaTime) {
 	// Set the rotation of the front right wheel using the combined quaternion
 	frontRightWheel->setRotationQuat(frontRightRotationSteer * frontRightRotation);
 
-	rearLeftWheel->setRotation3D(rearLeftWheel->getRotation3D() + ax::Vec3(0, 0, rotationAngle));
-	rearRightWheel->setRotation3D(rearRightWheel->getRotation3D() + ax::Vec3(0, 0, rotationAngle));
+	rearLeftWheel->setRotation3D(rearLeftWheel->getRotation3D() + ax::Vec3(0, 0, AX_RADIANS_TO_DEGREES(baseAngularVelocity)));
+	rearRightWheel->setRotation3D(rearRightWheel->getRotation3D() + ax::Vec3(0, 0, AX_RADIANS_TO_DEGREES(baseAngularVelocity)));
 
 
 }
