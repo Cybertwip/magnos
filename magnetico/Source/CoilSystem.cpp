@@ -30,6 +30,20 @@ filterIncrease(VoltageController(32, Settings::desired_capacitor_voltage, Settin
 CoilSystem::~CoilSystem(){
 }
 
+float CoilSystem::withdrawPower(float power){
+	
+	float withdrawn = std::min(power, std::max(this->accumulatedEMF = this->accumulatedEMF - power, 0.0f));
+	
+
+	if(this->accumulatedEMF < 0){
+		this->accumulatedEMF = 0;
+	}
+	
+	return withdrawn;
+	
+}
+
+
 void CoilSystem::recalibrate(){
 	pidCurrent = PIDController(1.0f, 0, 0);
 

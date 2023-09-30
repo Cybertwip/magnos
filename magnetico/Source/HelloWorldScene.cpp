@@ -179,7 +179,9 @@ void HelloWorld::onExit()
 
 void HelloWorld::onImGuiDraw()
 {
-	ImGui::Begin("window");
+	ImGui::SetNextWindowPos(ImVec2(120, 60), ImGuiCond_FirstUseEver);
+
+	ImGui::Begin("Engine");
 	
 	
 	float deltaTime = ImGui::GetIO().DeltaTime;
@@ -313,6 +315,29 @@ void HelloWorld::onImGuiDraw()
 
 	//ImGui::Text("Induced Current=%.4f", inducedCurrent);
 	ImGui::End();
+	
+	ImGui::SetNextWindowPos(ImVec2(960, 60), ImGuiCond_FirstUseEver);
+
+	ImGui::Begin("Car");
+	
+
+	static float acceleration = 0;
+	static float speed = 0;
+	
+	static float counter = 0;
+	
+	counter += deltaTime;
+	
+	if(counter >= 1.0f){
+		counter = 0;
+		acceleration = car->getAcceleration();
+		speed = car->getSpeed();
+	}
+
+	ImGui::Text("Accel m/s^2=%.2f", acceleration);
+	ImGui::Text("Speed m/s=%.2f", speed);
+	ImGui::End();
+
 }
 
 
@@ -384,7 +409,18 @@ void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
-		car->accelerate(40);
+		
+		float powerDraw = 6 / gimbals.size();
+		
+		float totalPowerDrawn = 0;
+		for(auto gimbal : gimbals){
+			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+			
+			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+		}
+		
+
+		car->accelerate(totalPowerDrawn);
 	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
@@ -440,7 +476,7 @@ void HelloWorld::update(float delta)
 	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
 	
 	// Calculate the new camera position relative to the car
-	float distanceFromCar = 5.0f; // Adjust the distance as needed
+	float distanceFromCar = 3.0f; // Adjust the distance as needed
 	float cameraHeight = 2.0f;   // Adjust the height as needed
 	
 	// Calculate the camera's offset from the car based on angles

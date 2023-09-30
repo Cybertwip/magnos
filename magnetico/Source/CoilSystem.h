@@ -27,6 +27,8 @@ public:
 	
 	~CoilSystem();
 	
+	float withdrawPower(float power);
+	
 	void recalibrate();
 	void resetAccumulators();
 	void saveDataToBinary(const std::string& filename);

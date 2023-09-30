@@ -45,7 +45,11 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	gimbals.push_back(createGimbal(2, gearBox, ax::Vec3(0.25, 0, 0)));
 	gimbals.push_back(createGimbal(3, gearBox, ax::Vec3(0, 0, -0.25)));
 	gimbals.push_back(createGimbal(4, gearBox, ax::Vec3(0, 0, 0.25)));
-	
+
+	gimbals.push_back(createGimbal(5, gearBox, ax::Vec3(0, 0.25f, 0)));
+
+	gimbals.push_back(createGimbal(6, gearBox, ax::Vec3(0, -0.25f, 0)));
+
 	// Add car components to the Car node
 	carBody->addChild(gearBox);
 	this->addChild(carBody);
@@ -54,6 +58,14 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 Car::~Car() {
 	// Release any allocated resources
 	// ...
+}
+
+float Car::getSpeed() const{
+	return speed;
+}
+
+float Car::getAcceleration() const{
+	return acceleration;
 }
 
 std::vector<ax::Node*> Car::getGimbals() const {
@@ -128,21 +140,18 @@ void Car::updateMotion(float deltaTime) {
 	}
 	
 	// Calculate the car's new position based on the updated speed
-	ax::Vec3 newPosition = this->getPosition3D() + ax::Vec3(newSpeed * deltaTime, 0, 0);
+	ax::Vec3 newPosition = this->getPosition3D();
 	
-	// Calculate lateral (sideways) movement based on steering
-	float turningRadius = 0.25f / -steeringAngle; // Adjust the factor for realism
-	float lateralMovement = 0.0f;
+	// Calculate linear movement (forward movement) along the x-axis
+	float linearMovementX = newSpeed * std::cos(carOrientation) * deltaTime;
 	
-	if (std::abs(steeringAngle) > 0.01f) {
-		float lateralSpeed = newSpeed * steeringAngle;
-		float deltaTheta = lateralSpeed / turningRadius;
-		float lateralMovementX = std::sin(deltaTheta) * turningRadius;
-		float lateralMovementZ = (1.0f - std::cos(deltaTheta)) * turningRadius;
-		lateralMovement = std::abs(steeringAngle) * deltaTime * (lateralMovementX > 0 ? 1 : -1);
-		newPosition.x += lateralMovementX * (lateralMovementX > 0 ? -1 : 1);
-		newPosition.z += lateralMovementZ;
-	}
+	// Calculate lateral movement (sideways movement) along the x-axis
+	float lateralMovementX = newSpeed * std::sin(carOrientation) * deltaTime;
+
+	// Update the car's position
+	newPosition.x += linearMovementX;
+	newPosition.z += lateralMovementX;
+
 	
 	// Calculate the car's traction force based on the ground friction coefficient
 	float groundFrictionCoefficient = 0.8f; // Adjust for realism
@@ -162,11 +171,26 @@ void Car::updateMotion(float deltaTime) {
 	// Update the car's position
 	this->setPosition3D(newPosition);
 	
+	// Calculate the change in orientation (yaw) based on the steering angle
+	float yawChange = newSpeed * std::tan(steeringAngle) * deltaTime;
+	
+	// Update the car's orientation (yaw)
+	carOrientation += yawChange;
+	
+	// Ensure the carOrientation stays within a valid range (e.g., between 0 and 2 * PI)
+	carOrientation = std::fmod(carOrientation, 2 * M_PI);
+	if (carOrientation < 0.0f) {
+		carOrientation += 2 * M_PI;
+	}
+	
+	this->setRotation3D(ax::Vec3(this->getRotation3D().x, AX_RADIANS_TO_DEGREES(-carOrientation), this->getRotation3D().z));
+
+	
 	// Calculate angular velocity for each wheel
 	float wheelRadius = 0.2f; // Adjust the wheel radius as needed
-	float baseAngularVelocity = -newSpeed / wheelRadius;
-	float frontLeftAngularVelocity = baseAngularVelocity * (1.0f + steeringAngle);
-	float frontRightAngularVelocity = baseAngularVelocity * (1.0f - steeringAngle);
+	float baseAngularVelocity = newSpeed / wheelRadius * deltaTime;
+//	float frontLeftAngularVelocity = baseAngularVelocity * (1.0f + steeringAngle);
+//	float frontRightAngularVelocity = baseAngularVelocity * (1.0f - steeringAngle);
 	
 	// Apply rotations to the wheels
 	rotationAngle += AX_RADIANS_TO_DEGREES(baseAngularVelocity);

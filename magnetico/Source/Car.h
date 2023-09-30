@@ -25,6 +25,7 @@ private:
 	float rotationAngle = 0;
 	float speed = 0;
 	float mass = 150;
+	float carOrientation = 0;
 
 public:
 	Car();
@@ -32,6 +33,8 @@ public:
 	
 	std::vector<ax::Node*> getGimbals() const;
 	
+	float getAcceleration() const;
+	float getSpeed() const;
 	void steer(float angle); // Function to set the steering angle
 	void accelerate(float value);
 	void applyFriction();
