@@ -10,16 +10,16 @@ MaritimeGimbal3D* createGimbal(ax::Node* parent, ax::Vec3 position){
 	return gimbal;
 }
 
-Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f) {
+Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAngle(15) {
 	// Create car's body, gear box, and gimbals
 	std::vector<CustomNode*> wheelsContainer;
 	
 	carBody = createCarWithWheels(1.25f, 0.1f, 0.2f, wheelsContainer);
 	
-	frontLeftWheel = wheelsContainer[0];
+	frontLeftWheel = wheelsContainer[3];
 	frontRightWheel = wheelsContainer[1];
 	rearLeftWheel = wheelsContainer[2];
-	rearRightWheel = wheelsContainer[3];
+	rearRightWheel = wheelsContainer[0];
 
 	auto gearBoxMesh = createCube(0.45f);
 	auto gearBoxRenderer = ax::MeshRenderer::create();
@@ -59,9 +59,29 @@ std::vector<ax::Node*> Car::getGimbals() const {
 	return this->gimbals;
 }
 
+void Car::steer(float angle) {
+	// Clamp the steering angle within the valid range
+	steeringAngle = std::min(std::max(angle, -maxSteeringAngle), maxSteeringAngle);
+}
 
-void Car::accelerate(float value) {
-	acceleration = value;
+
+void Car::accelerate(float voltage) {
+	// Define Tesla car properties (example values)
+//	const float maxVoltage = 400.0f; // Maximum voltage output in volts
+	const float maxVoltage = 40.0f; // Maximum voltage output in volts
+
+//	const float maxAcceleration = 2.00f; // Maximum acceleration in m/s^2
+	const float maxAcceleration = 8.0f; // Maximum acceleration in m/s^2
+	
+	// Scale the voltage input to acceleration based on Tesla car properties
+	acceleration = (voltage / maxVoltage) * maxAcceleration;
+	
+	// Ensure acceleration is within the valid range
+	if (acceleration > maxAcceleration) {
+		acceleration = maxAcceleration;
+	} else if (acceleration < -maxAcceleration) {
+		acceleration = -maxAcceleration;
+	}
 }
 
 void Car::applyFriction() {
@@ -97,7 +117,46 @@ void Car::updateMotion(float deltaTime) {
 	float velocity = acceleration * deltaTime;
 	ax::Vec3 newPosition = this->getPosition3D() + ax::Vec3(velocity, 0, 0);
 	
+	// Calculate lateral (sideways) movement based on steering
+	float lateralMovement = velocity * -steeringAngle * deltaTime;
+	
+	// Update the car's lateral position
+	newPosition += ax::Vec3(0, 0, lateralMovement);
+	
 	// Update the car's position
 	this->setPosition3D(newPosition);
+
+	// Calculate angular velocity for each wheel
+	float wheelRadius = 0.2f; // Adjust the wheel radius as needed
+	float baseAngularVelocity = velocity / wheelRadius;
+	float frontLeftAngularVelocity = baseAngularVelocity * (1.0f - steeringAngle);
+	float frontRightAngularVelocity = baseAngularVelocity * (1.0f + steeringAngle);
+	
+	// Apply rotations to the wheels
+	rotationAngle -= AX_RADIANS_TO_DEGREES(baseAngularVelocity);
+	
+	// Calculate the rotation quaternions for the wheels
+	ax::Quaternion frontLeftRotation;
+	frontLeftRotation.set(ax::Vec3(0, 0, 1), AX_DEGREES_TO_RADIANS(rotationAngle));
+	
+	ax::Quaternion frontRightRotation;
+	frontRightRotation.set(ax::Vec3(0, 0, 1), AX_DEGREES_TO_RADIANS(rotationAngle));
+	
+	// Combine the rotations with the steering angle
+	ax::Quaternion frontLeftRotationSteer;
+	frontLeftRotationSteer.set(ax::Vec3(0, 1, 0), -steeringAngle);
+	
+	ax::Quaternion frontRightRotationSteer;
+	frontRightRotationSteer.set(ax::Vec3(0, 1, 0), -steeringAngle);
+	
+	// Set the rotation of the front left wheel using the combined quaternion
+	frontLeftWheel->setRotationQuat(frontLeftRotationSteer * frontLeftRotation);
+	
+	// Set the rotation of the front right wheel using the combined quaternion
+	frontRightWheel->setRotationQuat(frontRightRotationSteer * frontRightRotation);
+
+	rearLeftWheel->setRotation3D(rearLeftWheel->getRotation3D() + ax::Vec3(0, 0, rotationAngle));
+	rearRightWheel->setRotation3D(rearRightWheel->getRotation3D() + ax::Vec3(0, 0, rotationAngle));
+
 
 }

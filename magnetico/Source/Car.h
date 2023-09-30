@@ -20,7 +20,9 @@ private:
 	float acceleration;
 	float maxSpeed;
 	float friction;
-	
+	float steeringAngle;
+	float maxSteeringAngle; // Maximum steering angle in radians
+	float rotationAngle = 0;
 
 public:
 	Car();
@@ -28,10 +30,12 @@ public:
 	
 	std::vector<ax::Node*> getGimbals() const;
 	
+	void steer(float angle); // Function to set the steering angle
 	void accelerate(float value);
 	void applyFriction();
 	void updateMotion(float deltaTime);
 
 	CREATE_FUNC(Car);
+	
 };
 

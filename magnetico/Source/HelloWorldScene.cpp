@@ -367,8 +367,18 @@ void HelloWorld::onMouseScroll(Event* event)
 void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 {
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
-		car->accelerate(1);
+		car->accelerate(40);
 	}
+	
+	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
+		car->steer(-15);
+	}
+	
+	
+	if(code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
+		car->steer(15);
+	}
+
 }
 
 void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
@@ -377,6 +387,10 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 		
 	}
 
+	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
+		car->steer(0);
+	}
+	
 }
 
 void HelloWorld::update(float delta)
