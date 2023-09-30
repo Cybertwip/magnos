@@ -5,15 +5,15 @@ MagnetSystem::MagnetSystem() {
 }
 
 ax::Vec3 MagnetSystem::calculateMagneticFieldAtOrigin(ax::Vec3 origin, ax::Vec3 magnetPosition, MagnetPolarity polarity) {
-	ax::Vec3 r = origin - magnetPosition;
-	float distance = r.length();
+	
+    float distance = (origin - magnetPosition).length();
     
     if (distance < 0.001f)
         distance = 0.001f;
     
     // Calculate the magnetic field strength based on the magnet's distance.
     // The field strength will be inversely proportional to the cube of the distance.
-    ax::Vec3 magneticField = _magneticFieldStrength * (1.0f / (distance * distance * distance)) * magnetPosition.getNormalized();
+    ax::Vec3 magneticField = _magneticFieldStrength * (1.0f / (distance * distance * distance)) * (origin - magnetPosition).getNormalized();
     
     // Considering polarity to determine the direction of the magnetic moment
     if(polarity == MagnetPolarity::SOUTH) {
@@ -23,21 +23,17 @@ ax::Vec3 MagnetSystem::calculateMagneticFieldAtOrigin(ax::Vec3 origin, ax::Vec3 
     return magneticField;
 }
 
-ax::Vec3 MagnetSystem::calculateForceDueToMagnet(const ax::Vec3& magnetPosition, const ax::Vec3& affectedMagnetPosition, MagnetPolarity polarity) {
+ax::Vec3 MagnetSystem::calculateForceDueToMagnet(const ax::Vec3& origin, const ax::Vec3& magnetPosition, const ax::Vec3& affectedMagnetPosition, MagnetPolarity polarity) {
     ax::Vec3 field = calculateMagneticFieldAtOrigin(magnetPosition, affectedMagnetPosition, polarity);
     return field;
 }
 
 ax::Vec3 MagnetSystem::combineFieldsOrForces(const ax::Vec3& origin) {
-    ax::Vec3 totalForce(0, 0, 0);
-    
-    for (const auto& [magnetPosition, polarity] : _attachedEntities) {
-        // Modify force calculation based on polarity if required.
-        // For simplicity, assuming polarity does not change the force calculation for now.
-        totalForce += calculateMagneticFieldAtOrigin(origin, magnetPosition, polarity);
-    }
-    
-    return totalForce;
+	
+	// @TODO
+	throw std::exception();
+	
+    return ax::Vec3(0, 0, 0);
 }
 
 

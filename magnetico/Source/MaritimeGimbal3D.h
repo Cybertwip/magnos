@@ -40,7 +40,7 @@ public:
 	
 	ax::Vec3 rotateAroundAxis(const ax::Vec3& point, const ax::Vec3& axis, float angle);
 			
-	void calculateFlux(CoilEntity::AttachedEntity& coil, const ax::Vec3& position);
+	void calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::AttachedEntity& magnet);
 	
 	float calculateCoilEMF(const CoilEntity::AttachedEntity& coil, float delta);
 	
@@ -66,17 +66,18 @@ public:
 	
 	std::unique_ptr<CoilSystem> outerCoilSystem;
 	
-	AlternatorSystem alternator = AlternatorSystem(0.025f, 420);
+	AlternatorSystem alternator = AlternatorSystem(0.025f, 120);
 	
 	std::unique_ptr<MagnetSystem> middleMagnetSystem = std::make_unique<MagnetSystem>();
-	
+	std::unique_ptr<MagnetSystem> outerMagnetSystem = std::make_unique<MagnetSystem>();
+
 	std::unique_ptr<MagnetSystem> innerMagnetSystem = std::make_unique<MagnetSystem>();
 
 	float baseDistanceOffset = 0.07f; // Base offset for the distance
 	
 	float innerRingRadius = 0.05f; // Base offset for the distance
 	float middleRingRadius = 0.06f; // Base offset for the distance
-	float outerRingRadius = 0.12f; // Base offset for the distance
+	float outerRingRadius = 0.10f; // Base offset for the distance
 
 public:
 	CREATE_FUNC(MaritimeGimbal3D);

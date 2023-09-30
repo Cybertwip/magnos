@@ -128,7 +128,7 @@ void CoilSystem::setCurrentFromVoltage(float voltage) {
 }
 
 ax::Vec3 CoilSystem::computeMagneticField(CoilEntity::AttachedEntity& coil, const ax::Vec3& origin, const ax::Vec3& point, MagnetPolarity polarity) const {
-    ax::Vec3 direction = (point).getNormalized();
+    ax::Vec3 direction = (point - origin).getNormalized();
     float distance = origin.distance(point);
     float magnitude = (this->current * coil.turns) / (2 * M_PI * distance);
     

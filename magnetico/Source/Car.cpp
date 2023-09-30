@@ -42,12 +42,12 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	gearBox->setRotation3D(ax::Vec3(0, 180, 0));
 	
 	gimbals.push_back(createGimbal(1, gearBox, ax::Vec3(-0.25, 0, 0)));
-	//gimbals.push_back(createGimbal(2, gearBox, ax::Vec3(0.25, 0, 0)));
-//	gimbals.push_back(createGimbal(3, gearBox, ax::Vec3(0, 0, -0.25)));
-//	gimbals.push_back(createGimbal(4, gearBox, ax::Vec3(0, 0, 0.25)));
+	gimbals.push_back(createGimbal(2, gearBox, ax::Vec3(0.25, 0, 0)));
+	gimbals.push_back(createGimbal(3, gearBox, ax::Vec3(0, 0, -0.25)));
+	gimbals.push_back(createGimbal(4, gearBox, ax::Vec3(0, 0, 0.25)));
 	
 	// Add car components to the Car node
-	this->addChild(gearBox);
+	carBody->addChild(gearBox);
 	this->addChild(carBody);
 }
 

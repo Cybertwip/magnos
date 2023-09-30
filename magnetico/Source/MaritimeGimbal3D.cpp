@@ -277,23 +277,30 @@ ax::Vec3 MaritimeGimbal3D::rotateAroundAxis(const ax::Vec3& point, const ax::Vec
 	}
 }
 
-void MaritimeGimbal3D::calculateFlux(CoilEntity::AttachedEntity& coil, const ax::Vec3& position) {
+void MaritimeGimbal3D::calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::AttachedEntity& magnet) {
 	auto ironBall = dynamic_cast<MagneticBall*>(pinball);
 	float ballMagneticMoment = ironBall->get_magnetization() * ironBall->calculate_volume();
 	
-	ax::Vec3 r = position - coil.position;
-	float distance = r.length();
+	ax::Vec3 r = magnet.position - coil.position;
+	float distance = magnet.position.distance(coil.position);
 	r.normalize();
 	
-	// Magnetic field at the coil's position due to the ball
-	ax::Vec3 B = (MU_0 / (4.0f * M_PI)) * (ballMagneticMoment / std::pow(distance, 3)) * r;
+	// Determine the magnetic field polarity based on both coil.polarity and magnet.polarity
+	float coilPolarityFactor = (coil.polarity == MagnetPolarity::SOUTH) ? -1.0f : 1.0f;
+	float magnetPolarityFactor = (magnet.polarity == MagnetPolarity::SOUTH) ? -1.0f : 1.0f;
 	
+	// Combine the polarity factors to determine the overall polarity effect
+	float polarityFactor = coilPolarityFactor * magnetPolarityFactor;
+
+	// Magnetic field at the coil's position due to the ball
+	ax::Vec3 B = (MU_0 / (4.0f * M_PI)) * (polarityFactor * ballMagneticMoment / std::pow(distance, 3)) * r;
+
 	float flux = B.length() * coil.area; // assuming coil's face is perpendicular to B
 	
-	// Calculate the flux through the coil due to this magnetic field
+	// Update the flux through the coil due to this magnetic field
 	coil.flux = flux;
-	
 }
+
 
 float MaritimeGimbal3D::calculateCoilEMF(const CoilEntity::AttachedEntity& coil, float delta) {
 	// Change in flux
@@ -317,6 +324,7 @@ void MaritimeGimbal3D::update(float) {
 	
 	do{
 		
+		outerMagnetSystem->update();
 		middleMagnetSystem->update();
 		innerMagnetSystem->update();
 		outerCoilSystem->update();
@@ -335,17 +343,27 @@ void MaritimeGimbal3D::update(float) {
 		
 		for (auto& coil : coils) {
 			// Reset the coil's flux before summing from all entities
+			bool firstRun = false;
+			if(coil.flux == 0){
+				firstRun = true;
+			}
 			coil.previousFlux = coil.flux;
 			coil.flux = 0.0f;
 			
 			for (auto& entity : outerEntities) {
 				// Compute flux for the current coil based on each entity's position
-				calculateFlux(coil, entity.position);
+				calculateFlux(coil, entity);
 			}
 			
-			// Compute the EMF for the coil after accounting for all entities
+			if(firstRun){
+				coil.previousFlux = coil.flux;
+			}
+			
 			totalEMF += calculateCoilEMF(coil, fixed_delta);
+
 		}
+		
+
 		// Compute total induced EMF in the alternator
 		alternator.emf = totalEMF;
 		
@@ -413,22 +431,41 @@ void MaritimeGimbal3D::applyMagneticImpulse(float delta) {
 	
 	auto ironBallMagnets = innerMagnetSystem->getAttachedEntities();
 	auto middleRingMagnets = middleMagnetSystem->getAttachedEntities();
-	
+	auto outerRingMagnets = outerMagnetSystem->getAttachedEntities();
+
+	// Initialize total forces to zero
 	ax::Vec3 ironBallTotalForce(0, 0, 0);
 	ax::Vec3 middleRingTotalForce(0, 0, 0);
 	
 	for (const auto& ironBallMagnet : ironBallMagnets) {
-		for (const auto& middleRingMagnet : middleRingMagnets) {
-			// Force on ironBallMagnet due to middleRingMagnet
-			ax::Vec3 forceOnIronBall =  innerMagnetSystem->calculateForceDueToMagnet(middleRingMagnet.position, ironBallMagnet.position, middleRingMagnet.polarity);
-			ironBallTotalForce += forceOnIronBall;
+		for (const auto& outerRingMagnet : outerRingMagnets) {
+			// Calculate force between ironBallMagnet and outerRingMagnet
+			ax::Vec3 forceOnIronBall = innerMagnetSystem->calculateForceDueToMagnet(
+																					ax::Vec3(0, 0, 0), outerRingMagnet.position, ironBallMagnet.position, outerRingMagnet.polarity
+																					);
 			
-			// Force on middleRingMagnet due to ironBallMagnet (opposite direction)
-			ax::Vec3 forceOnMiddleRing = -forceOnIronBall;
-			middleRingTotalForce += forceOnMiddleRing;
+			// Accumulate the force on the iron ball
+			ironBallTotalForce += forceOnIronBall;
 		}
 	}
 	
+	for (const auto& middleRingMagnet : middleRingMagnets) {
+		for (const auto& outerRingMagnet : outerRingMagnets) {
+			// Calculate force between middleRingMagnet and outerRingMagnet
+			ax::Vec3 forceOnMiddleRing =
+			middleMagnetSystem->calculateForceDueToMagnet(
+			ax::Vec3(0, 0, 0),
+			outerRingMagnet.position,
+			middleRingMagnet.position,
+			outerRingMagnet.polarity);
+			
+			// Accumulate the forces on the iron ball and middle ring
+			ironBallTotalForce += forceOnMiddleRing;
+			middleRingTotalForce += -forceOnMiddleRing; // Opposite direction
+		}
+	}
+	
+	// Update the forces
 	auto ironBallForces = ironBallTotalForce;
 	auto middleForces = middleRingTotalForce;
 	
@@ -486,11 +523,11 @@ void MaritimeGimbal3D::setupGui() {
 	outerCoilSystem->attachToDisk(outerNode, outerRingRadius + 0.0024f, MagnetDirection::EAST, MagnetPolarity::NORTH);
 	outerCoilSystem->attachToDisk(outerNode, outerRingRadius + 0.0024f, MagnetDirection::WEST, MagnetPolarity::SOUTH);
 	
-	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::NORTHEAST, MagnetPolarity::SOUTH);
+	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::NORTHEAST, MagnetPolarity::NORTH);
 	
 	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::SOUTHEAST, MagnetPolarity::SOUTH);
 	
-	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::NORTHWEST, MagnetPolarity::SOUTH);
+	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::NORTHWEST, MagnetPolarity::NORTH);
 	
 	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::SOUTHWEST, MagnetPolarity::SOUTH);
 	
@@ -500,7 +537,13 @@ void MaritimeGimbal3D::setupGui() {
 	
 	middleMagnetSystem->attachToDisk(middleNode, middleRingRadius + 0.0016f, MagnetDirection::WEST, MagnetPolarity::SOUTH);
 	middleMagnetSystem->attachToDisk(middleNode, (baseDistanceOffset - 0.01f) + 0.0016f, MagnetDirection::EAST, MagnetPolarity::NORTH);
-	
+
+	outerMagnetSystem->attachToDisk(outerNode, outerRingRadius + 0.0024f, MagnetDirection::NORTHEAST, MagnetPolarity::SOUTH);
+	outerMagnetSystem->attachToDisk(outerNode, outerRingRadius + 0.0024f, MagnetDirection::NORTHWEST, MagnetPolarity::NORTH);
+
+	outerMagnetSystem->attachToDisk(outerNode, outerRingRadius + 0.0024f, MagnetDirection::SOUTHEAST, MagnetPolarity::SOUTH);
+	outerMagnetSystem->attachToDisk(outerNode, outerRingRadius + 0.0024f, MagnetDirection::SOUTHWEST, MagnetPolarity::NORTH);
+
 	innerMagnetSystem->attachToDisk(innerNode, innerRingRadius + 0.0016f, MagnetDirection::NORTH, MagnetPolarity::NORTH);
 	innerMagnetSystem->attachToDisk(innerNode, innerRingRadius + 0.0016f, MagnetDirection::SOUTH, MagnetPolarity::SOUTH);
 	
@@ -525,7 +568,7 @@ void MaritimeGimbal3D::loadData(int id){
 	std::make_unique<CoilSystem>(id,
 								 1.5f,
 								 1.0f, // resistance
-								 0.5f, // current
+								 1.0f, // current
 								 360); // turns
 }
 
@@ -534,32 +577,5 @@ void MaritimeGimbal3D::attachPinball() {
 	pinball = IronBall::create(0.04f);
 	
 	innerNode->addChild(pinball);
-	
-	middleMagnetSystem->update();
-	innerMagnetSystem->update();
-	outerCoilSystem->update();
-	alternator.update();
-	
-	
-	// Compute flux for all coils
-	float totalEMF = 0.0f;
-	auto& outerEntities = middleMagnetSystem->getAttachedEntities();
-	auto& innerEntities = innerMagnetSystem->getAttachedEntities();
-	
-	auto& coils = alternator.getAttachedEntities();
-	
-	for (auto& coil : coils) {
-		// Reset the coil's flux before summing from all entities
-		coil.previousFlux = coil.flux;
-		coil.flux = 0.0f;
-		
-		for (auto& entity : outerEntities) {
-			// Compute flux for the current coil based on each entity's position
-			calculateFlux(coil, entity.position);
-		}
-		
-		coil.previousFlux = coil.flux;
-		
-	}
 }
 
