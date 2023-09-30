@@ -196,6 +196,7 @@ void HelloWorld::onImGuiDraw()
 	float accumulatedEMF = 0;
 
 	bool any_calibration = false;
+	bool any_collection = false;
 
 	for(auto gimbal : gimbals){
 		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
@@ -211,6 +212,10 @@ void HelloWorld::onImGuiDraw()
 		if(magnos->getCoilSystem().calibrating()){
 			any_calibration = true;
 		}
+		
+		if(magnos->getCoilSystem().collecting()){
+			any_collection = true;
+		}
 	}
 
 	
@@ -223,7 +228,7 @@ void HelloWorld::onImGuiDraw()
 	}
 	
 	if (guiEMF > peakEMF){
-		if((!any_calibration) && !Settings::data_collection_mode){
+		if((!any_calibration) && !any_collection){
 			peakEMF = guiEMF;
 		} else {
 			guiEMF = 0;
@@ -231,7 +236,7 @@ void HelloWorld::onImGuiDraw()
 		}
 	}
 	
-	if(any_calibration || Settings::data_collection_mode){
+	if(any_calibration || any_collection){
 		guiCounter = 0;
 		guiEMF = 0;
 		peakEMF = 0;
@@ -244,7 +249,7 @@ void HelloWorld::onImGuiDraw()
 	if(any_calibration){
 		ImGui::Text("Status=%s", "PID Calibration");
 	} else {
-		if(Settings::data_collection_mode){
+		if(any_collection){
 			ImGui::Text("Status=%s", "Collecting Data");
 		} else {
 			ImGui::Text("Status=%s", "Running");
@@ -258,7 +263,7 @@ void HelloWorld::onImGuiDraw()
 	static int desired_voltage = Settings::desired_target_voltage;
 	static int last_voltage_increase = desired_voltage;
 		
-	if(any_calibration || Settings::data_collection_mode){
+	if(any_calibration || any_collection){
 		ImGui::BeginDisabled();
 		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
 		ImGui::EndDisabled();
@@ -282,7 +287,7 @@ void HelloWorld::onImGuiDraw()
 	ImGui::Text("Base + Gain Voltage=%.4f", guiEMF);
 	//ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF); // @TODO maximize voltage
 	
-	if(Settings::data_collection_mode || any_calibration){
+	if(any_collection || any_calibration){
 		ImGui::BeginDisabled();
 		ImGui::Button("Collect Data");
 		ImGui::EndDisabled();
@@ -296,7 +301,11 @@ void HelloWorld::onImGuiDraw()
 		if (collectDataButtonPressed) {
 			collectDataButtonPressed = false;
 
-			Settings::schedule_recalibration_for_collection = true;
+			for(auto gimbal : gimbals){
+				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+				
+				magnos->getCoilSystem().scheduleCollection();
+			}
 			
 		}
 	}
@@ -366,23 +375,39 @@ void HelloWorld::onMouseScroll(Event* event)
 
 void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 {
+	for(auto gimbal : gimbals){
+		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+		
+		if(magnos->getCoilSystem().calibrating()){
+			return;
+		}
+	}
+	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		car->accelerate(40);
 	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
-		car->steer(-15);
+		car->steer(-6);
 	}
 	
 	
 	if(code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
-		car->steer(15);
+		car->steer(6);
 	}
 
 }
 
 void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 {
+	for(auto gimbal : gimbals){
+		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+		
+		if(magnos->getCoilSystem().calibrating()){
+			return;
+		}
+	}
+
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		
 	}
@@ -395,6 +420,9 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 
 void HelloWorld::update(float delta)
 {
+	for(auto gimbal : gimbals){
+		gimbal->update(1.0f / 60.0f);
+	}
 	car->updateMotion(delta);
 	
 	// Get the car's position
@@ -412,7 +440,7 @@ void HelloWorld::update(float delta)
 	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
 	
 	// Calculate the new camera position relative to the car
-	float distanceFromCar = 5.0f; // Adjust the distance as needed
+	float distanceFromCar = 2.0f; // Adjust the distance as needed
 	float cameraHeight = 2.0f;   // Adjust the height as needed
 	
 	// Calculate the camera's offset from the car based on angles

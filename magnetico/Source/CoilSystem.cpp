@@ -4,19 +4,18 @@
 static long long timePrev = 0;
 static long long timeNow = 0;
 
-CoilSystem::CoilSystem(float voltage, float resistance, float current, float coilTurns)
-	: coilResistance(resistance), maxCurrent(current), turns(coilTurns),
+CoilSystem::CoilSystem(int id, float voltage, float resistance, float current, float coilTurns)
+	: coil_id(id), coilResistance(resistance), maxCurrent(current), turns(coilTurns),
 filterBase(VoltageController(32, Settings::desired_base_voltage, Settings::desired_base_voltage, false)),
 filterIncrease(VoltageController(32, Settings::desired_capacitor_voltage, Settings::desired_capacitor_voltage, true)){
 		
     setCurrentFromVoltage(voltage);
 	std::string home = getenv("HOME");
 
-    hasML = loadDataAndTrainModel(home + "/calibration.bin");
+    hasML = loadDataAndTrainModel(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
     
     if(hasML){
-		Settings::data_collection_mode = false;
-		Settings::cycles_per_collection = 1;
+		data_collection_mode = false;
     }
 
     this->recalibrate();
@@ -128,9 +127,9 @@ void CoilSystem::setCurrentFromVoltage(float voltage) {
     this->current = std::clamp(this->current, 0.0f, maxCurrent);  // Ensure it doesn't exceed maxCurrent
 }
 
-ax::Vec3 CoilSystem::computeMagneticField(CoilEntity::AttachedEntity& coil, const ax::Vec3& point, MagnetPolarity polarity) const {
+ax::Vec3 CoilSystem::computeMagneticField(CoilEntity::AttachedEntity& coil, const ax::Vec3& origin, const ax::Vec3& point, MagnetPolarity polarity) const {
     ax::Vec3 direction = (point).getNormalized();
-    float distance = ax::Vec3(0, 0, 0).distance(point);
+    float distance = origin.distance(point);
     float magnitude = (this->current * coil.turns) / (2 * M_PI * distance);
     
     // Reverse the direction if the polarity is SOUTH
@@ -142,11 +141,11 @@ ax::Vec3 CoilSystem::computeMagneticField(CoilEntity::AttachedEntity& coil, cons
 }
 
 
-ax::Vec3 CoilSystem::combineFieldsOrForces() {
+ax::Vec3 CoilSystem::combineFieldsOrForces(const ax::Vec3& origin) {
     ax::Vec3 totalField(0, 0, 0);
     
     for (auto& coil : _attachedEntities) {
-        ax::Vec3 field = computeMagneticField(coil, coil.position, coil.polarity);
+        ax::Vec3 field = computeMagneticField(coil, origin, coil.position, coil.polarity);
         totalField += field;
     }
     
@@ -213,7 +212,15 @@ void CoilSystem::attachToDisk(ax::Node* node, float radius, MagnetDirection dire
 }
 
 bool CoilSystem::calibrating() {
-    return calibration;
+	return calibration;
+}
+
+bool CoilSystem::collecting() {
+	return data_collection_mode || schedule_recalibration_for_collection;
+}
+
+void CoilSystem::scheduleCollection(){
+	schedule_recalibration_for_collection = true;
 }
 
 void CoilSystem::adjustCurrentBasedOn(float dt) {
@@ -242,13 +249,11 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 			            
 			desiredEMFPerSecond = designedEMFPerSecond;
 
-			Settings::data_collection_mode = false;
-			Settings::cycles_per_collection = 1;
-
-			if(!hasML || Settings::schedule_data_collection_mode){
-				Settings::schedule_data_collection_mode = false;
-				Settings::data_collection_mode = true;
-				Settings::cycles_per_collection = data_collection_mode_cycles;
+			data_collection_mode = false;
+			
+			if(!hasML || schedule_data_collection_mode){
+				schedule_data_collection_mode = false;
+				data_collection_mode = true;
 			
 				this->resetAccumulators();
 
@@ -262,9 +267,9 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
         }
 		
         
-        if(hasML && !Settings::data_collection_mode){
+        if(hasML && !data_collection_mode){
             // Check if conditions are met to retrain
-            if(fabs(emfError) > error_trial && !Settings::schedule_data_collection_mode) {
+            if(fabs(emfError) > error_trial && !schedule_data_collection_mode) {
                 
 				//Settings::schedule_recalibration_for_collection = true;
             }
@@ -312,19 +317,17 @@ void CoilSystem::update(float measuredEMF, float delta) {
 		baseAccumulatedEMF = filterBase.controlVoltage(accumulatedEMF);
 	}
 	
-
 	timePrev = timeNow;
-	
 	timeNow += delta;
 
 	if((accumulatedEMF != desiredEMFPerSecond && !calibrating()) || (calibrating() && accumulationTime >= global_delta * 60)){
-		if(!Settings::data_collection_mode){
+		if(!data_collection_mode){
 			adjustCurrentBasedOn(accumulationTime);
 		}
     }
 	
 	
-	if(Settings::data_collection_mode && !calibrating()){
+	if(data_collection_mode && !calibrating()){
 		
 		// Calculate desired current based on EMF error and resistance
 		float emfError = desiredEMFPerSecond - accumulatedEMF;
@@ -353,13 +356,11 @@ void CoilSystem::update(float measuredEMF, float delta) {
 			if((dataCollection.size() * sizeof(DataPoint)) % data_collection_bin_size == 0){
 				std::string home = getenv("HOME");
 				
-				saveDataToBinary(home + "/calibration.bin");
+				saveDataToBinary(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
 				
-				Settings::data_collection_mode = false;
+				data_collection_mode = false;
 				
-				hasML = loadDataAndTrainModel(home + "/calibration.bin");
-				
-				Settings::cycles_per_collection = 1;
+				hasML = loadDataAndTrainModel(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
 				
 				this->recalibrate();
 				
@@ -406,10 +407,10 @@ void CoilSystem::update(float measuredEMF, float delta) {
 	}
 
 	
-	if(Settings::schedule_recalibration_for_collection){
-		Settings::schedule_recalibration_for_collection = false;
-		Settings::schedule_data_collection_mode = true;
-		Settings::data_collection_mode = false;
+	if(schedule_recalibration_for_collection){
+		schedule_recalibration_for_collection = false;
+		schedule_data_collection_mode = true;
+		data_collection_mode = false;
 		
 		this->recalibrate();
 	}

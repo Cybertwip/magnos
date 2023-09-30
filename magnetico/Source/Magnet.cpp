@@ -15,5 +15,8 @@ Magnet* Magnet::create(std::vector<MagnetEntity::AttachedEntity>& entities, size
 }
 
 void Magnet::updatePositions(){
-    attachedEntities[entityIndex - 1].position = getWorldPosition3D();
+	
+	if (entityIndex > 0 && entityIndex <= attachedEntities.size()) {
+		attachedEntities[entityIndex - 1].position = getWorldPosition3D();
+	}
 }

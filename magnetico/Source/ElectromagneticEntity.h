@@ -23,7 +23,7 @@ enum class MagnetPolarity {
 
 class ElectromagneticEntity {	
 public:
-	virtual ax::Vec3 combineFieldsOrForces() = 0;
+	virtual ax::Vec3 combineFieldsOrForces(const ax::Vec3& origin) = 0;
 	virtual void attachToDisk(ax::Node* disk, float radius, MagnetDirection direction, MagnetPolarity polarity) = 0;
 	
 	virtual ~ElectromagneticEntity() = default;

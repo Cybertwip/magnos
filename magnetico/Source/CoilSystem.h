@@ -23,7 +23,7 @@ public:
 	std::vector<Coil*> coils;
 	
 public:
-	CoilSystem(float voltage, float resistance, float current, float coilTurns);
+	CoilSystem(int id, float voltage, float resistance, float current, float coilTurns);
 	
 	~CoilSystem();
 	
@@ -32,10 +32,14 @@ public:
 	void saveDataToBinary(const std::string& filename);
 	bool loadDataAndTrainModel(const std::string& filename);
 	void setCurrentFromVoltage(float voltage);
-	ax::Vec3 computeMagneticField(AttachedEntity& coil, const ax::Vec3& point, MagnetPolarity polarity) const;
-	ax::Vec3 combineFieldsOrForces() override;
+	ax::Vec3 computeMagneticField(CoilEntity::AttachedEntity& coil, const ax::Vec3& origin, const ax::Vec3& point, MagnetPolarity polarity) const;
+	ax::Vec3 combineFieldsOrForces(const ax::Vec3& origin) override;
 
 	bool calibrating();
+	bool collecting();
+
+	void scheduleCollection();
+	
 	void setDesignedEMFPerSecond(float desiredEMF);
 	void setOnVoltagePeakCallback(std::function<void(float)> onVoltagePeak);
 
@@ -44,6 +48,12 @@ public:
 
 private:
 		
+	int coil_id;
+	bool data_collection_mode = false;
+	bool schedule_data_collection_mode = false;
+	bool schedule_recalibration_for_collection = false;
+
+	
 	struct DataPoint {
 		float emfError;
 		float desiredCurrent;

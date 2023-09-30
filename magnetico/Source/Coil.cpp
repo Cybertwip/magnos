@@ -13,6 +13,10 @@ Coil* Coil::create(std::vector<CoilEntity::AttachedEntity>& entities, size_t ind
     delete coil;
     return nullptr;
 }
+
 void Coil::updatePositions(){
-    attachedEntities[entityIndex - 1].position = getWorldPosition3D();
+	
+	if (entityIndex > 0 && entityIndex <= attachedEntities.size()) {
+		attachedEntities[entityIndex - 1].position = getWorldPosition3D();
+	}
 }

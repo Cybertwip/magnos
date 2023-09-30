@@ -39,11 +39,7 @@ public:
 	ax::Mesh* createFlatDisk(float radius, float thickness, int majorSegments, int minorSegments);
 	
 	ax::Vec3 rotateAroundAxis(const ax::Vec3& point, const ax::Vec3& axis, float angle);
-	
-	ax::Vec3 calculateMagneticFieldAt(const ax::Vec3& position);
-	
-	float calculateFluxThroughCoil(const ax::Vec3& B, float coilArea, int coilTurns);
-	
+			
 	void calculateFlux(CoilEntity::AttachedEntity& coil, const ax::Vec3& position);
 	
 	float calculateCoilEMF(const CoilEntity::AttachedEntity& coil, float delta);
@@ -68,11 +64,7 @@ public:
 	ax::Mesh* innerRing;
 	ax::Node* pinball;
 	
-	std::unique_ptr<CoilSystem> outerCoilSystem =
-	std::make_unique<CoilSystem>(1.5f,
-								 1.0f, // resistance
-								 0.5f, // current
-								 360); // turns
+	std::unique_ptr<CoilSystem> outerCoilSystem;
 	
 	AlternatorSystem alternator = AlternatorSystem(0.025f, 420);
 	
@@ -90,6 +82,8 @@ public:
 	CREATE_FUNC(MaritimeGimbal3D);
 	
 	bool init() override;
+	void setupGui();
+	void loadData(int id);
 	
 	void attachPinball();
 };

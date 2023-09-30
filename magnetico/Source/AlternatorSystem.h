@@ -16,7 +16,7 @@ public:
 
 	ax::Vec3 computeMagneticField(AttachedEntity& coil, const ax::Vec3& point, MagnetPolarity polarity) const;
 	
-	ax::Vec3 combineFieldsOrForces() override;
+	ax::Vec3 combineFieldsOrForces(const ax::Vec3& origin) override;
 	
 	void attachToDisk(ax::Node* node, float radius, MagnetDirection direction, MagnetPolarity polarity) override;	
 	void update();

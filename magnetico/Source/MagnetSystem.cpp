@@ -4,8 +4,9 @@
 MagnetSystem::MagnetSystem() {
 }
 
-ax::Vec3 MagnetSystem::calculateMagneticFieldAtOrigin(ax::Vec3 magnetPosition, MagnetPolarity polarity) {
-    float distance = magnetPosition.length();
+ax::Vec3 MagnetSystem::calculateMagneticFieldAtOrigin(ax::Vec3 origin, ax::Vec3 magnetPosition, MagnetPolarity polarity) {
+	ax::Vec3 r = origin - magnetPosition;
+	float distance = r.length();
     
     if (distance < 0.001f)
         distance = 0.001f;
@@ -23,17 +24,17 @@ ax::Vec3 MagnetSystem::calculateMagneticFieldAtOrigin(ax::Vec3 magnetPosition, M
 }
 
 ax::Vec3 MagnetSystem::calculateForceDueToMagnet(const ax::Vec3& magnetPosition, const ax::Vec3& affectedMagnetPosition, MagnetPolarity polarity) {
-    ax::Vec3 field = calculateMagneticFieldAtOrigin(magnetPosition - affectedMagnetPosition, polarity);
+    ax::Vec3 field = calculateMagneticFieldAtOrigin(magnetPosition, affectedMagnetPosition, polarity);
     return field;
 }
 
-ax::Vec3 MagnetSystem::combineFieldsOrForces() {
+ax::Vec3 MagnetSystem::combineFieldsOrForces(const ax::Vec3& origin) {
     ax::Vec3 totalForce(0, 0, 0);
     
     for (const auto& [magnetPosition, polarity] : _attachedEntities) {
         // Modify force calculation based on polarity if required.
         // For simplicity, assuming polarity does not change the force calculation for now.
-        totalForce += calculateMagneticFieldAtOrigin(magnetPosition, polarity);
+        totalForce += calculateMagneticFieldAtOrigin(origin, magnetPosition, polarity);
     }
     
     return totalForce;

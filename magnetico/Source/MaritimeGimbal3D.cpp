@@ -277,40 +277,6 @@ ax::Vec3 MaritimeGimbal3D::rotateAroundAxis(const ax::Vec3& point, const ax::Vec
 	}
 }
 
-ax::Vec3 MaritimeGimbal3D::calculateMagneticFieldAt(const ax::Vec3& position) {
-	ax::Vec3 totalB(0, 0, 0);  // Initialize the total magnetic field to zero
-	
-	auto ironBall = dynamic_cast<MagneticBall*>(pinball);
-	
-	float ballMagneticMoment = ironBall->get_magnetization() * innerNode->getAngularSpeed();
-	
-	auto& magnets = alternator.getAttachedEntities();
-	for (auto& attachedMagnet : magnets) {
-		// Calculate vector pointing from magnet to the position
-		ax::Vec3 r = position - attachedMagnet.position;
-		float distance = r.length();
-		
-		// Normalize the vector r
-		r.normalize();
-		
-		// Calculate the magnetic moment (simplified) for the attached magnet
-		float m = ballMagneticMoment * ironBall->calculate_volume();
-		
-		// Biot-Savart approximation for magnetic field due to a small magnet
-		ax::Vec3 B = (MU_0 / (4.0f * M_PI)) * (m / std::pow(distance, 3)) * r;
-		
-		// Sum up the contributions
-		totalB += B;
-	}
-	
-	
-	return totalB;
-}
-
-float MaritimeGimbal3D::calculateFluxThroughCoil(const ax::Vec3& B, float coilArea, int coilTurns) {
-	return coilTurns * coilArea * B.length();
-}
-
 void MaritimeGimbal3D::calculateFlux(CoilEntity::AttachedEntity& coil, const ax::Vec3& position) {
 	auto ironBall = dynamic_cast<MagneticBall*>(pinball);
 	float ballMagneticMoment = ironBall->get_magnetization() * ironBall->calculate_volume();
@@ -338,6 +304,12 @@ float MaritimeGimbal3D::calculateCoilEMF(const CoilEntity::AttachedEntity& coil,
 }
 
 void MaritimeGimbal3D::update(float) {
+	int cycles_per_collection = 1;
+	
+	if(getCoilSystem().collecting()){
+		cycles_per_collection = data_collection_mode_cycles;
+	}
+	
 	//global_delta = dt;
 	
 	//desired_voltage_per_second = desired_voltage * dt;
@@ -381,7 +353,7 @@ void MaritimeGimbal3D::update(float) {
 		outerCoilSystem->update(alternator.emf, global_delta);
 		
 		updates++;
-	} while(updates < Settings::cycles_per_collection);
+	} while(updates < cycles_per_collection);
 	
 }
 float MaritimeGimbal3D::calculateEffectiveArea(const ax::Quaternion& rotation) {
@@ -437,7 +409,7 @@ void MaritimeGimbal3D::applyMagneticImpulse(float delta) {
 	auto ironBall = dynamic_cast<MagneticBall*>(pinball);
 	
 	// Combine magnetic forces
-	auto forces = outerCoilSystem->combineFieldsOrForces();
+	auto forces = outerCoilSystem->combineFieldsOrForces(getWorldPosition3D());
 	
 	auto ironBallMagnets = innerMagnetSystem->getAttachedEntities();
 	auto middleRingMagnets = middleMagnetSystem->getAttachedEntities();
@@ -483,6 +455,11 @@ CoilSystem& MaritimeGimbal3D::getCoilSystem() { return *outerCoilSystem; }
 bool MaritimeGimbal3D::init() {
 	if (!ax::Node::init()) return false;
 	
+	return true;
+}
+
+void MaritimeGimbal3D::setupGui() {
+	
 	float baseThicknessOffset = 0.0012f;  // Base thickness offset for the gimbal rings
 	
 	// Create the three gimbal rings using the given parameters
@@ -517,9 +494,9 @@ bool MaritimeGimbal3D::init() {
 	
 	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::SOUTHWEST, MagnetPolarity::SOUTH);
 	
-//	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::FRONT, MagnetPolarity::SOUTH);
+	//	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::FRONT, MagnetPolarity::SOUTH);
 	
-//	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::BACK, MagnetPolarity::SOUTH);
+	//	alternator.attachToDisk(outerNode, outerRingRadius + 0.0044f, MagnetDirection::BACK, MagnetPolarity::SOUTH);
 	
 	middleMagnetSystem->attachToDisk(middleNode, middleRingRadius + 0.0016f, MagnetDirection::WEST, MagnetPolarity::SOUTH);
 	middleMagnetSystem->attachToDisk(middleNode, (baseDistanceOffset - 0.01f) + 0.0016f, MagnetDirection::EAST, MagnetPolarity::NORTH);
@@ -541,17 +518,20 @@ bool MaritimeGimbal3D::init() {
 	// Adding poles:
 	this->addPoles(innerNode, 0.04f, (innerRingRadius - 0.04f), 0.001f, 45);  // NE
 	this->addPoles(innerNode, 0.04f, (innerRingRadius - 0.04f), 0.001f, 135); // SE
-	this->scheduleUpdate();
-	
-	
-	return true;
+}
+
+void MaritimeGimbal3D::loadData(int id){
+	outerCoilSystem =
+	std::make_unique<CoilSystem>(id,
+								 1.5f,
+								 1.0f, // resistance
+								 0.5f, // current
+								 360); // turns
 }
 
 void MaritimeGimbal3D::attachPinball() {
 	
 	pinball = IronBall::create(0.04f);
-	
-	//scene->getPhysics3DWorld()->addPhysics3DObject(dynamic_cast<MagneticBall*>(pinball)->getPhysics3DRigidBody());
 	
 	innerNode->addChild(pinball);
 	

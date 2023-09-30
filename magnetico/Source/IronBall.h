@@ -14,9 +14,9 @@ protected:
 	float get_density() const override;
 
 	
-	float get_relative_permeability() const;
+	float get_relative_permeability() const override;
 	
-	float get_magnetization() const;
+	float get_magnetization() const override;
 
 public:
 	static IronBall* create(float radius);

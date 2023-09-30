@@ -16,11 +16,11 @@ public:
 	MagnetSystem();
 	~MagnetSystem() override = default;
 	
-	ax::Vec3 calculateMagneticFieldAtOrigin(ax::Vec3 magnetPosition, MagnetPolarity polarity);
+	ax::Vec3 calculateMagneticFieldAtOrigin(ax::Vec3 origin, ax::Vec3 magnetPosition, MagnetPolarity polarity);
 	
 	ax::Vec3 calculateForceDueToMagnet(const ax::Vec3& magnetPosition, const ax::Vec3& affectedMagnetPosition, MagnetPolarity polarity);
 
-	ax::Vec3 combineFieldsOrForces() override;
+	ax::Vec3 combineFieldsOrForces(const ax::Vec3& origin) override;
 	
 	void attachToDisk(ax::Node* disk, float radius, MagnetDirection direction, MagnetPolarity polarity) override;
 	

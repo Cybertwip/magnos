@@ -23,6 +23,8 @@ private:
 	float steeringAngle;
 	float maxSteeringAngle; // Maximum steering angle in radians
 	float rotationAngle = 0;
+	float speed = 0;
+	float mass = 150;
 
 public:
 	Car();

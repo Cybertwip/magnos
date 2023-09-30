@@ -12,7 +12,7 @@ ax::Vec3 AlternatorSystem::computeMagneticField(AttachedEntity& coil, const ax::
 }
 
 
-ax::Vec3 AlternatorSystem::combineFieldsOrForces() {
+ax::Vec3 AlternatorSystem::combineFieldsOrForces(const ax::Vec3& origin) {
     return {};
 }
 
