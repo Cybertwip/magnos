@@ -8,7 +8,7 @@
 class Car : public ax::Node {
 private:
 	ax::Node* carBody;
-	ax::Node* gearBox;
+	ax::Node* engineBox;
 	std::vector<ax::Node*> gimbals;
 	CustomNode* frontLeftWheel;
 	CustomNode* frontRightWheel;

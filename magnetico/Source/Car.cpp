@@ -23,35 +23,35 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	rearLeftWheel = wheelsContainer[2];
 	rearRightWheel = wheelsContainer[0];
 
-	auto gearBoxMesh = createCube(0.45f);
-	auto gearBoxRenderer = ax::MeshRenderer::create();
-	gearBoxRenderer->addMesh(gearBoxMesh);
-	gearBoxRenderer->setPosition3D(ax::Vec3(0.65f, 0, 0));
-	gearBoxRenderer->setRotation3D(ax::Vec3(0, 180, 0));
-	gearBoxRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-	gearBoxRenderer->setTexture("kitty.jpg");
-	gearBoxRenderer->setOpacity(50);
-	gearBoxRenderer->setScaleX(1);
-	gearBoxRenderer->setScaleY(1);
-	gearBoxRenderer->setScaleZ(1);
+	auto engineBoxMesh = createCube(0.45f);
+	auto engineBoxRenderer = ax::MeshRenderer::create();
+	engineBoxRenderer->addMesh(engineBoxMesh);
+	engineBoxRenderer->setPosition3D(ax::Vec3(0.65f, 0, 0));
+	engineBoxRenderer->setRotation3D(ax::Vec3(0, 180, 0));
+	engineBoxRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	engineBoxRenderer->setTexture("kitty.jpg");
+	engineBoxRenderer->setOpacity(50);
+	engineBoxRenderer->setScaleX(1);
+	engineBoxRenderer->setScaleY(1);
+	engineBoxRenderer->setScaleZ(1);
 
-	gearBox = gearBoxRenderer;
+	engineBox = engineBoxRenderer;
 	
 	// Create and position gimbals
-	gearBox->setPosition3D(ax::Vec3(0.65f, 0, 0));
-	gearBox->setRotation3D(ax::Vec3(0, 180, 0));
+	engineBox->setPosition3D(ax::Vec3(0.65f, 0, 0));
+	engineBox->setRotation3D(ax::Vec3(0, 180, 0));
 	
-	gimbals.push_back(createGimbal(1, gearBox, ax::Vec3(-0.25, 0, 0)));
-	gimbals.push_back(createGimbal(2, gearBox, ax::Vec3(0.25, 0, 0)));
-	gimbals.push_back(createGimbal(3, gearBox, ax::Vec3(0, 0, -0.25)));
-	gimbals.push_back(createGimbal(4, gearBox, ax::Vec3(0, 0, 0.25)));
+	gimbals.push_back(createGimbal(1, engineBox, ax::Vec3(-0.25, 0, 0)));
+	gimbals.push_back(createGimbal(2, engineBox, ax::Vec3(0.25, 0, 0)));
+	gimbals.push_back(createGimbal(3, engineBox, ax::Vec3(0, 0, -0.25)));
+	gimbals.push_back(createGimbal(4, engineBox, ax::Vec3(0, 0, 0.25)));
 
-	gimbals.push_back(createGimbal(5, gearBox, ax::Vec3(0, 0.25f, 0)));
+	gimbals.push_back(createGimbal(5, engineBox, ax::Vec3(0, 0.25f, 0)));
 
-	gimbals.push_back(createGimbal(6, gearBox, ax::Vec3(0, -0.25f, 0)));
+	gimbals.push_back(createGimbal(6, engineBox, ax::Vec3(0, -0.25f, 0)));
 
 	// Add car components to the Car node
-	carBody->addChild(gearBox);
+	carBody->addChild(engineBox);
 	this->addChild(carBody);
 }
 
