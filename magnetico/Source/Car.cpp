@@ -173,10 +173,10 @@ void Car::updateMotion(float deltaTime) {
 	
 	// Calculate the rotation quaternions for the wheels
 	ax::Quaternion frontLeftRotation;
-	frontLeftRotation.set(ax::Vec3(0, 0, 1), AX_DEGREES_TO_RADIANS(rotationAngle));
+	frontLeftRotation.set(ax::Vec3(0, 0, 1), AX_DEGREES_TO_RADIANS(-rotationAngle));
 	
 	ax::Quaternion frontRightRotation;
-	frontRightRotation.set(ax::Vec3(0, 0, 1), AX_DEGREES_TO_RADIANS(rotationAngle));
+	frontRightRotation.set(ax::Vec3(0, 0, 1), AX_DEGREES_TO_RADIANS(-rotationAngle));
 	
 	// Combine the rotations with the steering angle
 	ax::Quaternion frontLeftRotationSteer;

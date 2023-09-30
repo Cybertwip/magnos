@@ -440,7 +440,7 @@ void HelloWorld::update(float delta)
 	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
 	
 	// Calculate the new camera position relative to the car
-	float distanceFromCar = 2.0f; // Adjust the distance as needed
+	float distanceFromCar = 5.0f; // Adjust the distance as needed
 	float cameraHeight = 2.0f;   // Adjust the height as needed
 	
 	// Calculate the camera's offset from the car based on angles
