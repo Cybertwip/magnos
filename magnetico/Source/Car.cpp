@@ -158,12 +158,9 @@ void Car::updateMotion(float deltaTime) {
 	
 	// Apply braking force to decelerate the car
 	float brakingForce = brakePower; // Use positive acceleration for braking
-	
-	// Calculate the deceleration due to braking
-	float brakingDeceleration = brakingForce / mass;
-	
+		
 	// Calculate the new speed after braking
-	newSpeed -= brakingDeceleration * deltaTime;
+	newSpeed -= brakingForce * deltaTime;
 	
 	// Ensure the speed doesn't go below zero
 	if (newSpeed < 0.0f) {
