@@ -60,6 +60,7 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.001f), maxSteeringA
 	auto laserSystem2 = createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f));
 	
 	carBody->addChild(laserSystem1);
+	carBody->addChild(laserSystem2);
 	carBody->addChild(engineBox);
 	this->addChild(carBody);
 	
@@ -77,6 +78,8 @@ ax::Node* Car::createLaserSystem(ax::Vec3 position){
 	
 	// Set the position and add the LaserNode to the scene
 	laserNode->setPosition3D(position); // Adjust the position as needed
+	
+	lasers.push_back(laserNode);
 	
 	auto laserEmitter = createCube(0.1f);
 	auto laserReceiver = createCube(0.1f);

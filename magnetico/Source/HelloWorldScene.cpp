@@ -482,7 +482,7 @@ void HelloWorld::update(float delta)
 		
 		car->accelerate(totalPowerDrawn);
 		
-		float laserVoltage = 2.5f;
+		float laserVoltage = 5;
 		powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
 		
 		totalPowerDrawn = 0;
@@ -496,7 +496,6 @@ void HelloWorld::update(float delta)
 
 	} else {
 		car->accelerate(0);
-		car->charge(0);
 	}
 	
 	if(steer){
