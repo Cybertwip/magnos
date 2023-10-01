@@ -542,8 +542,6 @@ void HelloWorld::update(float delta)
 			car->charge(totalPowerDrawn);
 
 		}
-
-
 	} else {
 		car->liftPedal();
 	}

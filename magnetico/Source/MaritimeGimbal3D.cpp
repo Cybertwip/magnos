@@ -569,7 +569,7 @@ void MaritimeGimbal3D::loadData(int id){
 								 1.5f,
 								 1.0f, // resistance
 								 1.0f, // current
-								 360); // turns
+								 120); // turns
 }
 
 void MaritimeGimbal3D::attachPinball() {

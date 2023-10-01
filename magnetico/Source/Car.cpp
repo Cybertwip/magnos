@@ -48,13 +48,27 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.001f), maxSteeringA
 	engineBox->setRotation3D(ax::Vec3(0, 180, 0));
 	
 	gimbals.push_back(createGimbal(1, engineBox, ax::Vec3(-0.25, 0, 0)));
-	gimbals.push_back(createGimbal(2, engineBox, ax::Vec3(0.25, 0, 0)));
-	gimbals.push_back(createGimbal(3, engineBox, ax::Vec3(0, 0, -0.25)));
-	gimbals.push_back(createGimbal(4, engineBox, ax::Vec3(0, 0, 0.25)));
+	
+	if(number_of_gimbals > 1){
+		gimbals.push_back(createGimbal(2, engineBox, ax::Vec3(0.25, 0, 0)));
+	}
 
-	gimbals.push_back(createGimbal(5, engineBox, ax::Vec3(0, 0.25f, 0)));
+	
+	if(number_of_gimbals > 2){
+		gimbals.push_back(createGimbal(3, engineBox, ax::Vec3(0, 0, -0.25)));
+	}
+	
+	if(number_of_gimbals > 3){
+		gimbals.push_back(createGimbal(4, engineBox, ax::Vec3(0, 0, 0.25)));
+	}
+	
+	if(number_of_gimbals > 4){
+			gimbals.push_back(createGimbal(5, engineBox, ax::Vec3(0, 0.25f, 0)));
+	}
 
-	gimbals.push_back(createGimbal(6, engineBox, ax::Vec3(0, -0.25f, 0)));
+	if(number_of_gimbals > 5){
+			gimbals.push_back(createGimbal(6, engineBox, ax::Vec3(0, -0.25f, 0)));
+	}
 
 	auto laserSystem1 = createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f));
 	auto laserSystem2 = createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f));

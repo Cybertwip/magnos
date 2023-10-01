@@ -401,17 +401,14 @@ void CoilSystem::update(float measuredEMF, float delta) {
 			
 			this->current = currentAdjustment;
 		} else {
-			std::string home = getenv("HOME");
-			
-			saveDataToBinary(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
-			
-			data_collection_mode = false;
-			
-			hasML = loadDataAndTrainModel(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
-			
-			this->recalibrate();
-			
-			return;
+			if(accumulator.getVoltage() >= accumulator.getCapacity()){
+				
+				if(onVoltagePeak){
+					onVoltagePeak(coil_id - 1, accumulator.getVoltage());
+				}
+
+			}
+
 
 		}
 		

@@ -1,6 +1,7 @@
 #pragma once
 #include "CustomNode.h"
 #include "Battery.h"
+#include "Settings.h"
 
 #include <axmol.h>
 
@@ -34,7 +35,7 @@ private:
 	float brakePower = 0;
 	
 	
-	RechargeableBattery battery = RechargeableBattery(9.0f, 10.0f, 10.0f, 0.9f, 0.95f);
+	RechargeableBattery battery = RechargeableBattery(battery_voltage, battery_voltage + 1, battery_voltage + 1, 0.9f, 0.95f);
 public:
 	Car();
 	virtual ~Car();
