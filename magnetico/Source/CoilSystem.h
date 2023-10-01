@@ -18,7 +18,7 @@ public:
 	float emf;
 	
 	float current = 0;
-	float accumulatedEMF = 0.0f;
+	Capacitor accumulator = Capacitor(Settings::desired_target_voltage / (float)number_of_gimbals);
 
 	float turns;
 	
@@ -83,8 +83,7 @@ private:
 
 	bool calibration = true;
 
-	float desiredEMFPerSecond = Settings::desired_target_voltage;
-	const int numberOfCoils = 1;
+	const int numberOfCoils = 6;
 	const float totalResistance = coilResistance * numberOfCoils;
 	float baseAccumulatedEMF = 0.0f;
 	float accumulationTime = 0.0f;

@@ -488,7 +488,7 @@ void HelloWorld::update(float delta)
 		magnos->update(totalDelta);
 		
 		totalCurrent += magnos->getCoilSystem().current;
-		totalPower += magnos->getCoilSystem().accumulatedEMF;
+		totalPower += magnos->getCoilSystem().accumulator.getVoltage();
 		
 		totalResistance += 1;
 		

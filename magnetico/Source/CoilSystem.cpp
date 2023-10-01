@@ -37,10 +37,10 @@ float CoilSystem::withdrawPower(float power) {
 	}
 	
 	// Calculate the amount that can be withdrawn, ensuring it doesn't go below zero
-	float withdrawn = std::min(power, this->accumulatedEMF);
+	float withdrawn = std::min(power, accumulator.getVoltage());
 	
 	// Subtract the withdrawn power from accumulatedEMF
-	this->accumulatedEMF -= withdrawn;
+	accumulator.discharge(withdrawn);
 	
 	return withdrawn;
 }
@@ -52,11 +52,11 @@ float CoilSystem::storePower(float power) {
 	}
 	
 	// Calculate the amount that can be stored without exceeding desiredEMFPerSecond
-	float availableCapacity = desiredEMFPerSecond - this->accumulatedEMF;
+	float availableCapacity = accumulator.getCapacity() - accumulator.getVoltage();
 	float stored = std::min(power, availableCapacity);
 	
 	// Add the stored power to accumulatedEMF
-	this->accumulatedEMF += stored;
+	accumulator.charge(stored);
 	
 	return stored;
 }
@@ -81,7 +81,7 @@ void CoilSystem::setOnVoltagePeakCallback(std::function<void(float)> onVoltagePe
 
 void CoilSystem::resetAccumulators(){
 	accumulationTime = 0.0f;
-	accumulatedEMF = 0;
+	accumulator = Capacitor(accumulator.getCapacity());
 	baseAccumulatedEMF = 0;
 	lastBaseAccumulatedEMF = 0;
 	lastAccumulatedEMF = 0;
@@ -256,7 +256,7 @@ void CoilSystem::scheduleCollection(){
 
 void CoilSystem::adjustCurrentBasedOn(float dt) {
     // Calculate desired current based on EMF error and resistance
-    float emfError = desiredEMFPerSecond - accumulatedEMF;
+    float emfError = accumulator.getCapacity() - accumulator.getVoltage();
     
     // Compute error for the PID
     float desiredCurrent = emfError / totalResistance;
@@ -267,7 +267,7 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 	
     if(pidCurrent.calibrate(desiredCurrent, fixedDelta, timeNow)){
                                 
-        currentAdjustment = pidCurrent.getRelayState() ? maxCurrent : 0;
+        currentAdjustment = pidCurrent.getRelayState() ? 0 : maxCurrent;
         
     } else {
         
@@ -277,8 +277,8 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
 
         if(calibration){
             calibration = false;
-			            
-			desiredEMFPerSecond = designedEMFPerSecond;
+			          
+			accumulator = Capacitor(designedEMFPerSecond); // @TODO go to max voltage
 
 			data_collection_mode = false;
 			
@@ -338,20 +338,18 @@ void CoilSystem::update(){
 }
 
 void CoilSystem::update(float measuredEMF, float delta) {
-	desiredEMFPerSecond = designedEMFPerSecond;
-
-    accumulatedEMF += fabs(measuredEMF);
+	accumulator.charge(fabs(measuredEMF));
 	
 	accumulationTime += delta;
 	
 	if(!calibrating()){
-		baseAccumulatedEMF = filterBase.controlVoltage(accumulatedEMF);
+		baseAccumulatedEMF = filterBase.controlVoltage(accumulator.getVoltage());
 	}
 	
 	timePrev = timeNow;
 	timeNow += delta;
 
-	if((accumulatedEMF != desiredEMFPerSecond && !calibrating()) || (calibrating() && accumulationTime >= global_delta * 60)){
+	if((accumulator.getVoltage() != accumulator.getCapacity() && !calibrating()) || (calibrating() && accumulationTime >= global_delta * 60)){
 		if(!data_collection_mode){
 			adjustCurrentBasedOn(accumulationTime);
 		}
@@ -361,7 +359,7 @@ void CoilSystem::update(float measuredEMF, float delta) {
 	if(data_collection_mode && !calibrating()){
 		
 		// Calculate desired current based on EMF error and resistance
-		float emfError = desiredEMFPerSecond - accumulatedEMF;
+		float emfError = accumulator.getCapacity() - accumulator.getVoltage();
 		
 		if(emfError != 0.0f){
 			
@@ -407,33 +405,32 @@ void CoilSystem::update(float measuredEMF, float delta) {
 	if(accumulationTime == global_delta * 60){
 		accumulationTime = 0.0f;
 
-		if(accumulatedEMF > desiredEMFPerSecond){
+		if(accumulator.getVoltage() > accumulator.getCapacity()){
 			
-			if(!calibrating()){
-				accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
-			}
-			
-		} else if (accumulatedEMF < desiredEMFPerSecond && !calibrating()){
+//			if(!calibrating()){
+//				accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
+//			}
+//
+		} else if (accumulator.getVoltage() < accumulator.getCapacity() && !calibrating()){
 			float storedVoltage = filterIncrease.getCapacitorVoltage();
 			
 			// try to keep up
-			float recycledConsumption = filterIncrease.consumeFromCapacitor(std::min(storedVoltage, desiredEMFPerSecond - accumulatedEMF));
+			float recycledConsumption = filterIncrease.consumeFromCapacitor(std::min(storedVoltage, accumulator.getCapacity() - accumulator.getVoltage()));
 			
-			accumulatedEMF += recycledConsumption;
+			accumulator.charge(recycledConsumption);
 		}
 
 		lastBaseAccumulatedEMF = baseAccumulatedEMF;
-		lastAccumulatedEMF = accumulatedEMF;
+		lastAccumulatedEMF = accumulator.getVoltage();
 		lastRecycledEMF = recycledEMF;
 		
-		if(accumulatedEMF >= desiredEMFPerSecond || (accumulatedEMF >= desiredEMFPerSecond && calibrating())){
+		if(accumulator.getVoltage() >= accumulator.getCapacity() || (accumulator.getVoltage() >= accumulator.getCapacity() && calibrating())){
 
 			if(onVoltagePeak){
-				onVoltagePeak(accumulatedEMF);
+				onVoltagePeak(accumulator.getVoltage());
 			}
 			
-			accumulatedEMF = 0;
-			
+			accumulator.discharge(accumulator.getCapacity());
 		}
 	}
 
