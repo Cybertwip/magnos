@@ -128,9 +128,9 @@ LaserNode::~LaserNode()
 	delete laser;
 }
 
-LaserNode* LaserNode::create(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput)
+LaserNode* LaserNode::create(double apertureRadius, bool isConvexLens, float focalLength, float voltageInput, float frequency)
 {
-	auto node = new LaserNode(apertureRadius, isConvexLens, focalLength, voltageInput, 1.0f);
+	auto node = new LaserNode(apertureRadius, isConvexLens, focalLength, voltageInput, frequency);
 	if (node && node->init())
 	{
 		node->autorelease();
@@ -173,6 +173,13 @@ double LaserNode::getFocalLength() const
 void LaserNode::setVoltageInput(double voltage)
 {
 	laser->setVoltageInput(voltage);
+
+	if(getVoltageInput() >= 2.5f){
+		laserLight->stopParticleSystem();
+		laserLight->startParticleSystem();
+	} else {
+		laserLight->stopParticleSystem();
+	}
 	// Update the laser light's color based on the voltage
 	//updateLaserLightColor();
 }
@@ -214,17 +221,14 @@ void LaserNode::updateLaserLightColor()
 
 
 void LaserNode::update(float dt) {
-	// Amplify the voltage input (you can adjust the amplification factor as needed)
-	double amplifiedVoltage = getVoltageInput() * 2.0;
-	
-	// Set the amplified voltage input
-	setVoltageInput(amplifiedVoltage);
-	
 	// Update the laser light's color based on the amplified voltage
-	updateLaserLightColor();
+	//updateLaserLightColor();
 	
 	// Simulate the optical system and accumulate values based on delta time (dt)
-	simulateOpticalSystem(dt);
+	
+	if(getVoltageInput() >= 2.5f){
+		simulateOpticalSystem(dt);
+	}
 	
 	// Accumulate time elapsed
 	timeElapsed += dt;
@@ -252,4 +256,8 @@ void LaserNode::simulateOpticalSystem(float dt) {
 	// Accumulate values based on delta time (dt)
 	// accumulatedCurrent += boostedSample * dt;
 	accumulatedVoltage += boostedVoltageSample * dt;
+}
+
+float LaserNode::getAccumulatedVoltage() const {
+	return accumulatedVoltage;
 }

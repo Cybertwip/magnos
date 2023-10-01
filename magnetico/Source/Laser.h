@@ -1,6 +1,7 @@
 #pragma once
 
 #include <axmol.h>
+#include "extensions/Particle3D/PU/PUParticleSystem3D.h"
 
 
 class Laser : public ax::Node {
@@ -48,8 +49,8 @@ public:
 	LaserNode(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput, float laserFrequency);
 	virtual ~LaserNode();
 	
-	static LaserNode* create(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput);
-	
+	static LaserNode* create(double apertureRadius, bool isConvexLens, float focalLength, float voltageInput, float frequency);
+
 	void setApertureRadius(double radius);
 	double getApertureRadius() const;
 	
@@ -71,9 +72,11 @@ public:
 	
 	void simulateOpticalSystem(float dt);
 	
+	float getAccumulatedVoltage() const;
+	
 private:
 	Laser* laser; // Laser instance
-	ax::Node* laserLight; // PointLight for laser beam
+	ax::PUParticleSystem3D* laserLight; // PointLight for laser beam
 
 	float accumulatedCurrent;
 	float accumulatedVoltage;

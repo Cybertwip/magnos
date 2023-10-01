@@ -5,6 +5,8 @@
 
 #include <vector>
 
+class LaserNode;
+
 class Car : public ax::Node {
 private:
 	ax::Node* carBody;
@@ -15,6 +17,7 @@ private:
 	ax::Node* rearLeftWheel;
 	ax::Node* rearRightWheel;
 	ax::Node* rearSuspension;
+	LaserNode* laserNode;
 
 	// Member variables for acceleration and friction
 	float acceleration;
@@ -33,9 +36,11 @@ public:
 	virtual ~Car();
 	
 	std::vector<ax::Node*> getGimbals() const;
+	LaserNode* getLaserNode() const;
 	
 	float getAcceleration() const;
 	float getSpeed() const;
+	void charge(float amount);
 	void brake(float amount);
 	void steer(float angle); // Function to set the steering angle
 	void accelerate(float value);

@@ -57,7 +57,7 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	gimbals.push_back(createGimbal(6, engineBox, ax::Vec3(0, -0.25f, 0)));
 
 	// Create a LaserNode instance
-	auto laserNode = LaserNode::create(0.02, true, 0.1, 3.0); // Set your laser parameters
+	laserNode = LaserNode::create(0.02f, true, 0.1f, 0.0f, 5.0f); // Set your laser parameters
 	
 	// Set the position and add the LaserNode to the scene
 	laserNode->setPosition3D(ax::Vec3(-0.2f, 0.0f, 0.0f)); // Adjust the position as needed
@@ -80,7 +80,7 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	emitter->addChild(laserNode);
 	laserSystem->addChild(emitter);
 	laserSystem->addChild(receiver);
-
+	
 	carBody->addChild(laserSystem);
 	carBody->addChild(engineBox);
 	this->addChild(carBody);
@@ -104,6 +104,10 @@ std::vector<ax::Node*> Car::getGimbals() const {
 	return this->gimbals;
 }
 
+LaserNode* Car::getLaserNode() const {
+	return laserNode;
+}
+
 void Car::steer(float angle) {
 	// Clamp the steering angle within the valid range
 	steeringAngle = std::min(std::max(angle, -maxSteeringAngle), maxSteeringAngle);
@@ -123,7 +127,9 @@ void Car::brake(float brakePedalInput) {
 	}
 }
 
-
+void Car::charge(float laserInput){
+	laserNode->setVoltageInput(laserInput);
+}
 
 void Car::accelerate(float voltage) {
 	// Define Tesla car properties (example values)

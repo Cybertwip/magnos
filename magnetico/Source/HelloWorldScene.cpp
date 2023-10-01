@@ -27,6 +27,7 @@
 #include "MaritimeGimbal3D.h"
 #include "Car.h"
 #include "Utils3d.h"
+#include "Laser.h"
 
 #include "ui/axmol-ui.h"
 
@@ -323,7 +324,8 @@ void HelloWorld::onImGuiDraw()
 
 	static float acceleration = 0;
 	static float speed = 0;
-	
+	static float laser = 0;
+
 	static float counter = 0;
 	
 	counter += deltaTime;
@@ -332,10 +334,12 @@ void HelloWorld::onImGuiDraw()
 		counter = 0;
 		acceleration = car->getAcceleration();
 		speed = car->getSpeed();
+		laser = car->getLaserNode()->getAccumulatedVoltage();
 	}
 
 	ImGui::Text("Accel m/s^2=%.2f", acceleration);
 	ImGui::Text("Speed m/s=%.2f", speed);
+	ImGui::Text("Laser Voltage=%.2f", laser);
 	ImGui::End();
 
 }
@@ -421,6 +425,19 @@ void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 		
 
 		car->accelerate(totalPowerDrawn);
+		
+		float laserVoltage = 2.5f;
+		powerDraw = laserVoltage / gimbals.size();
+
+		totalPowerDrawn = 0;
+		for(auto gimbal : gimbals){
+			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+			
+			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+		}
+		
+		car->charge(totalPowerDrawn);
+
 	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
@@ -451,6 +468,7 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		car->accelerate(0);
+		car->charge(0);
 	}
 
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
