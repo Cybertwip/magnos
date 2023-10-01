@@ -46,7 +46,7 @@ public:
 	void scheduleCollection();
 	
 	void setDesignedEMFPerSecond(float desiredEMF);
-	void setOnVoltagePeakCallback(std::function<void(float)> onVoltagePeak);
+	void setOnVoltagePeakCallback(std::function<void(int, float)> onVoltagePeak);
 
 	void adjustCurrentBasedOn(float dt);
 	void attachToDisk(ax::Node* node, float radius, MagnetDirection direction, MagnetPolarity polarity) override;	
@@ -101,7 +101,7 @@ private:
 	VoltageController filterIncrease;
 	
 	float designedEMFPerSecond;
-	std::function<void(float)> onVoltagePeak = nullptr;
+	std::function<void(int, float)> onVoltagePeak = nullptr;
 	
 public:
 	float lastAccumulatedEMF = 0.0f;

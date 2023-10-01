@@ -41,6 +41,15 @@
 
 
 
+float voltsToCurrent(float voltage, float resistance) {
+	if (resistance == 0.0f) {
+		// Avoid division by zero
+		return 0.0f;
+	}
+	
+	return voltage / resistance;
+}
+
 USING_NS_AX;
 USING_NS_AX_EXT;
 
@@ -158,6 +167,18 @@ bool HelloWorld::init()
 //	terrain->setPosition3D(Vec3(0, 0, 0)); // Adjust the position as needed
 //	this->addChild(terrain); // Add the terrain to your scene
 
+	std::function<void(int, float)> onVoltagePeak = [this](int index, float charge){	car->getBattery().charge(voltsToCurrent(charge, 6), global_delta / 1000.0f);
+		auto gimbal = gimbals[index];
+		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+		
+		magnos->getCoilSystem().accumulator.discharge(charge);
+	};
+	
+	for(auto gimbal : gimbals){
+		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+
+		magnos->getCoilSystem().setOnVoltagePeakCallback(onVoltagePeak);
+	}
 	return true;
 }
 
@@ -465,15 +486,6 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 	
 }
 
-float voltsToCurrent(float voltage, float resistance) {
-	if (resistance == 0.0f) {
-		// Avoid division by zero
-		return 0.0f;
-	}
-	
-	return voltage / resistance;
-}
-
 void HelloWorld::update(float delta)
 {
 	float totalDelta = global_delta / 1000.0f;
@@ -489,7 +501,6 @@ void HelloWorld::update(float delta)
 		magnos->update(totalDelta);
 		
 		totalCurrent += magnos->getCoilSystem().current;
-		totalPower += magnos->getCoilSystem().accumulator.getVoltage();
 		
 		totalResistance += 1 * 6;
 	
@@ -500,8 +511,8 @@ void HelloWorld::update(float delta)
 				
 	}
 	
+	
 	car->getBattery().discharge(totalCurrent, totalDelta);
-	car->getBattery().charge(voltsToCurrent(totalPower, totalResistance), totalDelta);
 	
 	if(accelerate || anyDataCollectionMode){
 		
@@ -517,25 +528,27 @@ void HelloWorld::update(float delta)
 		
 		car->accelerate(totalPowerDrawn);
 		
-		
-		float laserVoltage = 5;
-		powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
-		
-		totalPowerDrawn = 0;
-		for(auto gimbal : gimbals){
-			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+		if(enable_lasers){
+			float laserVoltage = 5;
+			powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
 			
-			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+			totalPowerDrawn = 0;
+			for(auto gimbal : gimbals){
+				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+				
+				totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+			}
+			
+			car->charge(totalPowerDrawn);
+
 		}
-		
-		car->charge(totalPowerDrawn);
 
 
 	} else {
 		car->accelerate(0);
 	}
 	
-	if(car->anyLaserStatusOn()){
+	if(car->anyLaserStatusOn() && enable_lasers){
 		
 		float laserVoltage = 0;
 
@@ -569,8 +582,10 @@ void HelloWorld::update(float delta)
 	
 	car->updateMotion(totalDelta);
 	
-	for(auto laser : car->getLasers()){
-		laser->update(totalDelta);
+	if(enable_lasers){
+		for(auto laser : car->getLasers()){
+			laser->update(totalDelta);
+		}
 	}
 	
 	// Get the car's position
@@ -608,17 +623,19 @@ void HelloWorld::update(float delta)
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
 	
-	
-	for(auto laser : car->getLasers()){
-		float storedPower = 0;
-		float powerToStore = (laser->getAccumulatedVoltage() / (float)gimbals.size()) * totalDelta;
-		for(auto gimbal : gimbals){
-			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-			storedPower += magnos->getCoilSystem().storePower(powerToStore);
-		}
-		
-		if(storedPower != 0){
-			laser->dischargeAccumulatedVoltage(storedPower);
+	if(enable_lasers){
+		for(auto laser : car->getLasers()){
+			float storedPower = 0;
+			float powerToStore = (laser->getAccumulatedVoltage() / (float)gimbals.size()) * totalDelta;
+			for(auto gimbal : gimbals){
+				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+				storedPower += magnos->getCoilSystem().storePower(powerToStore);
+			}
+			
+			if(storedPower != 0){
+				laser->dischargeAccumulatedVoltage(storedPower);
+			}
+			
 		}
 
 	}

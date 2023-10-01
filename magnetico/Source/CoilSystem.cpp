@@ -75,7 +75,7 @@ void CoilSystem::setDesignedEMFPerSecond(float desiredEMF){
 	resetAccumulators();
 }
 
-void CoilSystem::setOnVoltagePeakCallback(std::function<void(float)> onVoltagePeak){
+void CoilSystem::setOnVoltagePeakCallback(std::function<void(int, float)> onVoltagePeak){
 	this->onVoltagePeak = onVoltagePeak;
 }
 
@@ -442,7 +442,7 @@ void CoilSystem::update(float measuredEMF, float delta) {
 		if(accumulator.getVoltage() >= accumulator.getCapacity() || (accumulator.getVoltage() >= accumulator.getCapacity() && calibrating())){
 
 			if(onVoltagePeak){
-				onVoltagePeak(accumulator.getVoltage());
+				onVoltagePeak(coil_id - 1, accumulator.getVoltage());
 			}
 			
 			//accumulator.discharge(accumulator.getCapacity());
