@@ -24,6 +24,6 @@ public:
 	void startAutoTuning(float relayHigh, float relayLow);
 	bool calibrating();
 	bool getRelayState();
-	bool calibrate(float error, float dt, long long currentTime);
+	bool calibrate(float normalizedError, float error, float dt, long long currentTime);
 	float compute(float error, float dt);
 };

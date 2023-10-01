@@ -81,7 +81,7 @@ void CoilSystem::setOnVoltagePeakCallback(std::function<void(float)> onVoltagePe
 
 void CoilSystem::resetAccumulators(){
 	accumulationTime = 0.0f;
-	accumulator = Capacitor(accumulator.getCapacity());
+	accumulator = Capacitor(designedEMFPerSecond); // @TODO make it fixed
 	baseAccumulatedEMF = 0;
 	lastBaseAccumulatedEMF = 0;
 	lastAccumulatedEMF = 0;
@@ -261,11 +261,13 @@ void CoilSystem::adjustCurrentBasedOn(float dt) {
     // Compute error for the PID
     float desiredCurrent = emfError / totalResistance;
 
+	float normalizedError = desiredCurrent / maxCurrent;
+	
     float currentAdjustment = 0;
 
 	float fixedDelta = (timeNow - timePrev) / 1000.0f;
 	
-    if(pidCurrent.calibrate(desiredCurrent, fixedDelta, timeNow)){
+    if(pidCurrent.calibrate(emfError / accumulator.getCapacity(), desiredCurrent, fixedDelta, timeNow)){
                                 
         currentAdjustment = pidCurrent.getRelayState() ? 0 : maxCurrent;
         

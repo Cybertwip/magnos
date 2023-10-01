@@ -9,7 +9,7 @@ PIDController::PIDController(float kp, float ki, float kd)
 
 void PIDController::startAutoTuning(float relayHigh, float relayLow) {
 	autoTuning = true;
-	relayState = true;
+	relayState = false;
 	relayState = !relayState;
 	this->relayHigh = relayHigh;
 	this->relayLow = relayLow;
@@ -27,9 +27,9 @@ bool PIDController::getRelayState() {
 	return relayState;
 }
 
-bool PIDController::calibrate(float error, float dt, long long currentTime){
+bool PIDController::calibrate(float normalizedError, float error, float dt, long long currentTime){
 	if (autoTuning) {
-		if ((relayState && error < 0.5f) || (!relayState && error > 0.5f)) {
+		if ((relayState && normalizedError > 0.5f) || (!relayState && normalizedError < 0.5f)) {
 			// Capture the oscillation period
 			if (oscillationsCount > 0) {
 				period += currentTime - prevSwitchTime;
