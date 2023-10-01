@@ -60,12 +60,28 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	auto laserNode = LaserNode::create(0.02, true, 0.1, 3.0); // Set your laser parameters
 	
 	// Set the position and add the LaserNode to the scene
-	laserNode->setPosition3D(ax::Vec3(0, carDimension / 2.0f, 0.0f)); // Adjust the position as needed
+	laserNode->setPosition3D(ax::Vec3(-0.2f, 0.0f, 0.0f)); // Adjust the position as needed
 	
-	carBody->addChild(laserNode);
+	auto laserEmitter = createCube(0.1f);
+	auto laserReceiver = createCube(0.1f);
+	auto laserSystem = ax::Node::create();
+	
+	auto emitter = ax::MeshRenderer::create();
+	auto receiver = ax::MeshRenderer::create();
+	emitter->addMesh(laserEmitter);
+	receiver->addMesh(laserReceiver);
+	emitter->setPosition3D(ax::Vec3(engineBox->getPositionX() - 0.2f, 0, 0));
+	receiver->setPosition3D(ax::Vec3(emitter->getPositionX() - 0.8f, 0, 0));
+	emitter->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	receiver->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	emitter->setTexture("black.jpg");
+	receiver->setTexture("black.jpg");
 
-	
-	// Add car components to the Car node
+	emitter->addChild(laserNode);
+	laserSystem->addChild(emitter);
+	laserSystem->addChild(receiver);
+
+	carBody->addChild(laserSystem);
 	carBody->addChild(engineBox);
 	this->addChild(carBody);
 	

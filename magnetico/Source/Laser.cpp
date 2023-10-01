@@ -192,6 +192,8 @@ void LaserNode::createLaserLight()
 	auto ps =
 	ax::PUParticleSystem3D::create("scripts/electricBeamSystem.pu");
 	ps->startParticleSystem();
+	
+	ps->setRotation3D(ax::Vec3(0, 0, -90));
 	this->addChild(ps);
 
 	laserLight = ps;
@@ -232,34 +234,22 @@ void LaserNode::update(float dt) {
 		timeElapsed = 0.0f;
 	}
 }
-
 void LaserNode::simulateOpticalSystem(float dt) {
 	float damping = 0.01f;
-	float cutoffFreq = 5.0f;
-
+	
+	// Calculate light intensity directly
 	float lightIntensity = photonicOscillator(frequency, timeElapsed, damping);
+	
+	// Apply photodetector
 	float currentSample = photodetector(lightIntensity);
-	float filteredSample = 0.0f;
-	float boostedSample = 0.0f;
-	float voltageSample = 0.0f;
-	float boostedVoltageSample = 0.0f;
 	
-	currentSamples.push_back(currentSample);
+	// Apply optical repeater boost
+	float boostedSample = opticalRepeaterBoost(currentSample);
 	
-	if (timeElapsed >= 2.0f) { // Assuming 2 seconds as the minimum time for filtering
-		std::vector<float> filteredCurrent = lowpassFilter(currentSamples, cutoffFreq, 1000.0);
-		
-		filteredCurrent = currentSamples;
-		filteredSample = filteredCurrent[0];
-		boostedSample = opticalRepeaterBoost(filteredSample);
-		//voltageSample = currentToVoltage(filteredSample);
-		boostedVoltageSample = currentToVoltage(boostedSample);
-		
-		currentSamples.clear();
-	}
+	// Convert to voltage
+	float boostedVoltageSample = currentToVoltage(boostedSample);
 	
 	// Accumulate values based on delta time (dt)
-	//accumulatedCurrent += boostedSample * dt;
+	// accumulatedCurrent += boostedSample * dt;
 	accumulatedVoltage += boostedVoltageSample * dt;
 }
-

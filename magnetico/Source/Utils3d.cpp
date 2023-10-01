@@ -588,7 +588,7 @@ ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheel
 	// Create the car body, roof, and windows as separate meshes
 	ax::Node* carBody = createCarBody(carDimension);
 	//ax::Node* roof = createCarRoof(carDimension, 1); // You may need to define roofHeight
-	ax::Node* windows = createCarWindows(carDimension, 0.25f);
+	//ax::Node* windows = createCarWindows(carDimension, 0.25f);
 	
 	// Create four wheels and attach them to the car body
 	ax::Mesh* frontLeftWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
@@ -645,7 +645,7 @@ ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheel
 
 	// Attach roof and windows to the car body
 	//carBody->addChild(roof);
-	carBody->addChild(windows);
+	//carBody->addChild(windows);
 	
 	return carNode;
 }
