@@ -17,7 +17,7 @@ private:
 	ax::Node* rearLeftWheel;
 	ax::Node* rearRightWheel;
 	ax::Node* rearSuspension;
-	LaserNode* laserNode;
+	std::vector<LaserNode*> lasers;
 
 	// Member variables for acceleration and friction
 	float acceleration;
@@ -35,8 +35,10 @@ public:
 	Car();
 	virtual ~Car();
 	
+	ax::Node* createLaserSystem(ax::Vec3 position);
+
 	std::vector<ax::Node*> getGimbals() const;
-	LaserNode* getLaserNode() const;
+	std::vector<LaserNode*> getLasers() const;
 	
 	float getAcceleration() const;
 	float getSpeed() const;

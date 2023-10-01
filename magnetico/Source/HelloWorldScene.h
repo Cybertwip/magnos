@@ -90,6 +90,11 @@ private:
 	float verticalAngle = 0.0f;   // Initialize vertical angle
 
 
+	bool brake = false;
+	bool accelerate = false;
+	bool steer = false;
+	
+	float steerAngle = 0;
 };
 
 #endif  // __HELLOWORLD_SCENE_H__

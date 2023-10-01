@@ -9,9 +9,23 @@
 
 
 // Photonic Oscillator
-float photonicOscillator(float frequency, float time, float damping = 0.01f) {
-	float amplitude = 1.0f;
-	return amplitude * std::exp(-damping * time) * std::sin(2 * M_PI * frequency * time);
+// Constants specific to the photodetector
+const float SENSITIVITY = 0.8f;   // Sensitivity factor (adjust as needed)
+const float DARK_CURRENT = 0.03f;   // Dark current (Amps, typically very small)
+const float LOAD_RESISTANCE = 1.0f; // Load resistor value (Ohms, adjust as needed)
+
+// Function to convert light frequency to voltage
+float convertLightToVoltage(float frequency, float delta_time) {
+	// Calculate the optical power (Watts) using the frequency and sensitivity
+	float optical_power = frequency * SENSITIVITY;
+	
+	// Calculate the photocurrent (Amps) using the optical power and dark current
+	float photocurrent = (optical_power + DARK_CURRENT) * delta_time;
+	
+	// Calculate the voltage across the load resistor
+	float voltage = photocurrent * LOAD_RESISTANCE;
+	
+	return voltage;
 }
 
 // Photodetector with noise
@@ -52,7 +66,7 @@ float opticalRepeaterBoost(float intensity) {
 }
 
 // Current to Voltage conversion
-float currentToVoltage(float current, float resistance = 1.0f) {
+float currentToVoltage(float current, float resistance = 4.0f) {
 	return current * resistance;
 }
 
@@ -96,7 +110,15 @@ double Laser::getFocalLength() const {
 
 // Set the voltage input
 void Laser::setVoltageInput(double voltage) {
-	voltageInput = voltage;
+	if(voltage == 0){
+		voltageInput = 0;
+	} else {
+		voltageInput += voltage;
+		
+		if(voltageInput >= 2.5f){
+			voltageInput = 2.5f;
+		}
+	}
 }
 
 // Get the voltage input
@@ -110,7 +132,7 @@ void Laser::calculateLaserPower() const {
 }
 
 LaserNode::LaserNode(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput, float laserFrequency)
-: accumulatedCurrent(0.0f), accumulatedVoltage(0.0f), totalTime(10.0f), timeElapsed(0.0f), frequency(laserFrequency) {
+: accumulatedCurrent(0.0f), accumulatedVoltage(0.0f), totalTime(1.0f), timeElapsed(0.0f), frequency(laserFrequency) {
 	laser = new Laser(apertureRadius, isConvexLens, focalLength, voltageInput);
 	
 	laser->autorelease();
@@ -120,8 +142,6 @@ LaserNode::LaserNode(double apertureRadius, bool isConvexLens, double focalLengt
 	// Initialize the laser light (PointLight)
 	createLaserLight();
 	updateLaserLightColor();
-	
-	scheduleUpdate();
 }
 
 LaserNode::~LaserNode()
@@ -241,32 +261,39 @@ void LaserNode::update(float dt) {
 	// Check if it's time to reset the simulation
 	if (timeElapsed >= totalTime) {
 		timeElapsed = 0.0f;
+		
+		guiMeasure = voltagePerSecond;
+		
+		voltagePerSecond = 0;
 	}
 }
 void LaserNode::simulateOpticalSystem(float dt) {
-	float damping = 0.01f;
-	
-	// Calculate light intensity directly
-	float lightIntensity = photonicOscillator(frequency, timeElapsed, damping);
-	
-	// Apply photodetector
-	float currentSample = photodetector(lightIntensity);
-	
-	// Apply optical repeater boost
-	float boostedSample = opticalRepeaterBoost(currentSample);
-	
-	// Convert to voltage
-	float boostedVoltageSample = currentToVoltage(boostedSample);
+ 	// Apply photodetector
+	float currentSample = convertLightToVoltage(frequency, dt);
 	
 	// Accumulate values based on delta time (dt)
-	// accumulatedCurrent += boostedSample * dt;
-	accumulatedVoltage += boostedVoltageSample * dt;
+	accumulatedVoltage += currentSample;
+	voltagePerSecond += currentSample;
+	
+	accumulatedVoltage = std::min(maxAccumulatedVoltage, accumulatedVoltage);
+	
+	voltagePerSecond = std::min(maxAccumulatedVoltage, voltagePerSecond);
+	
 }
 
 float LaserNode::getAccumulatedVoltage() const {
 	return accumulatedVoltage;
 }
 
-void LaserNode::dischargeAccumulatedVoltage() {
-	accumulatedVoltage = 0;
+void LaserNode::dischargeAccumulatedVoltage(float dischargeAmount) {
+	accumulatedVoltage -= dischargeAmount;
+	
+	// Ensure accumulatedVoltage doesn't go below zero
+	if (accumulatedVoltage < 0) {
+		accumulatedVoltage = 0;
+	}
+}
+
+float LaserNode::getGuiMeasure() const {
+	return guiMeasure;
 }

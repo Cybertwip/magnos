@@ -30,28 +30,35 @@ filterIncrease(VoltageController(32, Settings::desired_capacitor_voltage, Settin
 CoilSystem::~CoilSystem(){
 }
 
-float CoilSystem::withdrawPower(float power){
-	
-	float withdrawn = std::min(power, std::max(this->accumulatedEMF = this->accumulatedEMF - power, 0.0f));
-	
-
-	if(this->accumulatedEMF < 0){
-		this->accumulatedEMF = 0;
+float CoilSystem::withdrawPower(float power) {
+	if (power <= 0) {
+		// No valid power to withdraw, return 0
+		return 0.0f;
 	}
+	
+	// Calculate the amount that can be withdrawn, ensuring it doesn't go below zero
+	float withdrawn = std::min(power, this->accumulatedEMF);
+	
+	// Subtract the withdrawn power from accumulatedEMF
+	this->accumulatedEMF -= withdrawn;
 	
 	return withdrawn;
-	
 }
 
-
-void CoilSystem::storePower(float power){
-	
-	float withdrawn = std::max(power, std::min(this->accumulatedEMF = this->accumulatedEMF + power, desiredEMFPerSecond));
-	
-	
-	if(this->accumulatedEMF > desiredEMFPerSecond){
-		this->accumulatedEMF = desiredEMFPerSecond;
+float CoilSystem::storePower(float power) {
+	if (power <= 0) {
+		// No valid power to store, return 0
+		return 0.0f;
 	}
+	
+	// Calculate the amount that can be stored without exceeding desiredEMFPerSecond
+	float availableCapacity = desiredEMFPerSecond - this->accumulatedEMF;
+	float stored = std::min(power, availableCapacity);
+	
+	// Add the stored power to accumulatedEMF
+	this->accumulatedEMF += stored;
+	
+	return stored;
 }
 
 void CoilSystem::recalibrate(){

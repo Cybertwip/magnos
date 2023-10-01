@@ -14,7 +14,7 @@ MaritimeGimbal3D* createGimbal(int id, ax::Node* parent, ax::Vec3 position){
 	return gimbal;
 }
 
-Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAngle(15) {
+Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.001f), maxSteeringAngle(15) {
 	// Create car's body, gear box, and gimbals
 	std::vector<ax::Node*> wheelsContainer;
 	
@@ -56,11 +56,27 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 
 	gimbals.push_back(createGimbal(6, engineBox, ax::Vec3(0, -0.25f, 0)));
 
+	auto laserSystem1 = createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f));
+	auto laserSystem2 = createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f));
+	
+	carBody->addChild(laserSystem1);
+	carBody->addChild(engineBox);
+	this->addChild(carBody);
+	
+}
+
+Car::~Car() {
+	// Release any allocated resources
+	// ...
+}
+
+ax::Node* Car::createLaserSystem(ax::Vec3 position){
+	
 	// Create a LaserNode instance
-	laserNode = LaserNode::create(0.02f, true, 0.1f, 0.0f, 30.0f); // Set your laser parameters
+	auto laserNode = LaserNode::create(0.02f, true, 0.1f, 0.0f, 40); // Set your laser parameters
 	
 	// Set the position and add the LaserNode to the scene
-	laserNode->setPosition3D(ax::Vec3(-0.2f, 0.0f, 0.0f)); // Adjust the position as needed
+	laserNode->setPosition3D(position); // Adjust the position as needed
 	
 	auto laserEmitter = createCube(0.1f);
 	auto laserReceiver = createCube(0.1f);
@@ -76,20 +92,12 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	receiver->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
 	emitter->setTexture("black.jpg");
 	receiver->setTexture("black.jpg");
-
+	
 	emitter->addChild(laserNode);
 	laserSystem->addChild(emitter);
 	laserSystem->addChild(receiver);
 	
-	carBody->addChild(laserSystem);
-	carBody->addChild(engineBox);
-	this->addChild(carBody);
-	
-}
-
-Car::~Car() {
-	// Release any allocated resources
-	// ...
+	return laserSystem;
 }
 
 float Car::getSpeed() const{
@@ -104,13 +112,20 @@ std::vector<ax::Node*> Car::getGimbals() const {
 	return this->gimbals;
 }
 
-LaserNode* Car::getLaserNode() const {
-	return laserNode;
+std::vector<LaserNode*> Car::getLasers() const {
+	return lasers;
 }
 
 void Car::steer(float angle) {
 	// Clamp the steering angle within the valid range
 	steeringAngle = std::min(std::max(angle, -maxSteeringAngle), maxSteeringAngle);
+}
+void Car::charge(float laserInput){
+	float dispersion = laserInput / (float)lasers.size();
+	
+	for(auto laser : lasers){
+		laser->setVoltageInput(laserInput);
+	}
 }
 
 void Car::brake(float brakePedalInput) {
@@ -125,10 +140,11 @@ void Car::brake(float brakePedalInput) {
 	if (brakePower < 0.0f) {
 		brakePower = 0.0f;
 	}
-}
-
-void Car::charge(float laserInput){
-	laserNode->setVoltageInput(laserInput);
+	
+	// Check if the brake pedal is pressed (positive input)
+	if (brakePedalInput > 0.0f) {
+		accelerate(-acceleration);
+	}
 }
 
 void Car::accelerate(float voltage) {
@@ -140,7 +156,7 @@ void Car::accelerate(float voltage) {
 	const float maxAcceleration = 8.0f; // Maximum acceleration in m/s^2
 	
 	// Scale the voltage input to acceleration based on Tesla car properties
-	acceleration = (voltage / maxVoltage) * maxAcceleration;
+	acceleration += (voltage / maxVoltage) * maxAcceleration;
 	
 	// Ensure acceleration is within the valid range
 	if (acceleration > maxAcceleration) {

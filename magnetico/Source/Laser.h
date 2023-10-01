@@ -73,7 +73,9 @@ public:
 	void simulateOpticalSystem(float dt);
 	
 	float getAccumulatedVoltage() const;
-	void dischargeAccumulatedVoltage();
+	void dischargeAccumulatedVoltage(float dischargeAmount);
+	
+	float getGuiMeasure() const;
 private:
 	Laser* laser; // Laser instance
 	ax::PUParticleSystem3D* laserLight; // PointLight for laser beam
@@ -84,6 +86,11 @@ private:
 	float timeElapsed;  // Added member to keep track of time elapsed
 	float frequency;       // Added member for the laser's frequency
 
+	float maxAccumulatedVoltage = 20;
+	
+	float voltagePerSecond;
+	float guiMeasure;
+	
 	std::vector<float> currentSamples;
 
 };

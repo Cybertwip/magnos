@@ -334,12 +334,15 @@ void HelloWorld::onImGuiDraw()
 		counter = 0;
 		acceleration = car->getAcceleration();
 		speed = car->getSpeed();
-		laser = car->getLaserNode()->getAccumulatedVoltage();
+		laser = 0;
+		for(auto laserNode : car->getLasers()){
+			laser += laserNode->getGuiMeasure();
+		}
 	}
 
 	ImGui::Text("Accel m/s^2=%.2f", acceleration);
 	ImGui::Text("Speed m/s=%.2f", speed);
-	ImGui::Text("Laser Voltage=%.2f", laser);
+	ImGui::Text("Laser v/s=%.2f", laser);
 	ImGui::End();
 
 }
@@ -413,46 +416,23 @@ void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
-		
-		float powerDraw = 6 / gimbals.size();
-		
-		float totalPowerDrawn = 0;
-		for(auto gimbal : gimbals){
-			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-			
-			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-		}
-		
-
-		car->accelerate(totalPowerDrawn);
-		
-		float laserVoltage = 2.5f;
-		powerDraw = laserVoltage / gimbals.size();
-
-		totalPowerDrawn = 0;
-		for(auto gimbal : gimbals){
-			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-			
-			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-		}
-		
-		car->charge(totalPowerDrawn);
-
+		accelerate = true;
 	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
-		car->steer(-6);
+		steer = true;
+		steerAngle = -6;
 	}
 	
 	
 	if(code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
-		car->steer(6);
+		steer = true;
+		steerAngle = 6;
 	}
 
 	
 	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
-		float brakePedalInput = 1.0f; // Adjust as needed
-		car->brake(brakePedalInput);
+		brake = true;
 	}
 }
 
@@ -467,27 +447,77 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 	}
 
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
-		car->accelerate(0);
-		car->charge(0);
+		accelerate = false;
 	}
 
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
-		car->steer(0);
+		steer = false;
+		steerAngle = 0;
 	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
-		float brakePedalInput = 0.0f; // Adjust as needed
-		car->brake(brakePedalInput);
+		brake = false;
 	}
 	
 }
 
 void HelloWorld::update(float delta)
 {
+	float totalDelta = global_delta / 1000.0f;
 	for(auto gimbal : gimbals){
-		gimbal->update(1.0f / 60.0f);
+		gimbal->update(totalDelta);
 	}
-	car->updateMotion(delta);
+	
+	if(accelerate){
+		
+		float powerDraw = (2.5f / (float)gimbals.size()) * totalDelta;
+		
+		float totalPowerDrawn = 0;
+		for(auto gimbal : gimbals){
+			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+			
+			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+		}
+		
+		
+		car->accelerate(totalPowerDrawn);
+		
+		float laserVoltage = 2.5f;
+		powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
+		
+		totalPowerDrawn = 0;
+		for(auto gimbal : gimbals){
+			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+			
+			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+		}
+		
+		car->charge(totalPowerDrawn);
+
+	} else {
+		car->accelerate(0);
+		car->charge(0);
+	}
+	
+	if(steer){
+		car->steer(steerAngle);
+	} else {
+		car->steer(0);
+	}
+	
+	if(brake){
+		float brakePedalInput = 1.0f; // Adjust as needed
+		car->brake(brakePedalInput);
+	} else {
+		float brakePedalInput = 0; // Adjust as needed
+		car->brake(brakePedalInput);
+	}
+	
+	car->updateMotion(totalDelta);
+	
+	for(auto laser : car->getLasers()){
+		laser->update(totalDelta);
+	}
 	
 	// Get the car's position
 	Vec3 carPosition = car->getPosition3D();
@@ -525,12 +555,18 @@ void HelloWorld::update(float delta)
 	cursorDeltaY = 0;
 	
 	
-	for(auto gimbal : gimbals){
-		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+	for(auto laser : car->getLasers()){
+		float storedPower = 0;
+		float powerToStore = (laser->getAccumulatedVoltage() / (float)gimbals.size()) * totalDelta;
+		for(auto gimbal : gimbals){
+			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+			storedPower += magnos->getCoilSystem().storePower(powerToStore);
+		}
 		
-		magnos->getCoilSystem().storePower(car->getLaserNode()->getAccumulatedVoltage() / gimbals.size());
+		if(storedPower != 0){
+			laser->dischargeAccumulatedVoltage(storedPower);
+		}
+
 	}
-	
-	car->getLaserNode()->dischargeAccumulatedVoltage();
 }
 
