@@ -450,7 +450,7 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 	}
 
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
-		
+		car->accelerate(0);
 	}
 
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){

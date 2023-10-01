@@ -81,7 +81,7 @@ void Car::steer(float angle) {
 
 void Car::brake(float brakePedalInput) {
 	// Calculate the braking force based on brake pedal input
-	float maxBrakeForce = 5000.0f; // Adjust for realism
+	float maxBrakeForce = 500.0f; // Adjust for realism
 	float brakingForce = maxBrakeForce * brakePedalInput;
 	
 	// Apply the braking force to decelerate the car
