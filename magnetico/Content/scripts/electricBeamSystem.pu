@@ -12,7 +12,7 @@ system electricBeamSystem
         }
         emitter                                 Point
         {
-            emission_rate                       5
+            emission_rate                       10
             angle                               0
             time_to_live                        0.25
             velocity                            2
