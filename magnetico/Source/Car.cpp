@@ -70,11 +70,9 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.001f), maxSteeringA
 			gimbals.push_back(createGimbal(6, engineBox, ax::Vec3(0, -0.25f, 0)));
 	}
 
-	auto laserSystem1 = createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f));
-	auto laserSystem2 = createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f));
-	
-	carBody->addChild(laserSystem1);
-	carBody->addChild(laserSystem2);
+	for(int i = 0; i<number_of_lasers; ++i){
+		carBody->addChild(createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f)));
+	}
 	carBody->addChild(engineBox);
 	this->addChild(carBody);
 	
