@@ -164,11 +164,12 @@ void Car::brake(float brakePedalInput) {
 	}
 }
 
-void Car::accelerate(float voltage) {
-	if(voltage == 0.0f){
-		acceleration = -acceleration;
-		return;
+void Car::liftPedal(){
+	if(acceleration > 0){
+		acceleration = 0;
 	}
+}
+void Car::accelerate(float voltage) {
 	// Define Tesla car properties (example values)
 //	const float maxVoltage = 400.0f; // Maximum voltage output in volts
 	const float maxVoltage = 40.0f; // Maximum voltage output in volts

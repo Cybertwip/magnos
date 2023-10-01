@@ -545,7 +545,7 @@ void HelloWorld::update(float delta)
 
 
 	} else {
-		car->accelerate(0);
+		car->liftPedal();
 	}
 	
 	if(car->anyLaserStatusOn() && enable_lasers){

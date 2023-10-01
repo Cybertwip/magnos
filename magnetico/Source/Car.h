@@ -50,6 +50,7 @@ public:
 	void charge(float amount);
 	void brake(float amount);
 	void steer(float angle); // Function to set the steering angle
+	void liftPedal();
 	void accelerate(float value);
 	void applyFriction();
 	void updateMotion(float deltaTime);
