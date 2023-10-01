@@ -523,5 +523,14 @@ void HelloWorld::update(float delta)
 	
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
+	
+	
+	for(auto gimbal : gimbals){
+		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+		
+		magnos->getCoilSystem().storePower(car->getLaserNode()->getAccumulatedVoltage() / gimbals.size());
+	}
+	
+	car->getLaserNode()->dischargeAccumulatedVoltage();
 }
 

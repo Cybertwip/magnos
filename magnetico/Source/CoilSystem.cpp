@@ -44,6 +44,16 @@ float CoilSystem::withdrawPower(float power){
 }
 
 
+void CoilSystem::storePower(float power){
+	
+	float withdrawn = std::max(power, std::min(this->accumulatedEMF = this->accumulatedEMF + power, desiredEMFPerSecond));
+	
+	
+	if(this->accumulatedEMF > desiredEMFPerSecond){
+		this->accumulatedEMF = desiredEMFPerSecond;
+	}
+}
+
 void CoilSystem::recalibrate(){
 	pidCurrent = PIDController(1.0f, 0, 0);
 

@@ -28,6 +28,7 @@ public:
 	~CoilSystem();
 	
 	float withdrawPower(float power);
+	void storePower(float power);
 	
 	void recalibrate();
 	void resetAccumulators();

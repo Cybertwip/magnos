@@ -175,10 +175,13 @@ void LaserNode::setVoltageInput(double voltage)
 	laser->setVoltageInput(voltage);
 
 	if(getVoltageInput() >= 2.5f){
-		laserLight->stopParticleSystem();
-		laserLight->startParticleSystem();
+		if(laserLight->getState() == ax::ParticleSystem3D::State::STOP){
+			laserLight->startParticleSystem();
+		}
 	} else {
-		laserLight->stopParticleSystem();
+		if(laserLight->getState() == ax::ParticleSystem3D::State::RUNNING){
+			laserLight->stopParticleSystem();
+		}
 	}
 	// Update the laser light's color based on the voltage
 	//updateLaserLightColor();
@@ -198,8 +201,10 @@ void LaserNode::createLaserLight()
 {
 	auto ps =
 	ax::PUParticleSystem3D::create("scripts/electricBeamSystem.pu");
-	ps->startParticleSystem();
+	//ps->startParticleSystem();
 	
+	ps->stopParticleSystem();
+
 	ps->setRotation3D(ax::Vec3(0, 0, -90));
 	this->addChild(ps);
 
@@ -260,4 +265,8 @@ void LaserNode::simulateOpticalSystem(float dt) {
 
 float LaserNode::getAccumulatedVoltage() const {
 	return accumulatedVoltage;
+}
+
+void LaserNode::dischargeAccumulatedVoltage() {
+	accumulatedVoltage = 0;
 }

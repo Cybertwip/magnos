@@ -73,7 +73,7 @@ public:
 	void simulateOpticalSystem(float dt);
 	
 	float getAccumulatedVoltage() const;
-	
+	void  dischargeAccumulatedVoltage();
 private:
 	Laser* laser; // Laser instance
 	ax::PUParticleSystem3D* laserLight; // PointLight for laser beam
