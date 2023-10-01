@@ -400,6 +400,19 @@ void CoilSystem::update(float measuredEMF, float delta) {
 			}
 			
 			this->current = currentAdjustment;
+		} else {
+			std::string home = getenv("HOME");
+			
+			saveDataToBinary(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
+			
+			data_collection_mode = false;
+			
+			hasML = loadDataAndTrainModel(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
+			
+			this->recalibrate();
+			
+			return;
+
 		}
 		
 	}
@@ -416,7 +429,7 @@ void CoilSystem::update(float measuredEMF, float delta) {
 		} else if (accumulator.getVoltage() < accumulator.getCapacity() && !calibrating()){
 			float storedVoltage = filterIncrease.getCapacitorVoltage();
 			
-			// try to keep up
+//			 try to keep up
 			float recycledConsumption = filterIncrease.consumeFromCapacitor(std::min(storedVoltage, accumulator.getCapacity() - accumulator.getVoltage()));
 			
 			accumulator.charge(recycledConsumption);
@@ -432,7 +445,7 @@ void CoilSystem::update(float measuredEMF, float delta) {
 				onVoltagePeak(accumulator.getVoltage());
 			}
 			
-			accumulator.discharge(accumulator.getCapacity());
+			//accumulator.discharge(accumulator.getCapacity());
 		}
 	}
 

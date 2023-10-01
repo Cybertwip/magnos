@@ -39,6 +39,7 @@ public:
 	Car();
 	virtual ~Car();
 	
+	bool anyLaserStatusOn();
 	ax::Node* createLaserSystem(ax::Vec3 position);
 
 	std::vector<ax::Node*> getGimbals() const;

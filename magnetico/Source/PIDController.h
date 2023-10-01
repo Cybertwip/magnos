@@ -9,6 +9,7 @@ private:
 	float prev_error = 0.0f;
 	bool autoTuning = false;
 	bool relayState = false; // Used for relay feedback, true for high, false for low
+	bool relayStateCheck = false;
 	float relayHigh = 1.0;   // Set a high relay value
 	float relayLow = 0.0;   // Set a low relay value
 	double period = 0.0f;

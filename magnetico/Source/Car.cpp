@@ -131,6 +131,20 @@ void Car::charge(float laserInput){
 	}
 }
 
+bool Car::anyLaserStatusOn(){
+	bool lasersOn = false;
+	
+	for(auto laser : lasers){
+		lasersOn = laser->getVoltageInput() == 2.5f;
+		
+		if(lasersOn){
+			break;
+		}
+	}
+	
+	return lasersOn;
+}
+
 void Car::brake(float brakePedalInput) {
 	// Calculate the braking force based on brake pedal input
 	float maxBrakeForce = 500.0f; // Adjust for realism

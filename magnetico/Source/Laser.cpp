@@ -109,7 +109,7 @@ double Laser::getFocalLength() const {
 }
 
 // Set the voltage input
-void Laser::setVoltageInput(double voltage) {
+void Laser::setVoltageInput(float voltage) {
 	if(voltage == 0){
 		voltageInput = 0;
 	} else {
@@ -122,7 +122,7 @@ void Laser::setVoltageInput(double voltage) {
 }
 
 // Get the voltage input
-double Laser::getVoltageInput() const {
+float Laser::getVoltageInput() const {
 	return voltageInput;
 }
 
@@ -190,7 +190,7 @@ double LaserNode::getFocalLength() const
 	return laser->getFocalLength();
 }
 
-void LaserNode::setVoltageInput(double voltage)
+void LaserNode::setVoltageInput(float voltage)
 {
 	laser->setVoltageInput(voltage);
 
@@ -207,7 +207,7 @@ void LaserNode::setVoltageInput(double voltage)
 	//updateLaserLightColor();
 }
 
-double LaserNode::getVoltageInput() const
+float LaserNode::getVoltageInput() const
 {
 	return laser->getVoltageInput();
 }

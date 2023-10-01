@@ -34,10 +34,10 @@ public:
 	double getFocalLength() const;
 	
 	// Set the voltage input
-	void setVoltageInput(double voltage);
+	void setVoltageInput(float voltage);
 	
 	// Get the voltage input
-	double getVoltageInput() const;
+	float getVoltageInput() const;
 	
 	// Calculate and print the laser power
 	void calculateLaserPower() const;
@@ -60,8 +60,8 @@ public:
 	void setFocalLength(double length);
 	double getFocalLength() const;
 	
-	void setVoltageInput(double voltage);
-	double getVoltageInput() const;
+	void setVoltageInput(float voltage);
+	float getVoltageInput() const;
 	
 	void calculateLaserPower();
 	

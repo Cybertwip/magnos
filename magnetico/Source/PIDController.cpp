@@ -29,6 +29,21 @@ bool PIDController::getRelayState() {
 
 bool PIDController::calibrate(float normalizedError, float error, float dt, long long currentTime){
 	if (autoTuning) {
+		
+		if(!relayStateCheck){
+			relayStateCheck = true;
+			
+			if(relayState && normalizedError < 0.5f){
+				relayState = !relayState; // low
+			} else if(!relayState && normalizedError > 0.5f){
+				relayState = !relayState; // high
+			}
+		}
+		
+		if(relayStateCheck && normalizedError == 0){
+			relayState = !relayState;
+		}
+		
 		if ((relayState && normalizedError > 0.5f) || (!relayState && normalizedError < 0.5f)) {
 			// Capture the oscillation period
 			if (oscillationsCount > 0) {
