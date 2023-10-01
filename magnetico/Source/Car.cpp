@@ -57,7 +57,7 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	gimbals.push_back(createGimbal(6, engineBox, ax::Vec3(0, -0.25f, 0)));
 
 	// Create a LaserNode instance
-	laserNode = LaserNode::create(0.02f, true, 0.1f, 0.0f, 60.0f); // Set your laser parameters
+	laserNode = LaserNode::create(0.02f, true, 0.1f, 0.0f, 30.0f); // Set your laser parameters
 	
 	// Set the position and add the LaserNode to the scene
 	laserNode->setPosition3D(ax::Vec3(-0.2f, 0.0f, 0.0f)); // Adjust the position as needed
@@ -71,7 +71,7 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	emitter->addMesh(laserEmitter);
 	receiver->addMesh(laserReceiver);
 	emitter->setPosition3D(ax::Vec3(engineBox->getPositionX() - 0.2f, 0, 0));
-	receiver->setPosition3D(ax::Vec3(emitter->getPositionX() - 0.8f, 0, 0));
+	receiver->setPosition3D(ax::Vec3(emitter->getPositionX() - 1.5f, 0, 0));
 	emitter->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
 	receiver->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
 	emitter->setTexture("black.jpg");

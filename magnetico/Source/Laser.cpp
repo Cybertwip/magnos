@@ -112,6 +112,9 @@ void Laser::calculateLaserPower() const {
 LaserNode::LaserNode(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput, float laserFrequency)
 : accumulatedCurrent(0.0f), accumulatedVoltage(0.0f), totalTime(10.0f), timeElapsed(0.0f), frequency(laserFrequency) {
 	laser = new Laser(apertureRadius, isConvexLens, focalLength, voltageInput);
+	
+	laser->autorelease();
+		
 	addChild(laser);
 	
 	// Initialize the laser light (PointLight)
@@ -123,9 +126,6 @@ LaserNode::LaserNode(double apertureRadius, bool isConvexLens, double focalLengt
 
 LaserNode::~LaserNode()
 {
-	AX_SAFE_RELEASE_NULL(_programState);
-
-	delete laser;
 }
 
 LaserNode* LaserNode::create(double apertureRadius, bool isConvexLens, float focalLength, float voltageInput, float frequency)
