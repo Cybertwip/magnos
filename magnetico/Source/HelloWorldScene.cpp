@@ -432,6 +432,11 @@ void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 		car->steer(6);
 	}
 
+	
+	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
+		float brakePedalInput = 1.0f; // Adjust as needed
+		car->brake(brakePedalInput);
+	}
 }
 
 void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
@@ -450,6 +455,11 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
 		car->steer(0);
+	}
+	
+	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
+		float brakePedalInput = 0.0f; // Adjust as needed
+		car->brake(brakePedalInput);
 	}
 	
 }

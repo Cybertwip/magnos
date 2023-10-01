@@ -172,6 +172,125 @@ ax::Mesh* createPlane(float width, float depth, int texRepeatX, int texRepeatY) 
 	// Create mesh and return it
 	return ax::Mesh::create(positions, normals, texs, indexArray);
 }
+
+ax::Mesh* createHollowCuboid(float outerWidth, float outerHeight, float outerDepth, float innerWidth, float innerHeight, float innerDepth) {
+	// Calculate half-dimensions for convenience
+	float halfOuterWidth = outerWidth / 2.0f;
+	float halfOuterHeight = outerHeight / 2.0f;
+	float halfOuterDepth = outerDepth / 2.0f;
+	float halfInnerWidth = innerWidth / 2.0f;
+	float halfInnerHeight = innerHeight / 2.0f;
+	float halfInnerDepth = innerDepth / 2.0f;
+	
+	// Calculate vertices for the hollow cuboid
+	std::vector<float> positions = {
+		// Outer vertices
+		-halfOuterWidth, -halfOuterHeight, halfOuterDepth,
+		halfOuterWidth, -halfOuterHeight, halfOuterDepth,
+		halfOuterWidth, halfOuterHeight, halfOuterDepth,
+		-halfOuterWidth, halfOuterHeight, halfOuterDepth,
+		-halfOuterWidth, -halfOuterHeight, -halfOuterDepth,
+		halfOuterWidth, -halfOuterHeight, -halfOuterDepth,
+		halfOuterWidth, halfOuterHeight, -halfOuterDepth,
+		-halfOuterWidth, halfOuterHeight, -halfOuterDepth,
+		
+		// Inner vertices
+		-halfInnerWidth, -halfInnerHeight, halfInnerDepth,
+		halfInnerWidth, -halfInnerHeight, halfInnerDepth,
+		halfInnerWidth, halfInnerHeight, halfInnerDepth,
+		-halfInnerWidth, halfInnerHeight, halfInnerDepth,
+		-halfInnerWidth, -halfInnerHeight, -halfInnerDepth,
+		halfInnerWidth, -halfInnerHeight, -halfInnerDepth,
+		halfInnerWidth, halfInnerHeight, -halfInnerDepth,
+		-halfInnerWidth, halfInnerHeight, -halfInnerDepth,
+	};
+	
+	// Normals (assuming the outer faces have normals pointing outward and inner faces have normals pointing inward)
+	std::vector<float> normals = {
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, -1,
+		0, 0, -1,
+		0, 0, -1,
+		0, 0, -1,
+		
+		// Inner normals (opposite of outer normals)
+		0, 0, -1,
+		0, 0, -1,
+		0, 0, -1,
+		0, 0, -1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+	};
+	
+	// Texture coordinates
+	std::vector<float> texs = {
+		// Outer texture coordinates (can be adjusted based on your needs)
+		0, 0,
+		1, 0,
+		1, 1,
+		0, 1,
+		0, 0,
+		1, 0,
+		1, 1,
+		0, 1,
+		
+		// Inner texture coordinates (can be adjusted based on your needs)
+		0, 0,
+		1, 0,
+		1, 1,
+		0, 1,
+		0, 0,
+		1, 0,
+		1, 1,
+		0, 1,
+	};
+	
+	// Indices for the hollow cuboid
+	std::vector<unsigned short> indices = {
+		// Front outer face
+		0, 1, 2, 0, 2, 3,
+		// Back outer face
+		5, 4, 7, 5, 7, 6,
+		// Left outer face
+		4, 0, 3, 4, 3, 7,
+		// Right outer face
+		1, 5, 6, 1, 6, 2,
+		// Bottom outer face
+		4, 5, 1, 4, 1, 0,
+		// Top outer face
+		3, 2, 6, 3, 6, 7,
+		
+		// Front inner face
+		8, 9, 10, 8, 10, 11,
+		// Back inner face
+		13, 12, 15, 13, 15, 14,
+		// Left inner face
+		12, 8, 11, 12, 11, 15,
+		// Right inner face
+		9, 13, 14, 9, 14, 10,
+		// Bottom inner face
+		12, 13, 9, 12, 9, 8,
+		// Top inner face
+		11, 10, 14, 11, 14, 15,
+	};
+	
+	ax::IndexArray indexArray;
+	
+	for (auto index : indices) {
+		indexArray.emplace_back(index);
+	}
+	
+	// Create mesh for the hollow cuboid
+	ax::Mesh* cuboidMesh = ax::Mesh::create(positions, normals, texs, indexArray);
+	
+	return cuboidMesh;
+}
+
 ax::Mesh* createTorus(float majorRadius, float minorRadius, int majorSegments, int minorSegments) {
 	std::vector<float> positions;
 	std::vector<float> normals;
@@ -246,11 +365,156 @@ ax::Mesh* createFlatDisk(float radius, float thickness, int majorSegments, int m
 	auto torus = createTorus(radius + thickness / 2, thickness / 2, majorSegments, minorSegments);
 	
 	torus->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-	torus->setTexture("kitty.jpg");
+	torus->setTexture("pink.jpg");
 	
 	return torus;
-
 }
+
+ax::Mesh* createCylinder(float radius, float height, int segments) {
+	std::vector<float> positions;
+	std::vector<float> normals;
+	std::vector<float> texs;
+	std::vector<unsigned short> indices;
+	
+	float segmentAngle = 2.0f * M_PI / static_cast<float>(segments);
+	
+	// Create vertices
+	for (int i = 0; i <= segments; ++i) {
+		float angle = static_cast<float>(i) * segmentAngle;
+		float x = radius * cos(angle);
+		float y = -height / 2.0f;
+		float z = radius * sin(angle);
+		
+		// Add bottom vertices
+		positions.push_back(x);
+		positions.push_back(y);
+		positions.push_back(z);
+		normals.push_back(0.0f);
+		normals.push_back(-1.0f);
+		normals.push_back(0.0f);
+		texs.push_back(static_cast<float>(i) / static_cast<float>(segments));
+		texs.push_back(0.0f);
+		
+		// Add top vertices
+		positions.push_back(x);
+		positions.push_back(y + height);
+		positions.push_back(z);
+		normals.push_back(0.0f);
+		normals.push_back(1.0f);
+		normals.push_back(0.0f);
+		texs.push_back(static_cast<float>(i) / static_cast<float>(segments));
+		texs.push_back(1.0f);
+	}
+	
+	// Create indices
+	for (int i = 0; i < segments; ++i) {
+		int next = (i + 1) % (segments + 1);
+		
+		// Bottom face
+		indices.push_back(i * 2);
+		indices.push_back(next * 2);
+		indices.push_back(i * 2 + 1);
+		
+		indices.push_back(i * 2 + 1);
+		indices.push_back(next * 2);
+		indices.push_back(next * 2 + 1);
+		
+		// Side faces
+		indices.push_back(i * 2);
+		indices.push_back(i * 2 + 2);
+		indices.push_back(i * 2 + 1);
+		
+		indices.push_back(i * 2 + 1);
+		indices.push_back(i * 2 + 2);
+		indices.push_back(i * 2 + 3);
+	}
+	
+	ax::IndexArray indexArray;
+	for (auto index : indices) {
+		indexArray.emplace_back(index);
+	}
+	
+	// Create mesh and return it
+	return ax::Mesh::create(positions, normals, texs, indexArray);
+}
+
+ax::Node* createRearSuspension(float width, float height, float depth) {
+	// Create a cylinder for the rear suspension
+	ax::Mesh* rearSuspensionMesh = createCuboid(width, height, depth);
+	
+	ax::MeshRenderer* rearSuspensionMeshRenderer = ax::MeshRenderer::create();
+	
+	rearSuspensionMeshRenderer->addMesh(rearSuspensionMesh);
+
+	// Set material, texture, and other properties as needed
+	rearSuspensionMeshRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	rearSuspensionMeshRenderer->setTexture("kitty.jpg");
+	
+	return rearSuspensionMeshRenderer;
+}
+
+
+ax::Node* createRearAxle(float width, float height, float depth) {
+	// Create a cuboid for the rear axle
+	ax::Mesh* rearAxleMesh = createCuboid(width, height, depth);
+	
+	ax::MeshRenderer* rearAxleMeshRenderer = ax::MeshRenderer::create();
+	
+	rearAxleMeshRenderer->addMesh(rearAxleMesh);
+
+	// Set material, texture, and other properties as needed
+	rearAxleMeshRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	rearAxleMeshRenderer->setTexture("gray.jpg");
+	
+	return rearAxleMeshRenderer;
+}
+
+ax::Node* createTransmission(float width, float height, float depth) {
+
+	ax::Mesh* transmissionMeshUpper = createCuboid(width, height / 2.0f, depth / 2.0f);
+	ax::Mesh* transmissionMeshLower = createCuboid(width, height / 2.0f, depth / 2.0f);
+	ax::Mesh* transmissionMeshLeft = createCuboid(width, height / 2.0f, depth / 2.0f);
+	ax::Mesh* transmissionMeshRight = createCuboid(width, height / 2.0f, depth / 2.0f);
+
+	// Create a node to hold the transmission meshes
+	ax::Node* transmissionMeshNode = ax::Node::create();
+	
+	// Create MeshRenderers for each side and set material and texture properties
+	ax::MeshRenderer* transmissionMeshUpperRenderer = ax::MeshRenderer::create();
+	transmissionMeshUpperRenderer->addMesh(transmissionMeshUpper);
+	transmissionMeshUpperRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	transmissionMeshUpperRenderer->setTexture("gold.jpg");
+	
+	ax::MeshRenderer* transmissionMeshLowerRenderer = ax::MeshRenderer::create();
+	transmissionMeshLowerRenderer->addMesh(transmissionMeshLower);
+	transmissionMeshLowerRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	transmissionMeshLowerRenderer->setTexture("gold.jpg");
+	
+	ax::MeshRenderer* transmissionMeshLeftRenderer = ax::MeshRenderer::create();
+	transmissionMeshLeftRenderer->addMesh(transmissionMeshLeft);
+	transmissionMeshLeftRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	transmissionMeshLeftRenderer->setTexture("gold.jpg");
+	
+	ax::MeshRenderer* transmissionMeshRightRenderer = ax::MeshRenderer::create();
+	transmissionMeshRightRenderer->addMesh(transmissionMeshRight);
+	transmissionMeshRightRenderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	transmissionMeshRightRenderer->setTexture("gold.jpg");
+	
+	transmissionMeshUpperRenderer->setPosition3D(ax::Vec3(0.0f, height, 0.0f));
+	transmissionMeshLowerRenderer->setPosition3D(ax::Vec3(0.0f, -height, 0.0f));
+	transmissionMeshLeftRenderer->setPosition3D(ax::Vec3(0.0f, 0.0f, -depth));
+	transmissionMeshRightRenderer->setPosition3D(ax::Vec3(0.0f, 0.0f, depth));
+
+	// Attach the MeshRenderers to the transmission node
+	transmissionMeshNode->addChild(transmissionMeshUpperRenderer);
+	transmissionMeshNode->addChild(transmissionMeshLowerRenderer);
+	transmissionMeshNode->addChild(transmissionMeshLeftRenderer);
+	transmissionMeshNode->addChild(transmissionMeshRightRenderer);
+	
+	return transmissionMeshNode;
+}
+
+
 
 // Function to create the car body
 ax::Node* createCarBody(float carDimension) {
@@ -320,7 +584,7 @@ ax::Node* createCarWindows(float carDimension, float roofHeight) {
 	return carWindowsNode;
 }
 
-ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheelWidth, std::vector<CustomNode*>& wheelsContainer) {
+ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheelWidth, std::vector<ax::Node*>& suspensionContainer) {
 	// Create the car body, roof, and windows as separate meshes
 	ax::Node* carBody = createCarBody(carDimension);
 	//ax::Node* roof = createCarRoof(carDimension, 1); // You may need to define roofHeight
@@ -332,10 +596,10 @@ ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheel
 	ax::Mesh* rearLeftWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
 	ax::Mesh* rearRightWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
 	
-	CustomNode* frontLeftWheel = CustomNode::create();
-	CustomNode* frontRightWheel = CustomNode::create();
-	CustomNode* rearLeftWheel = CustomNode::create();
-	CustomNode* rearRightWheel = CustomNode::create();
+	ax::MeshRenderer* frontLeftWheel = ax::MeshRenderer::create();
+	ax::MeshRenderer* frontRightWheel = ax::MeshRenderer::create();
+	ax::MeshRenderer* rearLeftWheel = ax::MeshRenderer::create();
+	ax::MeshRenderer* rearRightWheel = ax::MeshRenderer::create();
 	
 	frontLeftWheel->addMesh(frontLeftWheelMesh);
 	frontRightWheel->addMesh(frontRightWheelMesh);
@@ -344,24 +608,41 @@ ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheel
 	
 	// Position the wheels relative to the car body
 	// You can adjust these positions as needed to align the wheels correctly
-	frontLeftWheel->setPosition3D(ax::Vec3(-carDimension + wheelRadius, -carDimension / 2, -carDimension / 2 - wheelRadius));
-	frontRightWheel->setPosition3D(ax::Vec3(carDimension - wheelRadius, -carDimension / 2, carDimension / 2 + wheelRadius));
-	rearLeftWheel->setPosition3D(ax::Vec3(-carDimension + wheelRadius, -carDimension / 2, carDimension / 2 + wheelRadius));
-	rearRightWheel->setPosition3D(ax::Vec3(carDimension - wheelRadius, -carDimension / 2, -carDimension / 2 - wheelRadius));
+	frontLeftWheel->setPosition3D(ax::Vec3(-carDimension + wheelRadius * 2.0f, -carDimension / 2, -carDimension / 2 - wheelRadius));
+	frontRightWheel->setPosition3D(ax::Vec3(carDimension - wheelRadius * 2.0f, -carDimension / 2, carDimension / 2 + wheelRadius));
+	rearLeftWheel->setPosition3D(ax::Vec3(-carDimension + wheelRadius * 2.0f, -carDimension / 2, carDimension / 2 + wheelRadius));
+	rearRightWheel->setPosition3D(ax::Vec3(carDimension - wheelRadius * 2.0f, -carDimension / 2, -carDimension / 2 - wheelRadius));
 	
-	// Create a container node for the entire car (body, roof, windows, and wheels)
+	// Create rear suspension, rear axle, and transmission
+	
+	ax::Node* rearSuspension = createRearSuspension(0.0825f, 0.0825f, carDimension / 2.0f + wheelWidth / 2.0f);
+	ax::Node* rearAxle = createRearAxle(1.0f, 0.1f, 0.1f);
+	ax::Node* transmission = createTransmission(0.18f, 0.25f, 0.2f);
+	
+	float suspensionOffset = 0.2f;
+	// Position the components relative to the car body
+	rearSuspension->setPosition3D(ax::Vec3(-carDimension +  suspensionOffset, -carDimension / 2, 0.0f));
+	rearAxle->setPosition3D(ax::Vec3(0.0f, -carDimension / 2, 0));
+	transmission->setPosition3D(ax::Vec3(-carDimension +  suspensionOffset, -carDimension / 2, 0.0f));
+	
+	// Create a container node for the entire car (body, roof, windows, wheels, and components)
 	ax::Node* carNode = ax::Node::create();
 	carNode->addChild(carBody);
 	carNode->addChild(frontLeftWheel);
 	carNode->addChild(frontRightWheel);
 	carNode->addChild(rearLeftWheel);
 	carNode->addChild(rearRightWheel);
-	
-	wheelsContainer.push_back(frontLeftWheel);
-	wheelsContainer.push_back(frontRightWheel);
-	wheelsContainer.push_back(rearLeftWheel);
-	wheelsContainer.push_back(rearRightWheel);
-	
+	carNode->addChild(rearSuspension);
+	carNode->addChild(rearAxle);
+	carNode->addChild(transmission);
+
+	suspensionContainer.push_back(rearRightWheel);
+	suspensionContainer.push_back(frontRightWheel);
+	suspensionContainer.push_back(rearLeftWheel);
+	suspensionContainer.push_back(frontLeftWheel);
+
+	suspensionContainer.push_back(rearSuspension);
+
 	// Attach roof and windows to the car body
 	//carBody->addChild(roof);
 	carBody->addChild(windows);

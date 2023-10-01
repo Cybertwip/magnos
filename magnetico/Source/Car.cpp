@@ -14,14 +14,16 @@ MaritimeGimbal3D* createGimbal(int id, ax::Node* parent, ax::Vec3 position){
 
 Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAngle(15) {
 	// Create car's body, gear box, and gimbals
-	std::vector<CustomNode*> wheelsContainer;
+	std::vector<ax::Node*> wheelsContainer;
 	
 	carBody = createCarWithWheels(1.25f, 0.1f, 0.2f, wheelsContainer);
 	
-	frontLeftWheel = wheelsContainer[3];
+	frontLeftWheel = wheelsContainer[0];
 	frontRightWheel = wheelsContainer[1];
 	rearLeftWheel = wheelsContainer[2];
-	rearRightWheel = wheelsContainer[0];
+	rearRightWheel = wheelsContainer[3];
+	
+	rearSuspension = wheelsContainer[4];
 
 	auto engineBoxMesh = createCube(0.45f);
 	auto engineBoxRenderer = ax::MeshRenderer::create();
@@ -76,6 +78,21 @@ void Car::steer(float angle) {
 	// Clamp the steering angle within the valid range
 	steeringAngle = std::min(std::max(angle, -maxSteeringAngle), maxSteeringAngle);
 }
+
+void Car::brake(float brakePedalInput) {
+	// Calculate the braking force based on brake pedal input
+	float maxBrakeForce = 5000.0f; // Adjust for realism
+	float brakingForce = maxBrakeForce * brakePedalInput;
+	
+	// Apply the braking force to decelerate the car
+	brakePower = brakingForce / mass;
+	
+	// Ensure brakePower does not go below zero (prevents negative braking)
+	if (brakePower < 0.0f) {
+		brakePower = 0.0f;
+	}
+}
+
 
 
 void Car::accelerate(float voltage) {
@@ -139,6 +156,21 @@ void Car::updateMotion(float deltaTime) {
 		newSpeed = -maxSpeed;
 	}
 	
+	// Apply braking force to decelerate the car
+	float brakingForce = brakePower; // Use positive acceleration for braking
+	
+	// Calculate the deceleration due to braking
+	float brakingDeceleration = brakingForce / mass;
+	
+	// Calculate the new speed after braking
+	newSpeed -= brakingDeceleration * deltaTime;
+	
+	// Ensure the speed doesn't go below zero
+	if (newSpeed < 0.0f) {
+		newSpeed = 0.0f;
+	}
+
+	
 	// Calculate the car's new position based on the updated speed
 	ax::Vec3 newPosition = this->getPosition3D();
 	
@@ -151,22 +183,6 @@ void Car::updateMotion(float deltaTime) {
 	// Update the car's position
 	newPosition.x += linearMovementX;
 	newPosition.z += lateralMovementX;
-
-	
-	// Calculate the car's traction force based on the ground friction coefficient
-	float groundFrictionCoefficient = 0.8f; // Adjust for realism
-	float tractionForce = groundFrictionCoefficient * mass * 9.81f; // 9.81 m/s^2 is the acceleration due to gravity
-	
-	// Calculate the force required for acceleration
-	float forceForAcceleration = mass * (newSpeed - speed) / deltaTime;
-	
-	// Apply traction and adjust acceleration
-	if (std::abs(forceForAcceleration) <= std::abs(tractionForce)) {
-		acceleration = forceForAcceleration / mass;
-	} else {
-		acceleration = tractionForce * (forceForAcceleration > 0 ? 1 : -1) / mass;
-	}
-	
 
 	// Update the car's position
 	this->setPosition3D(newPosition);
@@ -217,7 +233,9 @@ void Car::updateMotion(float deltaTime) {
 	
 	rearLeftWheel->setRotation3D(rearLeftWheel->getRotation3D() + ax::Vec3(0, 0, AX_RADIANS_TO_DEGREES(baseAngularVelocity)));
 	rearRightWheel->setRotation3D(rearRightWheel->getRotation3D() + ax::Vec3(0, 0, AX_RADIANS_TO_DEGREES(baseAngularVelocity)));
-	
+
+	rearSuspension->setRotation3D(rearRightWheel->getRotation3D() + ax::Vec3(0, 0, AX_RADIANS_TO_DEGREES(baseAngularVelocity)));
+
 	// Update the car's speed
 	speed = newSpeed;
 }

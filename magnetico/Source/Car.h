@@ -10,11 +10,12 @@ private:
 	ax::Node* carBody;
 	ax::Node* engineBox;
 	std::vector<ax::Node*> gimbals;
-	CustomNode* frontLeftWheel;
-	CustomNode* frontRightWheel;
-	CustomNode* rearLeftWheel;
-	CustomNode* rearRightWheel;
-	
+	ax::Node* frontLeftWheel;
+	ax::Node* frontRightWheel;
+	ax::Node* rearLeftWheel;
+	ax::Node* rearRightWheel;
+	ax::Node* rearSuspension;
+
 
 	// Member variables for acceleration and friction
 	float acceleration;
@@ -26,7 +27,8 @@ private:
 	float speed = 0;
 	float mass = 150;
 	float carOrientation = 0;
-
+	float brakePower = 0;
+	
 public:
 	Car();
 	virtual ~Car();
@@ -35,6 +37,7 @@ public:
 	
 	float getAcceleration() const;
 	float getSpeed() const;
+	void brake(float amount);
 	void steer(float angle); // Function to set the steering angle
 	void accelerate(float value);
 	void applyFriction();
