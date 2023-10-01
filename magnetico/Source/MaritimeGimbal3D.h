@@ -66,7 +66,7 @@ public:
 	
 	std::unique_ptr<CoilSystem> outerCoilSystem;
 	
-	AlternatorSystem alternator = AlternatorSystem(0.025f, 120);
+	AlternatorSystem alternator = AlternatorSystem(0.04f, 40);
 	
 	std::unique_ptr<MagnetSystem> middleMagnetSystem = std::make_unique<MagnetSystem>();
 	std::unique_ptr<MagnetSystem> outerMagnetSystem = std::make_unique<MagnetSystem>();

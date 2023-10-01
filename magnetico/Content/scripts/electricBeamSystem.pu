@@ -17,7 +17,7 @@ system electricBeamSystem
             time_to_live                        0.5
             velocity                            2
             direction                           0 1 0
-            colour                              1 0 0 0.2
+            colour                              0 0 1 0.2
         }
 
     }

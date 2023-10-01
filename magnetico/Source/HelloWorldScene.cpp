@@ -578,7 +578,9 @@ void HelloWorld::update(float delta)
 		car->brake(brakePedalInput);
 	}
 	
-	car->updateMotion(totalDelta);
+	if(!anyDataCollectionMode){
+		car->updateMotion(totalDelta);
+	}
 	
 	if(enable_lasers){
 		for(auto laser : car->getLasers()){

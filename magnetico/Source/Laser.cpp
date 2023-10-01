@@ -224,6 +224,8 @@ void LaserNode::createLaserLight()
 	//ps->startParticleSystem();
 	
 	ps->stopParticleSystem();
+	
+	ps->setOpacity(50);
 
 	ps->setRotation3D(ax::Vec3(0, 0, -90));
 	this->addChild(ps);
