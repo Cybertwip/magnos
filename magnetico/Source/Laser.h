@@ -1,0 +1,86 @@
+#pragma once
+
+#include <axmol.h>
+
+
+class Laser : public ax::Node {
+private:
+	double apertureRadius;   // Aperture radius in meters
+	bool isConvexLens;       // Whether the lens is convex (true) or concave (false)
+	double focalLength;      // Focal length of the lens in meters
+	double voltageInput;     // Voltage input in volts
+	
+public:
+	// Constructor to initialize the Laser object
+	Laser(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput);
+	
+	// Set the aperture radius
+	void setApertureRadius(double radius);
+	
+	// Get the aperture radius
+	double getApertureRadius() const;
+	
+	// Set the lens type (convex or concave)
+	void setLensType(bool convex);
+	
+	// Check if the lens is convex
+	bool isConvex() const;
+	
+	// Set the focal length of the lens
+	void setFocalLength(double length);
+	
+	// Get the focal length of the lens
+	double getFocalLength() const;
+	
+	// Set the voltage input
+	void setVoltageInput(double voltage);
+	
+	// Get the voltage input
+	double getVoltageInput() const;
+	
+	// Calculate and print the laser power
+	void calculateLaserPower() const;
+};
+
+
+class LaserNode : public ax::Node {
+public:
+	LaserNode(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput, float laserFrequency);
+	virtual ~LaserNode();
+	
+	static LaserNode* create(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput);
+	
+	void setApertureRadius(double radius);
+	double getApertureRadius() const;
+	
+	void setLensType(bool convex);
+	bool isConvex() const;
+	
+	void setFocalLength(double length);
+	double getFocalLength() const;
+	
+	void setVoltageInput(double voltage);
+	double getVoltageInput() const;
+	
+	void calculateLaserPower();
+	
+	void createLaserLight(); // Function to create the PointLight
+	void updateLaserLightColor(); // Function to update the laser light's color
+
+	void update(float dt) override;
+	
+	void simulateOpticalSystem(float dt);
+	
+private:
+	Laser* laser; // Laser instance
+	ax::Node* laserLight; // PointLight for laser beam
+
+	float accumulatedCurrent;
+	float accumulatedVoltage;
+	float totalTime;  // Added member to keep track of total time
+	float timeElapsed;  // Added member to keep track of time elapsed
+	float frequency;       // Added member for the laser's frequency
+
+	std::vector<float> currentSamples;
+
+};

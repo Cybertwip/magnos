@@ -113,7 +113,7 @@ bool HelloWorld::init()
 
 	auto director = Director::getInstance();
 
-	director->setClearColor(Color4F(0.0f, 1.0f, 0.0f, 1.0f));
+	director->setClearColor(Color4F(0.0f, 0.0f, 1.0f, 1.0f));
 
 	auto plane = createPlane(1024, 1024, 1, 1);
 	

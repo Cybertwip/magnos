@@ -16,7 +16,6 @@ private:
 	ax::Node* rearRightWheel;
 	ax::Node* rearSuspension;
 
-
 	// Member variables for acceleration and friction
 	float acceleration;
 	float maxSpeed;

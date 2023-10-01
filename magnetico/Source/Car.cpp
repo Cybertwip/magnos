@@ -1,6 +1,8 @@
 #include "Car.h"
 #include "MaritimeGimbal3D.h"
 #include "Utils3d.h"
+#include "Laser.h"
+
 
 MaritimeGimbal3D* createGimbal(int id, ax::Node* parent, ax::Vec3 position){
 	auto gimbal = MaritimeGimbal3D::create();
@@ -16,7 +18,9 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 	// Create car's body, gear box, and gimbals
 	std::vector<ax::Node*> wheelsContainer;
 	
-	carBody = createCarWithWheels(1.25f, 0.1f, 0.2f, wheelsContainer);
+	float carDimension = 1.25f;
+	
+	carBody = createCarWithWheels(carDimension, 0.1f, 0.2f, wheelsContainer);
 	
 	frontLeftWheel = wheelsContainer[0];
 	frontRightWheel = wheelsContainer[1];
@@ -52,9 +56,19 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.02f), maxSteeringAn
 
 	gimbals.push_back(createGimbal(6, engineBox, ax::Vec3(0, -0.25f, 0)));
 
+	// Create a LaserNode instance
+	auto laserNode = LaserNode::create(0.02, true, 0.1, 3.0); // Set your laser parameters
+	
+	// Set the position and add the LaserNode to the scene
+	laserNode->setPosition3D(ax::Vec3(0, carDimension / 2.0f, 0.0f)); // Adjust the position as needed
+	
+	carBody->addChild(laserNode);
+
+	
 	// Add car components to the Car node
 	carBody->addChild(engineBox);
 	this->addChild(carBody);
+	
 }
 
 Car::~Car() {

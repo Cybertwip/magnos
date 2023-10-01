@@ -52,6 +52,8 @@ frequency = 1.0
 time = np.linspace(0, 10, 10000)
 fs = len(time)/time[-1]  # Sampling frequency
 
+print(fs)
+exit()
 # Simulate
 light_intensity = photonic_oscillator(frequency, time)
 current = photodetector(light_intensity)
