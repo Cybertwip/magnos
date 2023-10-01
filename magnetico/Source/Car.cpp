@@ -291,3 +291,7 @@ void Car::updateMotion(float deltaTime) {
 	// Update the car's speed
 	speed = newSpeed;
 }
+
+RechargeableBattery& Car::getBattery() {
+	return battery;
+}

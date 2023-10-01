@@ -1,11 +1,13 @@
 #pragma once
 #include "CustomNode.h"
+#include "Battery.h"
 
 #include <axmol.h>
 
 #include <vector>
 
 class LaserNode;
+
 
 class Car : public ax::Node {
 private:
@@ -31,6 +33,8 @@ private:
 	float carOrientation = 0;
 	float brakePower = 0;
 	
+	
+	RechargeableBattery battery = RechargeableBattery(9.0f, 10.0f, 10.0f, 0.9f, 0.95f);
 public:
 	Car();
 	virtual ~Car();
@@ -48,6 +52,8 @@ public:
 	void accelerate(float value);
 	void applyFriction();
 	void updateMotion(float deltaTime);
+	
+	RechargeableBattery& getBattery();
 
 	CREATE_FUNC(Car);
 	

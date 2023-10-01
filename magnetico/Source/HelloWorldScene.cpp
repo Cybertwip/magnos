@@ -322,6 +322,7 @@ void HelloWorld::onImGuiDraw()
 	ImGui::Begin("Car");
 	
 
+	static float battery = 0;
 	static float acceleration = 0;
 	static float speed = 0;
 	static float laser = 0;
@@ -332,6 +333,8 @@ void HelloWorld::onImGuiDraw()
 	
 	if(counter >= 1.0f){
 		counter = 0;
+		battery = 0;
+		battery = car->getBattery().getVoltage();
 		acceleration = car->getAcceleration();
 		speed = car->getSpeed();
 		laser = 0;
@@ -340,6 +343,7 @@ void HelloWorld::onImGuiDraw()
 		}
 	}
 
+	ImGui::Text("Battery Voltage=%.2f", battery);
 	ImGui::Text("Accel m/s^2=%.2f", acceleration);
 	ImGui::Text("Speed m/s=%.2f", speed);
 	ImGui::Text("Laser v/s=%.2f", laser);
@@ -461,12 +465,37 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 	
 }
 
+float voltsToCurrent(float voltage, float resistance) {
+	if (resistance == 0.0f) {
+		// Avoid division by zero
+		return 0.0f;
+	}
+	
+	return voltage / resistance;
+}
+
 void HelloWorld::update(float delta)
 {
 	float totalDelta = global_delta / 1000.0f;
+	
+	float totalCurrent = 0.0f;
+	float totalPower = 0.0f;
+	float totalResistance = 0.0f;
+
 	for(auto gimbal : gimbals){
-		gimbal->update(totalDelta);
+		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+
+		magnos->update(totalDelta);
+		
+		totalCurrent += magnos->getCoilSystem().current;
+		totalPower += magnos->getCoilSystem().accumulatedEMF;
+		
+		totalResistance += 1;
+		
 	}
+	
+	car->getBattery().discharge(totalCurrent, totalDelta);
+	car->getBattery().charge(voltsToCurrent(totalPower, totalResistance), totalDelta);
 	
 	if(accelerate){
 		

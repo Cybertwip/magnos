@@ -18,6 +18,8 @@ public:
 	float emf;
 	
 	float current = 0;
+	float accumulatedEMF = 0.0f;
+
 	float turns;
 	
 	std::vector<Coil*> coils;
@@ -84,7 +86,6 @@ private:
 	float desiredEMFPerSecond = Settings::desired_target_voltage;
 	const int numberOfCoils = 1;
 	const float totalResistance = coilResistance * numberOfCoils;
-	float accumulatedEMF = 0.0f;
 	float baseAccumulatedEMF = 0.0f;
 	float accumulationTime = 0.0f;
 	float guiBaseAccumulatedEMF = 0.0f;
