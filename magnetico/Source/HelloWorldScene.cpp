@@ -72,6 +72,8 @@ bool HelloWorld::init()
 	
 	this->addChild(currentGameState);
 	
+	
+	currentGameState->setup(_defaultCamera);
 	return true;
 }
 
