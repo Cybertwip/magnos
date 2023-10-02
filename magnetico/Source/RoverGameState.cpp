@@ -97,7 +97,7 @@ bool RoverGameState::init() {
 }
 
 void RoverGameState::setup(ax::Camera* defaultCamera){
-	_defaultCamera = camera;
+	_defaultCamera = defaultCamera;
 	
 	_defaultCamera->setNearPlane(0.01f);
 	_defaultCamera->setFarPlane(10000);
