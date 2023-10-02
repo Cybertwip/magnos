@@ -5,6 +5,10 @@ class Car;
 
 class RoverGameState : public GameState {
 private:
+	
+	ax::Camera* _defaultCamera;
+	
+
 	std::vector<Node*> gimbals;
 	
 	

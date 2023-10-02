@@ -97,14 +97,16 @@ bool RoverGameState::init() {
 }
 
 void RoverGameState::setup(ax::Camera* defaultCamera){
-	defaultCamera->setNearPlane(0.01f);
-	defaultCamera->setFarPlane(10000);
-	defaultCamera->setFOV(90);
-	defaultCamera->setZoom(1);
-	defaultCamera->setPosition3D(Vec3(1.5f, 1.5f, -1.5f));
-	defaultCamera->setRotation3D(Vec3(0, 0, 0));
+	_defaultCamera = camera;
 	
-	defaultCamera->lookAt(Vec3(0, 0, 0));
+	_defaultCamera->setNearPlane(0.01f);
+	_defaultCamera->setFarPlane(10000);
+	_defaultCamera->setFOV(90);
+	_defaultCamera->setZoom(1);
+	_defaultCamera->setPosition3D(Vec3(1.5f, 1.5f, -1.5f));
+	_defaultCamera->setRotation3D(Vec3(0, 0, 0));
+	
+	_defaultCamera->lookAt(Vec3(0, 0, 0));
 }
 
 void RoverGameState::onMouseMove(Event* event)

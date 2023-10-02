@@ -18,6 +18,4 @@ public:
 
 protected:
 	virtual void setup(ax::Camera* defaultCamera) = 0;
-
-
 };
