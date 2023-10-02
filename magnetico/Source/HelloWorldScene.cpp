@@ -69,6 +69,9 @@ bool HelloWorld::init()
 	_director->getOpenGLView()->setCursorVisible(true);
 
 	this->currentGameState = RoverGameState::create();
+	
+	this->addChild(currentGameState);
+	
 	return true;
 }
 
