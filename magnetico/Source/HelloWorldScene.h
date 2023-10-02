@@ -28,18 +28,15 @@
 
 #include "axmol.h"
 
-class Car;
+class GameState;
 
 class HelloWorld : public ax::Scene
 {
-    enum class ExampleGameState
+    enum class State
     {
-        init = 0,
-        update,
-        pause,
-        end,
-        menu1,
-        menu2,
+        menu = 0,
+        rover,
+        launch
     };
     
 public:
@@ -49,52 +46,19 @@ public:
 	void onEnter() override;
 	void onExit() override;
 	void onImGuiDraw();
-
-
-    // touch
-    void onTouchesBegan(const std::vector<ax::Touch*>& touches, ax::Event* event);
-    void onTouchesMoved(const std::vector<ax::Touch*>& touches, ax::Event* event);
-    void onTouchesEnded(const std::vector<ax::Touch*>& touches, ax::Event* event);
-
-    // mouse
-    void onMouseDown(ax::Event* event);
-    void onMouseUp(ax::Event* event);
-    void onMouseMove(ax::Event* event);
-    void onMouseScroll(ax::Event* event);
-
-    // Keyboard
-    void onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* event);
-    void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event);
 private:
-    ExampleGameState _gameState = ExampleGameState::init;
 	
-	std::vector<Node*> gimbals;
+	// mouse
+	void onMouseMove(ax::Event* event);
 	
-	
-	std::string emf;
-	std::string current;
-	
-	Car* car;
-	
-	float sensitivity = 0.01f;
-	float cursorDeltaX = 0;
-	float cursorDeltaY = 0;
+	// Keyboard
+	void onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* event);
+	void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event);
 
-	float cursorX = 0;
-	float cursorY = 0;
-	float prevCursorX = 0;
-	float prevCursorY = 0;
-
-	ax::Quaternion cameraRotation;
-	float horizontalAngle = 0.0f; // Initialize horizontal angle
-	float verticalAngle = 0.0f;   // Initialize vertical angle
-
-
-	bool brake = false;
-	bool accelerate = false;
-	bool steer = false;
+    State _gameState = State::menu;
 	
-	float steerAngle = 0;
+	GameState* currentGameState;
+	
 };
 
 #endif  // __HELLOWORLD_SCENE_H__

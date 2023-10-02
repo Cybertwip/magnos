@@ -28,6 +28,7 @@ cmake_minimum_required(VERSION 3.10)
 set(APP_NAME magnetico)
 
 project(${APP_NAME})
+#add_subdirectory(thirdparty/geant4)
 
 find_package(PkgConfig REQUIRED)
 
@@ -183,6 +184,18 @@ target_include_directories(${APP_NAME} PRIVATE ${ARMADILLO_INCLUDE_DIRS} ${MLPAC
 target_link_directories(${APP_NAME} PRIVATE ${ARMADILLO_LIBRARY_DIRS} ${MLPACK_LIBRARY_DIRS})
 
 target_link_libraries(${APP_NAME} ${MLPACK_LIBRARIES})
+
+#set(_geant4_lib_use_suffix -static)
+#set(Geant4_LIBRARIES
+# Geant4::G4Tree${_geant4_lib_use_suffix}
+#   Geant4::G4FR${_geant4_lib_use_suffix}
+#   Geant4::G4GMocren${_geant4_lib_use_suffix}
+#   Geant4::G4visHepRep${_geant4_lib_use_suffix}
+#   Geant4::G4RayTracer${_geant4_lib_use_suffix}
+#   Geant4::G4VRML${_geant4_lib_use_suffix}
+#   Geant4::G4ToolsSG${_geant4_lib_use_suffix})
+
+# target_link_libraries(${APP_NAME} ${Geant4_LIBRARIES})
 
 
 
