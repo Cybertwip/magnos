@@ -94,24 +94,26 @@ void RocketGameState::update(float delta) {
 	rocket->update(delta);
 
 	// Get the rocket's position
-	Vec3 targetPosition = rocket->getPosition3D();
-	
+	Vec3 rocketPosition = rocket->getPosition3D();
+
 	// Calculate new camera rotation angles based on normalized cursor deltas
 	horizontalAngle += cursorDeltaX * delta;
 	verticalAngle -= cursorDeltaY * delta;
 
 	// Define the vertical angle constraints (adjust as needed)
 	float minVerticalAngle = AX_DEGREES_TO_RADIANS(0); // Minimum vertical angle (degrees)
-	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(9); // Maximum vertical angle (degrees)
+	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(24); // Maximum vertical angle (degrees)
 	
 	// Clamp the vertical angle within the specified range
 	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
 	
 	// Calculate the new camera position relative to the car
-	float distance = 60.0f; // Adjust the distance as needed
-	float cameraHeight = 49.5f;   // Adjust the height as needed
+	float distance = 50; // Adjust the distance as needed
+	float rocketOffset = 49.5f;   // Adjust the height as needed
+	float cameraHeight = 0;
 	
-	
+	Vec3 targetPosition = Vec3(rocketPosition.x, rocketPosition.y + rocketOffset / 2.0f, rocketPosition.z);
+
 	horizontalAngle = std::roundf(horizontalAngle * 10.0f) / 10.0f;
 	verticalAngle = std::roundf(verticalAngle * 10.0f) / 10.0f;
 
@@ -125,6 +127,7 @@ void RocketGameState::update(float delta) {
 	// Calculate the new camera position
 	// Smoothly interpolate camera position
 	Vec3 newPosition = targetPosition + cameraOffset;
+
 	
 	_defaultCamera->setPosition3D(newPosition);
 	_defaultCamera->lookAt(targetPosition);
