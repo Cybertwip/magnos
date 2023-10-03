@@ -66,14 +66,12 @@ initial_orientation(initial_orientation)
 	rocket_body = rocket_rb_info.createRigidBody();
 
 	autorelease();
-	scheduleUpdate();
 	
-	ax::Mesh* mesh = createCuboid(rocket_radius, rocket_height, rocket_radius);
-	auto renderer = ax::MeshRenderer::create();
-	renderer->addMesh(mesh);
+	auto renderer = ax::MeshRenderer::create("soyuz-fg.obj");
 	renderer->setPosition3D(ax::Vec3(0, 0, 0));
-	renderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-	renderer->setTexture("gold.jpg");
+	renderer->setColor(ax::Color3B::GRAY);
+	//	renderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::QUAD_TEXTURE, false));
+//	renderer->setTexture("gold.jpg");
 	this->addChild(renderer);
 }
 

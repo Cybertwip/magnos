@@ -28,8 +28,8 @@ public:
 
 // Rocket parameters
 namespace {
-float rocket_height = 42;
-float rocket_radius = 4;
+float rocket_height = 49.5;
+float rocket_radius = 5.15;
 float thrust_kN = 845;
 float total_propellant_mass = 523000;
 float max_valve_opening = 1.0f;

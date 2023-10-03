@@ -60,7 +60,7 @@ void RocketGameState::setup(ax::Camera* defaultCamera){
 	_defaultCamera->setNearPlane(10);
 	_defaultCamera->setFarPlane(100000);
 
-	_defaultCamera->setPosition3D(Vec3(10, 10, 10));
+	_defaultCamera->setPosition3D(this->getWorldPosition3D());
 }
 
 void RocketGameState::onMouseMove(Event* event)
@@ -91,39 +91,45 @@ void RocketGameState::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 }
 
 void RocketGameState::update(float delta) {
+	rocket->update(delta);
 
 	// Get the rocket's position
 	Vec3 targetPosition = rocket->getPosition3D();
 	
 	// Calculate new camera rotation angles based on normalized cursor deltas
-	horizontalAngle += cursorDeltaX * sensitivity;
-	verticalAngle -= cursorDeltaY * sensitivity;
+	horizontalAngle += cursorDeltaX * delta;
+	verticalAngle -= cursorDeltaY * delta;
 
 	// Define the vertical angle constraints (adjust as needed)
 	float minVerticalAngle = AX_DEGREES_TO_RADIANS(0); // Minimum vertical angle (degrees)
-	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(15.0f); // Maximum vertical angle (degrees)
+	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(9); // Maximum vertical angle (degrees)
 	
 	// Clamp the vertical angle within the specified range
 	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
 	
 	// Calculate the new camera position relative to the car
-	float distance = 100.0f; // Adjust the distance as needed
-	float cameraHeight = 20.0f;   // Adjust the height as needed
+	float distance = 60.0f; // Adjust the distance as needed
+	float cameraHeight = 49.5f;   // Adjust the height as needed
 	
+	
+	horizontalAngle = std::roundf(horizontalAngle * 10.0f) / 10.0f;
+	verticalAngle = std::roundf(verticalAngle * 10.0f) / 10.0f;
+
 	// Calculate the camera's offset from the car based on angles
 	float horizontalOffset = distance * sinf(horizontalAngle);
-	float verticalOffset = distance * cosf(horizontalAngle) * sinf(verticalAngle);
+	float verticalOffset = (distance + cameraHeight) * cosf(horizontalAngle) * sinf(verticalAngle);
 	float depthOffset = distance * cosf(horizontalAngle) * cosf(verticalAngle);
 	
-	Vec3 cameraOffset(horizontalOffset, cameraHeight + verticalOffset, depthOffset);
+	Vec3 cameraOffset(horizontalOffset, verticalOffset, depthOffset);
 	
 	// Calculate the new camera position
+	// Smoothly interpolate camera position
 	Vec3 newPosition = targetPosition + cameraOffset;
 	
-	// Set the camera's new position and look-at point
 	_defaultCamera->setPosition3D(newPosition);
 	_defaultCamera->lookAt(targetPosition);
-	
+
+
 	float altitude = rocket->get_altitude();
 	
 	uint8_t current_color[4];

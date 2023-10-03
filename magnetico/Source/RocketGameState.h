@@ -8,7 +8,6 @@ private:
 	Rocket* rocket;
 	ax::Camera* _defaultCamera;
 	
-	float sensitivity = 0.01f;
 	float cursorDeltaX = 0;
 	float cursorDeltaY = 0;
 	
