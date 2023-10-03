@@ -341,7 +341,6 @@ void RoverGameState::renderUI() {
 	
 	ImGui::Begin("Engine");
 	
-	
 	float deltaTime = ImGui::GetIO().DeltaTime;
 	static float guiCounter = 0;
 	static float guiBaseEMF = 0;

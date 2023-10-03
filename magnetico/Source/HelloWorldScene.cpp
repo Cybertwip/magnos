@@ -25,6 +25,7 @@
 
 #include "HelloWorldScene.h"
 #include "RoverGameState.h"
+#include "RocketGameState.h"
 
 #include "ImGui/ImGuiPresenter.h"
 
@@ -92,6 +93,29 @@ void HelloWorld::onExit()
 
 void HelloWorld::onImGuiDraw()
 {
+	ImGui::SetNextWindowPos(ImVec2(10, 600), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Sim Mode");
+	
+	// Button to switch to RoverGameState
+	if (ImGui::Button("Rover"))
+	{
+		this->removeAllChildren();
+		this->currentGameState = RoverGameState::create();
+		this->currentGameState->setup(_defaultCamera);
+		this->addChild(currentGameState);
+	}
+	
+	// Button to switch to another state (replace with your other state's name)
+	if (ImGui::Button("Rocket"))
+	{
+		this->removeAllChildren();
+		this->currentGameState = RocketGameState::create();
+		this->currentGameState->setup(_defaultCamera);
+		this->addChild(currentGameState);
+	}
+	
+	ImGui::End();
+
 	this->currentGameState->renderUI();
 }
 
