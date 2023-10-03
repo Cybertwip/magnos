@@ -75,6 +75,9 @@ bool HelloWorld::init()
 	
 	
 	currentGameState->setup(_defaultCamera);
+	
+	scheduleUpdate();
+
 	return true;
 }
 

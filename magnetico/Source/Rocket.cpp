@@ -1,5 +1,6 @@
 #include "Rocket.h"
 #include "Settings.h"
+#include "Utils3d.h"
 
 #include <cmath>
 
@@ -34,16 +35,16 @@ initial_position(initial_position),
 initial_orientation(initial_orientation)
 {
 	// Create the rocket collision shape
-	CollisionShape* rocket_shape = new CylinderShape(rocket_radius_game, rocket_height_game / 2);
+	CollisionShape* rocket_shape = new CylinderShape(rocket_radius, rocket_height / 2);
 	
 	// Calculate the initial mass of the rocket
 	current_mass = dry_mass + initial_propellant_mass;
 	
 	// Calculate the initial thrust of the rocket
-	current_thrust = thrust_kN * thrust_multiplier;
+	current_thrust = thrust_kN;
 	
 	// Calculate the initial specific impulse of the rocket
-	current_specific_impulse = isp_multiplier * 9.81 * specific_impulse;
+	current_specific_impulse = 9.81 * specific_impulse;
 	
 	// Calculate the initial burn rate of the rocket
 	current_burn_rate = burn_rate;
@@ -64,8 +65,21 @@ initial_orientation(initial_orientation)
 	ax::Vec3 rocket_inertia(0, 0, 0);
 	rocket_shape->calculateLocalInertia(current_mass, rocket_inertia);
 	
-	RigidBodyConstructionInfo rocket_rb_info(current_mass, {}, {}, {}, 0, 0);
+	RigidBodyConstructionInfo rocket_rb_info(current_mass, initial_position, {}, {}, 0, 0);
 	rocket_body = rocket_rb_info.createRigidBody();
+	
+	altitude = get_position().length() - earth_radius_game;
+
+	autorelease();
+	scheduleUpdate();
+	
+	ax::Mesh* mesh = createCuboid(rocket_radius, rocket_height, rocket_radius);
+	auto renderer = ax::MeshRenderer::create();
+	renderer->addMesh(mesh);
+	renderer->setPosition3D(ax::Vec3(0, 0, 0));
+	renderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	renderer->setTexture("gold.jpg");
+	this->addChild(renderer);
 }
 
 
@@ -84,13 +98,13 @@ void Rocket::update(float dt) {
 	
 	// Calculate the current thrust of the rocket
 	if (current_stage == 1) {
-		current_thrust = first_stage_thrust * thrust_multiplier;
+		current_thrust = first_stage_thrust;
 	} else {
-		current_thrust = second_stage_thrust * thrust_multiplier;
+		current_thrust = second_stage_thrust;
 	}
 	
 	// Calculate the current specific impulse of the rocket
-	current_specific_impulse = isp_multiplier * 9.81 * specific_impulse;
+	current_specific_impulse = 9.81 * specific_impulse;
 	
 	// Calculate the current burn rate of the rocket
 	current_burn_rate = burn_rate;
@@ -131,11 +145,13 @@ void Rocket::update(float dt) {
 	ax::Vec3 rocket_velocity = rocket_body->getLinearVelocity();
 	float rocket_speed = rocket_velocity.length();
 	ax::Vec3 rocket_direction = rocket_velocity.getNormalized();
-	ax::Vec3 rocket_position = rocket_body->getCenterOfMassPosition();
-	float altitude = rocket_position.length() - earth_radius_game;
+	ax::Vec3 rocket_position = rocket_body->getPosition();
+	altitude = rocket_position.length() - earth_radius_game;
 	float atmospheric_density = _get_atmospheric_density(altitude);
 	ax::Vec3 drag_force = -0.5 * atmospheric_density * current_drag_coefficient * current_cross_sectional_area * rocket_speed * rocket_speed * rocket_direction;
 	rocket_body->applyForce(drag_force);
+	rocket_body->update(dt);
+	this->setPosition3D(rocket_body->getPosition());
 }
 
 float Rocket::get_first_stage_mass() {
@@ -147,19 +163,23 @@ float Rocket::get_second_stage_mass() {
 }
 
 float Rocket::get_mass() {
-    float mass = rocket_body->getInvMass();
+    float mass = current_mass;
     if (mass == 0) {
         return 0;
     }
-    return 1 / mass;
+    return current_mass;
 }
 
 float Rocket::_get_rocket_radius() {
-	return rocket_radius_game;
+	return rocket_radius;
 }
 
 ax::Vec3 Rocket::get_position() {
 	return rocket_body->getCenterOfMassPosition();
+}
+
+float Rocket::get_altitude() {
+	return altitude;
 }
 
 ax::Quaternion Rocket::get_rocket_orientation() {
@@ -188,18 +208,22 @@ float Rocket::_get_atmospheric_pressure(float altitude) {
 }
 
 float Rocket::_get_atmospheric_density(float altitude) {
-    const float R = 287.058f; // Specific gas constant for dry air
-    const float g0 = 9.80665f; // Standard gravitational acceleration at sea level
-    const float T0 = 288.15f; // Standard temperature at sea level
-    const float p0 = 101325.0f; // Standard pressure at sea level
-    const float L = 0.0065f; // Temperature lapse rate
-    const float M = 0.0289644f; // Molar mass of dry air
-
-    float T = T0 - L * altitude;
-    float p = p0 * powf(1 - L * altitude / T0, g0 * M / (R * L));
-    float rho = p * M / (R * T);
-
-    return rho;
+	const float R = 287.058f; // Specific gas constant for dry air
+	const float g0 = 9.80665f; // Standard gravitational acceleration at sea level
+	const float T0 = 288.15f; // Standard temperature at sea level
+	const float p0 = 101325.0f; // Standard pressure at sea level
+	const float L = 0.0065f; // Temperature lapse rate
+	const float M = 0.0289644f; // Molar mass of dry air
+	
+	float T = T0 - L * altitude;
+	float denominator = 1 - L * altitude / T0;
+	if (denominator <= 0) {
+		return 0.0f; // Return 0 density if denominator is zero or negative
+	}
+	float p = p0 * powf(denominator, g0 * M / (R * L));
+	float rho = p * M / (R * T);
+	
+	return rho;
 }
 
 float Rocket::_get_gravitational_force(float altitude) {

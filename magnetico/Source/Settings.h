@@ -28,14 +28,12 @@ public:
 
 // Rocket parameters
 namespace {
-float scale_radius = 0.0001;
-float thrust_multiplier = 100;
-float isp_multiplier = 1;
 float rocket_height = 42;
 float rocket_radius = 4;
 float thrust_kN = 845;
 float total_propellant_mass = 523000;
 float max_valve_opening = 1.0f;
+float FALCON_9_BURN_RATE = 256.7f;
 
 // Celestial body parameters
 float earth_radius = 6371000;
@@ -43,19 +41,19 @@ float moon_radius = 173710;
 float moon_distance = 384400e3;
 float earth_mass = 5.972e24;
 float moon_mass = 7.342e22;
-float earth_radius_game = earth_radius * scale_radius;
-float moon_distance_game = moon_distance * scale_radius;
-float moon_radius_game = moon_radius * scale_radius;
+float earth_radius_game = earth_radius;
+float moon_distance_game = moon_distance;
+float moon_radius_game = moon_radius;
 
 // Atmospheric parameters
 float troposphere_distance = 120000;
 float stratosphere_distance = 500000;
 float mesosphere_distance = 850000;
 float thermosphere_distance = 600000;
-float troposphere_distance_game = troposphere_distance * scale_radius;
-float stratosphere_distance_game = stratosphere_distance * scale_radius;
-float mesosphere_distance_game = mesosphere_distance * scale_radius;
-float thermosphere_distance_game = thermosphere_distance * scale_radius;
+float troposphere_distance_game = troposphere_distance;
+float stratosphere_distance_game = stratosphere_distance;
+float mesosphere_distance_game = mesosphere_distance;
+float thermosphere_distance_game = thermosphere_distance;
 float troposphere_radius = earth_radius + troposphere_distance;
 float stratosphere_radius = earth_radius + stratosphere_distance;
 float mesosphere_radius = earth_radius + mesosphere_distance;

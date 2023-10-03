@@ -26,7 +26,6 @@ private:
 	float prevCursorX = 0;
 	float prevCursorY = 0;
 	
-	ax::Quaternion cameraRotation;
 	float horizontalAngle = 0.0f; // Initialize horizontal angle
 	float verticalAngle = 0.0f;   // Initialize vertical angle
 	

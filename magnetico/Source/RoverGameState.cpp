@@ -52,10 +52,7 @@ bool RoverGameState::init() {
 		
 		magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::desired_target_voltage / number_of_gimbals);
 	}
-			
-	// scheduleUpdate() is required to ensure update(float) is called on every loop
-	scheduleUpdate();
-	
+				
 	auto director = Director::getInstance();
 	
 	director->setClearColor(Color4F(0.0f, 0.0f, 1.0f, 1.0f));
