@@ -21,16 +21,7 @@ public:
 		   float drag_coefficient,
 		   float cross_sectional_area,
 		   float initial_propellant_mass,
-		   float valve_multiplier,
 		   float max_valve_opening,
-		   float max_thrust_multiplier,
-		   float max_specific_impulse_multiplier,
-		   float max_burn_rate_multiplier,
-		   float max_nozzle_radius_multiplier,
-		   float max_drag_coefficient_multiplier,
-		   float max_cross_sectional_area_multiplier,
-		   float max_propellant_mass_multiplier,
-		   float max_mass_multiplier,
 		   ax::Vec3 initial_position,
 		   ax::Quaternion initial_orientation);
 	
@@ -98,16 +89,7 @@ private:
 	float current_drag_coefficient;
 	float current_cross_sectional_area;
 	float current_propellant_mass;
-	float valve_multiplier;
 	float max_valve_opening;
-	float max_thrust_multiplier;
-	float max_specific_impulse_multiplier;
-	float max_burn_rate_multiplier;
-	float max_nozzle_radius_multiplier;
-	float max_drag_coefficient_multiplier;
-	float max_cross_sectional_area_multiplier;
-	float max_propellant_mass_multiplier;
-	float max_mass_multiplier;
 	float current_valve_opening;
 	
 	int current_stage;

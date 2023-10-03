@@ -16,15 +16,6 @@ Rocket::Rocket(float mass,
 			   float cross_sectional_area,
 			   float initial_propellant_mass,
 			   float valve_multiplier,
-			   float max_valve_opening,
-			   float max_thrust_multiplier,
-			   float max_specific_impulse_multiplier,
-			   float max_burn_rate_multiplier,
-			   float max_nozzle_radius_multiplier,
-			   float max_drag_coefficient_multiplier,
-			   float max_cross_sectional_area_multiplier,
-			   float max_propellant_mass_multiplier,
-			   float max_mass_multiplier,
 			   ax::Vec3 initial_position,
 			   ax::Quaternion initial_orientation) :
 dry_mass(mass - initial_propellant_mass - first_stage_mass - second_stage_mass),
@@ -37,16 +28,7 @@ nozzle_radius(nozzle_radius),
 drag_coefficient(drag_coefficient),
 cross_sectional_area(cross_sectional_area),
 initial_propellant_mass(initial_propellant_mass),
-valve_multiplier(valve_multiplier),
 max_valve_opening(max_valve_opening),
-max_thrust_multiplier(max_thrust_multiplier),
-max_specific_impulse_multiplier(max_specific_impulse_multiplier),
-max_burn_rate_multiplier(max_burn_rate_multiplier),
-max_nozzle_radius_multiplier(max_nozzle_radius_multiplier),
-max_drag_coefficient_multiplier(max_drag_coefficient_multiplier),
-max_cross_sectional_area_multiplier(max_cross_sectional_area_multiplier),
-max_propellant_mass_multiplier(max_propellant_mass_multiplier),
-max_mass_multiplier(max_mass_multiplier),
 current_stage(0),
 initial_position(initial_position),
 initial_orientation(initial_orientation)
@@ -58,22 +40,22 @@ initial_orientation(initial_orientation)
 	current_mass = dry_mass + initial_propellant_mass;
 	
 	// Calculate the initial thrust of the rocket
-	current_thrust = thrust_kN * thrust_multiplier * valve_multiplier;
+	current_thrust = thrust_kN * thrust_multiplier;
 	
 	// Calculate the initial specific impulse of the rocket
 	current_specific_impulse = isp_multiplier * 9.81 * specific_impulse;
 	
 	// Calculate the initial burn rate of the rocket
-	current_burn_rate = burn_rate * valve_multiplier;
+	current_burn_rate = burn_rate;
 	
 	// Calculate the initial nozzle radius of the rocket
-	current_nozzle_radius = nozzle_radius * max_nozzle_radius_multiplier * valve_multiplier;
+	current_nozzle_radius = nozzle_radius;
 	
 	// Calculate the initial cross-sectional area of the rocket
-	current_cross_sectional_area = cross_sectional_area * max_cross_sectional_area_multiplier * valve_multiplier;
+	current_cross_sectional_area = cross_sectional_area;
 	
 	// Calculate the initial drag coefficient of the rocket
-	current_drag_coefficient = drag_coefficient * max_drag_coefficient_multiplier;
+	current_drag_coefficient = drag_coefficient;
 	
 	// Calculate the initial propellant mass of the rocket
 	current_propellant_mass = initial_propellant_mass;
@@ -102,25 +84,25 @@ void Rocket::update(float dt) {
 	
 	// Calculate the current thrust of the rocket
 	if (current_stage == 1) {
-		current_thrust = first_stage_thrust * thrust_multiplier * valve_multiplier;
+		current_thrust = first_stage_thrust * thrust_multiplier;
 	} else {
-		current_thrust = second_stage_thrust * thrust_multiplier * valve_multiplier;
+		current_thrust = second_stage_thrust * thrust_multiplier;
 	}
 	
 	// Calculate the current specific impulse of the rocket
 	current_specific_impulse = isp_multiplier * 9.81 * specific_impulse;
 	
 	// Calculate the current burn rate of the rocket
-	current_burn_rate = burn_rate * valve_multiplier;
+	current_burn_rate = burn_rate;
 	
 	// Calculate the current nozzle radius of the rocket
-	current_nozzle_radius = nozzle_radius * max_nozzle_radius_multiplier * valve_multiplier;
+	current_nozzle_radius = nozzle_radius;
 	
 	// Calculate the current cross-sectional area of the rocket
-	current_cross_sectional_area = cross_sectional_area * max_cross_sectional_area_multiplier * valve_multiplier;
+	current_cross_sectional_area = cross_sectional_area;
 	
 	// Calculate the current drag coefficient of the rocket
-	current_drag_coefficient = drag_coefficient * max_drag_coefficient_multiplier;
+	current_drag_coefficient = drag_coefficient;
 	
 	// Calculate the current propellant mass of the rocket
 	float propellant_mass_delta = -current_burn_rate * dt;
@@ -243,7 +225,7 @@ float Rocket::_get_drag_force(float altitude, float velocity) {
 }
 
 float Rocket::_get_thrust() {
-	float thrust = current_thrust * valve_multiplier * max_thrust_multiplier;
+	float thrust = current_thrust;
 	return thrust;
 }
 
@@ -303,7 +285,7 @@ void Rocket::_update_specific_impulse() {
 }
 
 void Rocket::_update_burn_rate() {
-    current_burn_rate = burn_rate * current_valve_opening * valve_multiplier;
+    current_burn_rate = burn_rate * current_valve_opening;
 }
 
 void Rocket::_update_nozzle_radius() {
@@ -326,11 +308,6 @@ void Rocket::_update_propellant_mass(float delta_time) {
 }
 
 void Rocket::_update_valve_opening() {
-    if (held_keys.empty()) {
-        valve_multiplier = 0.0f;
-    } else {
-        valve_multiplier = 1.0f;
-    }
     if (std::find(held_keys.begin(), held_keys.end(), 'w') != held_keys.end()) {
         current_valve_opening += 0.1f;
     }
@@ -354,11 +331,6 @@ void Rocket::handle_input(char key, bool is_pressed) {
 }
 
 void Rocket::adjust_valve_opening() {
-    if (held_keys.empty()) {
-        valve_multiplier = 0.0f;
-    } else {
-        valve_multiplier = 1.0f;
-    }
     if (std::find(held_keys.begin(), held_keys.end(), 'w') != held_keys.end()) {
         current_valve_opening += 0.1f;
     }

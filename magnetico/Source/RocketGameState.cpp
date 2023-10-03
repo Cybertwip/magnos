@@ -1,6 +1,7 @@
 
 #include "RocketGameState.h"
-
+#include "Settings.h"
+#include "Rocket.h"
 
 #include "ImGui/ImGuiPresenter.h"
 #include "imgui/imgui_internal.h"
@@ -20,7 +21,24 @@ bool RocketGameState::init() {
 	{
 		return false;
 	}
-	
+	// Instantiate a Rocket object with the given parameters
+	Rocket rocket(
+				  total_rocket_mass, // mass
+				  thrust_kN, // thrust
+				  mass_RP1, // first_stage_mass
+				  mass_LOX, // second_stage_mass
+				  thrust_kN, // first_stage_thrust
+				  thrust_kN * isp_multiplier, // second_stage_thrust
+				  3000.0f * isp_multiplier, // specific_impulse
+				  0.1f, // burn_rate
+				  0.5f, // nozzle_radius
+				  drag_coefficient, // drag_coefficient
+				  M_PI * pow(rocket_radius, 2), // cross_sectional_area
+				  total_propellant_mass, // initial_propellant_mass
+				  max_valve_opening, // max_valve_opening
+				  ax::Vec3(0.0f, r_initial + earth_radius_game, 0.0f), // initial_position
+				  ax::Quaternion::identity() // initial_orientation
+				  );
 	
 	
 	return true;
