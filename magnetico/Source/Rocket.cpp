@@ -8,8 +8,6 @@ Rocket::Rocket(float mass,
 			   float thrust,
 			   float first_stage_mass,
 			   float second_stage_mass,
-			   float first_stage_thrust,
-			   float second_stage_thrust,
 			   float specific_impulse,
 			   float burn_rate,
 			   float nozzle_radius,
@@ -19,10 +17,10 @@ Rocket::Rocket(float mass,
 			   float valve_multiplier,
 			   ax::Vec3 initial_position,
 			   ax::Quaternion initial_orientation) :
-dry_mass(mass - initial_propellant_mass - first_stage_mass - second_stage_mass),
+dry_mass(mass - initial_propellant_mass),
 thrust_kN(thrust),
-first_stage_thrust(first_stage_thrust),
-second_stage_thrust(second_stage_thrust),
+first_stage_mass(first_stage_mass),
+second_stage_mass(second_stage_mass),
 specific_impulse(specific_impulse),
 burn_rate(burn_rate),
 nozzle_radius(nozzle_radius),
@@ -30,7 +28,6 @@ drag_coefficient(drag_coefficient),
 cross_sectional_area(cross_sectional_area),
 initial_propellant_mass(initial_propellant_mass),
 max_valve_opening(max_valve_opening),
-current_stage(0),
 initial_position(initial_position),
 initial_orientation(initial_orientation)
 {
@@ -67,8 +64,6 @@ initial_orientation(initial_orientation)
 	
 	RigidBodyConstructionInfo rocket_rb_info(current_mass, initial_position, {}, {}, 0, 0);
 	rocket_body = rocket_rb_info.createRigidBody();
-	
-	altitude = get_position().length() - earth_radius_game;
 
 	autorelease();
 	scheduleUpdate();
@@ -89,20 +84,11 @@ Rocket::~Rocket() {
 
 void Rocket::update(float dt) {
 	// Calculate the current mass of the rocket
-	if (current_stage == 1) {
-		current_mass = first_stage_mass + current_propellant_mass;
-	} else {
-		current_mass = second_stage_mass + current_propellant_mass;
-	}
 	_update_mass();
 	
 	// Calculate the current thrust of the rocket
-	if (current_stage == 1) {
-		current_thrust = first_stage_thrust;
-	} else {
-		current_thrust = second_stage_thrust;
-	}
-	
+	_update_thrust();
+
 	// Calculate the current specific impulse of the rocket
 	current_specific_impulse = 9.81 * specific_impulse;
 	
@@ -117,39 +103,39 @@ void Rocket::update(float dt) {
 	
 	// Calculate the current drag coefficient of the rocket
 	current_drag_coefficient = drag_coefficient;
-	
-	// Calculate the current propellant mass of the rocket
-	float propellant_mass_delta = -current_burn_rate * dt;
-	current_propellant_mass += propellant_mass_delta;
-	current_propellant_mass = std::max(0.0f, current_propellant_mass);  // Limit to a minimum of 0
-	
-	// Calculate the current mass of the rocket
-	if (current_stage == 1) {
-		current_mass = first_stage_mass + current_propellant_mass;
-	} else {
-		current_mass = second_stage_mass + current_propellant_mass;
-	}
-	_update_mass();
+		
+	_update_propellant_mass(dt);
 	
 	// Apply the current thrust to the rocket
-	ax::Vec3 thrust_vector(0, current_thrust, 0);
+	ax::Vec3 rocket_position = rocket_body->getPosition();
+
+	altitude = rocket_position.length() - earth_radius;
+
+	float force = _get_thrust_force(altitude) * dt;
+	
+	ax::Vec3 thrust_vector(0, force, 0);
 	ax::Quaternion orientation_quaternion = get_rocket_orientation();
-	ax::Vec3 orientation_euler = quaternion_to_euler(orientation_quaternion);
 	ax::Mat4 orientation_matrix;
 	ax::Mat4::createRotation(orientation_quaternion, &orientation_matrix);
-	ax::Vec3 thrust_direction = orientation_matrix * ax::Vec3(0, 1, 0);
-	ax::Vec3 thrust_force = thrust_direction * current_thrust;
-	rocket_body->applyForce(thrust_force);
+	ax::Vec3 thrust_direction = orientation_matrix * ax::Vec3(0, -1, 0);
+	ax::Vec3 thrust_force = thrust_direction * force; // Corrected direction
+	rocket_body->applyForce(thrust_force / 1000.0f);
+
 	
 	// Apply atmospheric drag to the rocket
 	ax::Vec3 rocket_velocity = rocket_body->getLinearVelocity();
 	float rocket_speed = rocket_velocity.length();
 	ax::Vec3 rocket_direction = rocket_velocity.getNormalized();
-	ax::Vec3 rocket_position = rocket_body->getPosition();
-	altitude = rocket_position.length() - earth_radius_game;
 	float atmospheric_density = _get_atmospheric_density(altitude);
-	ax::Vec3 drag_force = -0.5 * atmospheric_density * current_drag_coefficient * current_cross_sectional_area * rocket_speed * rocket_speed * rocket_direction;
-	rocket_body->applyForce(drag_force);
+	ax::Vec3 drag_force_components = -0.5 * atmospheric_density * current_drag_coefficient * current_cross_sectional_area * rocket_speed * rocket_speed * rocket_direction * dt;
+	
+	// Now, calculate the total drag force as a vector
+	ax::Vec3 drag_force = ax::Vec3(
+								   drag_force_components.x * rocket_velocity.x,
+								   drag_force_components.y * rocket_velocity.y,
+								   drag_force_components.z * rocket_velocity.z
+								   );
+	rocket_body->applyForce(-drag_force / 1000.0f);
 	rocket_body->update(dt);
 	this->setPosition3D(rocket_body->getPosition());
 }
@@ -180,6 +166,11 @@ ax::Vec3 Rocket::get_position() {
 
 float Rocket::get_altitude() {
 	return altitude;
+}
+
+float Rocket::get_linear_velocity() {
+	ax::Vec3 rocket_velocity = rocket_body->getLinearVelocity();
+	return rocket_velocity.length();
 }
 
 ax::Quaternion Rocket::get_rocket_orientation() {
@@ -217,8 +208,8 @@ float Rocket::_get_atmospheric_density(float altitude) {
 	
 	float T = T0 - L * altitude;
 	float denominator = 1 - L * altitude / T0;
-	if (denominator <= 0) {
-		return 0.0f; // Return 0 density if denominator is zero or negative
+	if(denominator == 0){
+		return 0;
 	}
 	float p = p0 * powf(denominator, g0 * M / (R * L));
 	float rho = p * M / (R * T);
@@ -269,7 +260,14 @@ float Rocket::_get_thrust_force(float altitude) {
 }
 
 float Rocket::_get_specific_impulse() {
-    return current_specific_impulse;
+	float specific_impulse_at_sea_level = 311.0f; // seconds
+	float specific_impulse_in_vacuum = 282.0f; // seconds
+	float sea_level_pressure = 101325.0f; // Pascals
+	float vacuum_pressure = 0.0f; // Pascals
+	
+	float pressure = sea_level_pressure * exp(-altitude / 8000.0f); // simple atmospheric model
+	float specific_impulse = specific_impulse_at_sea_level + (specific_impulse_in_vacuum - specific_impulse_at_sea_level) * (pressure - vacuum_pressure) / (sea_level_pressure - vacuum_pressure);
+	return specific_impulse;
 }
 
 float Rocket::_get_burn_rate() {
@@ -297,7 +295,7 @@ float Rocket::_get_valve_opening() {
 }
 
 void Rocket::_update_mass() {
-    current_mass = dry_mass + first_stage_mass + second_stage_mass + current_propellant_mass;
+    current_mass = dry_mass + current_propellant_mass;
 }
 
 void Rocket::_update_thrust() {
@@ -366,20 +364,6 @@ void Rocket::adjust_valve_opening() {
     }
     if (current_valve_opening > 1) {
         current_valve_opening = 1;
-    }
-}
-
-void Rocket::jettison_first_stage() {
-    if (first_stage_mass > 0) {
-        rocket_mass -= first_stage_mass;
-        first_stage_mass = 0;
-    }
-}
-
-void Rocket::jettison_second_stage() {
-    if (second_stage_mass > 0) {
-        rocket_mass -= second_stage_mass;
-        second_stage_mass = 0;
     }
 }
 

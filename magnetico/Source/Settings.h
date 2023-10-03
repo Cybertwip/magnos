@@ -41,23 +41,17 @@ float moon_radius = 173710;
 float moon_distance = 384400e3;
 float earth_mass = 5.972e24;
 float moon_mass = 7.342e22;
-float earth_radius_game = earth_radius;
-float moon_distance_game = moon_distance;
-float moon_radius_game = moon_radius;
 
 // Atmospheric parameters
-float troposphere_distance = 120000;
-float stratosphere_distance = 500000;
-float mesosphere_distance = 850000;
-float thermosphere_distance = 600000;
-float troposphere_distance_game = troposphere_distance;
-float stratosphere_distance_game = stratosphere_distance;
-float mesosphere_distance_game = mesosphere_distance;
-float thermosphere_distance_game = thermosphere_distance;
-float troposphere_radius = earth_radius + troposphere_distance;
-float stratosphere_radius = earth_radius + stratosphere_distance;
-float mesosphere_radius = earth_radius + mesosphere_distance;
-float thermosphere_radius = earth_radius + thermosphere_distance;
+const float troposphere_distance = 12000.0f; // meters
+const float stratosphere_distance = 50000.0f; // meters
+const float mesosphere_distance = 80000.0f; // meters
+const float thermosphere_distance = 600000.0f; // meters
+const float troposphere_radius = earth_radius + troposphere_distance;
+const float stratosphere_radius = earth_radius + stratosphere_distance;
+const float mesosphere_radius = earth_radius + mesosphere_distance;
+const float thermosphere_radius = earth_radius + thermosphere_distance;
+
 uint8_t troposphere_color[4] = {0, 0, 255, 100};
 uint8_t stratosphere_color[4] = {150, 150, 255, 40};
 uint8_t mesosphere_color[4] = {80, 80, 200, 30};
@@ -81,8 +75,19 @@ float frontal_area = M_PI * pow(rocket_radius, 2);
 
 // Simulation parameters
 float G = 6.674e-11;
-float total_distance = 2000;
-float r_initial = moon_radius + total_distance;
-bool is_rocket_state = true;
-float transition_speed = 2.0;
+//float total_distance = 2000;
+//float r_initial = moon_radius + total_distance;
+
+float specific_impulse_at_sea_level = 311.0f; // seconds
+float specific_impulse_in_vacuum = 282.0f; // seconds
+float sea_level_pressure = 101325.0f; // Pascals
+float vacuum_pressure = 0.0f; // Pascals
+}
+
+namespace{
+void lerp(const uint8_t color1[4], const uint8_t color2[4], float ratio, uint8_t result[4]) {
+	for (int i = 0; i < 4; i++) {
+		result[i] = (1 - ratio) * color1[i] + ratio * color2[i];
+	}
+}
 }

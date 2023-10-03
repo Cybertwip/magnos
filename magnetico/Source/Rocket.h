@@ -13,8 +13,6 @@ public:
 		   float thrust,
 		   float first_stage_mass,
 		   float second_stage_mass,
-		   float first_stage_thrust,
-		   float second_stage_thrust,
 		   float specific_impulse,
 		   float burn_rate,
 		   float nozzle_radius,
@@ -33,6 +31,8 @@ public:
 	float get_second_stage_mass();
 	ax::Vec3 get_position();
 	float get_altitude();
+	float get_linear_velocity();
+	
 	ax::Quaternion get_rocket_orientation();
 	ax::Vec3 quaternion_to_euler(ax::Quaternion quaternion);
 	
@@ -63,8 +63,6 @@ private:
 	void _update_propellant_mass(float deltaTime);
 	void _update_valve_opening();
 	void adjust_valve_opening();
-	void jettison_first_stage();
-	void jettison_second_stage();
 	void set_gimbal_rotation(float angle);
 	void set_thrust(float thrust);
 	void set_specific_impulse(float isp);
@@ -77,13 +75,7 @@ private:
 	
 private:
 	float thrust;
-	
 	float altitude;
-
-	// todo
-	float first_stage_thrust;
-	float second_stage_thrust;
-	float rocket_mass;
 
 private:
 	float current_mass;
@@ -97,7 +89,6 @@ private:
 	float max_valve_opening;
 	float current_valve_opening;
 	
-	int current_stage;
 	ax::Vec3 initial_position;
 	ax::Quaternion initial_orientation;
 	RigidBody* rocket_body;
