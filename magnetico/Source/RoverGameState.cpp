@@ -1,6 +1,6 @@
 #include "RoverGameState.h"
 
-#include "MaritimeGimbal3D.h"
+#include "components/Magnos.hpp"
 #include "Car.h"
 #include "Utils3d.h"
 #include "Laser.h"
@@ -8,18 +8,6 @@
 
 #include "ImGui/ImGuiPresenter.h"
 #include "imgui/imgui_internal.h"
-
-
-float voltsToCurrent(float voltage, float resistance) {
-	if (resistance == 0.0f) {
-		// Avoid division by zero
-		return 0.0f;
-	}
-	
-	return voltage / resistance;
-}
-
-
 
 float quaternionDot(const ax::Quaternion& q1, const ax::Quaternion& q2) {
 	// Manually compute the dot product
@@ -45,14 +33,6 @@ bool RoverGameState::init() {
 	car = Car::create();
 	this->addChild(car);
 	
-	gimbals = car->getGimbals();
-	
-	for(auto gimbal : gimbals){
-		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-		
-		magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::desired_target_voltage / number_of_gimbals);
-	}
-				
 	auto director = Director::getInstance();
 	
 	director->setClearColor(Color4F(0.0f, 0.0f, 1.0f, 1.0f));
@@ -77,18 +57,6 @@ bool RoverGameState::init() {
 	planeRenderer->setPositionY(-1.25f / 2 - 0.3f);
 	this->addChild(planeRenderer);
 	
-	std::function<void(int, float)> onVoltagePeak = [this](int index, float charge){	car->getBattery().charge(voltsToCurrent(charge, 6), global_delta / 1000.0f);
-		auto gimbal = gimbals[index];
-		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-		
-		magnos->getCoilSystem().accumulator.discharge(charge);
-	};
-	
-	for(auto gimbal : gimbals){
-		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-		
-		magnos->getCoilSystem().setOnVoltagePeakCallback(onVoltagePeak);
-	}
 	return true;
 	
 }
@@ -124,13 +92,13 @@ void RoverGameState::onMouseMove(Event* event)
 
 void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 {
-	for(auto gimbal : gimbals){
-		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-		
-		if(magnos->getCoilSystem().calibrating()){
-			return;
-		}
-	}
+//	for(auto gimbal : gimbals){
+//		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//
+//		if(magnos->getCoilSystem().calibrating()){
+//			return;
+//		}
+//	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = true;
@@ -155,13 +123,13 @@ void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 
 void RoverGameState::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 {
-	for(auto gimbal : gimbals){
-		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-		
-		if(magnos->getCoilSystem().calibrating()){
-			return;
-		}
-	}
+//	for(auto gimbal : gimbals){
+//		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//
+//		if(magnos->getCoilSystem().calibrating()){
+//			return;
+//		}
+//	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = false;
@@ -186,57 +154,56 @@ void RoverGameState::update(float delta) {
 	float totalResistance = 0.0f;
 	
 	bool anyDataCollectionMode = false;
-	for(auto gimbal : gimbals){
-		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-		
-		magnos->update(totalDelta);
-		
-		totalCurrent += magnos->getCoilSystem().current;
-		
-		totalResistance += 1 * 6;
-		
-		
-		if(!anyDataCollectionMode){
-			anyDataCollectionMode = magnos->getCoilSystem().collecting();
-		}
-		
-	}
-	
+//	for(auto gimbal : gimbals){
+//		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//
+//		magnos->update(totalDelta);
+//
+//		totalCurrent += magnos->getCoilSystem().current;
+//
+//		totalResistance += 1 * 6;
+//
+//
+//		if(!anyDataCollectionMode){
+//			anyDataCollectionMode = magnos->getCoilSystem().collecting();
+//		}
+//
+//	}
 	
 	car->getBattery().discharge(totalCurrent, totalDelta);
 	
-	if(accelerate || anyDataCollectionMode){
+//	if(accelerate || anyDataCollectionMode){
 		
-		float powerDraw = (2.5f / (float)gimbals.size()) * totalDelta;
-		
-		float totalPowerDrawn = 0;
-		for(auto gimbal : gimbals){
-			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-			
-			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-		}
-		
-		
-		car->accelerate(totalPowerDrawn);
-		
-		if(enable_lasers){
-			float laserVoltage = 5;
-			powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
-			
-			totalPowerDrawn = 0;
-			for(auto gimbal : gimbals){
-				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-				
-				totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-			}
-			
-			car->charge(totalPowerDrawn);
-			
-		}
-	} else {
-		car->liftPedal();
-	}
-	
+//		float powerDraw = (2.5f / (float)gimbals.size()) * totalDelta;
+//
+//		float totalPowerDrawn = 0;
+//		for(auto gimbal : Settings::number_of_gimbals){
+//			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//
+//			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+//		}
+//
+//
+//		car->accelerate(totalPowerDrawn);
+//
+//		if(enable_lasers){
+//			float laserVoltage = 5;
+//			powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
+//
+//			totalPowerDrawn = 0;
+//			for(auto gimbal : gimbals){
+//				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//
+//				totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+//			}
+//
+//			car->charge(totalPowerDrawn);
+//
+//		}
+//	} else {
+//		car->liftPedal();
+//	}
+//
 	if(car->anyLaserStatusOn() && enable_lasers){
 		
 		float laserVoltage = 0;
@@ -248,11 +215,11 @@ void RoverGameState::update(float delta) {
 		float powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
 		
 		float totalPowerDrawn = 0;
-		for(auto gimbal : gimbals){
-			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-			
-			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-		}
+//		for(auto gimbal : gimbals){
+//			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//
+//			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+//		}
 	}
 	
 	if(steer){
@@ -313,23 +280,23 @@ void RoverGameState::update(float delta) {
 	
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
-	
-	if(enable_lasers){
-		for(auto laser : car->getLasers()){
-			float storedPower = 0;
-			float powerToStore = (laser->getAccumulatedVoltage() / (float)gimbals.size()) * totalDelta;
-			for(auto gimbal : gimbals){
-				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-				storedPower += magnos->getCoilSystem().storePower(powerToStore);
-			}
-			
-			if(storedPower != 0){
-				laser->dischargeAccumulatedVoltage(storedPower);
-			}
-			
-		}
-		
-	}
+//
+//	if(enable_lasers){
+//		for(auto laser : car->getLasers()){
+//			float storedPower = 0;
+//			float powerToStore = (laser->getAccumulatedVoltage() / (float)gimbals.size()) * totalDelta;
+//			for(auto gimbal : gimbals){
+//				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//				storedPower += magnos->getCoilSystem().storePower(powerToStore);
+//			}
+//
+//			if(storedPower != 0){
+//				laser->dischargeAccumulatedVoltage(storedPower);
+//			}
+//
+//		}
+//
+//	}
 	
 }
 
@@ -353,27 +320,27 @@ void RoverGameState::renderUI() {
 	
 	bool any_calibration = false;
 	bool any_collection = false;
-	
-	for(auto gimbal : gimbals){
-		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-		
-		float inducedEMF = abs(magnos->getAlternatorSystem().emf);
-		
-		if(!magnos->getCoilSystem().calibrating()){
-			baseAccumulatedEMF += magnos->getCoilSystem().lastBaseAccumulatedEMF;
-			accumulatedEMF += magnos->getCoilSystem().lastAccumulatedEMF;
-			//		recycledEMF = magnos->getCoilSystem().lastRecycledEMF;
-		}
-		
-		if(magnos->getCoilSystem().calibrating()){
-			any_calibration = true;
-		}
-		
-		if(magnos->getCoilSystem().collecting()){
-			any_collection = true;
-		}
-	}
-	
+//
+//	for(auto gimbal : gimbals){
+//		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//
+//		float inducedEMF = abs(magnos->getAlternatorSystem().emf);
+//
+//		if(!magnos->getCoilSystem().calibrating()){
+//			baseAccumulatedEMF += magnos->getCoilSystem().lastBaseAccumulatedEMF;
+//			accumulatedEMF += magnos->getCoilSystem().lastAccumulatedEMF;
+//			//		recycledEMF = magnos->getCoilSystem().lastRecycledEMF;
+//		}
+//
+//		if(magnos->getCoilSystem().calibrating()){
+//			any_calibration = true;
+//		}
+//
+//		if(magnos->getCoilSystem().collecting()){
+//			any_collection = true;
+//		}
+//	}
+//
 	
 	if(guiCounter >= 1){
 		guiBaseEMF = baseAccumulatedEMF;
@@ -427,15 +394,15 @@ void RoverGameState::renderUI() {
 		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
 	}
 	
-	if(last_voltage_increase != Settings::desired_target_voltage){
-		Settings::desired_target_voltage = last_voltage_increase;
-		for(auto gimbal : gimbals){
-			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-			magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::desired_target_voltage / number_of_gimbals);
-			magnos->getCoilSystem().recalibrate();
-		}
-		
-	}
+//	if(last_voltage_increase != Settings::desired_target_voltage){
+//		Settings::desired_target_voltage = last_voltage_increase;
+//		for(auto gimbal : gimbals){
+//			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//			magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::desired_target_voltage / number_of_gimbals);
+//			magnos->getCoilSystem().recalibrate();
+//		}
+//
+//	}
 	
 	last_voltage_increase = desired_voltage;
 	
@@ -456,12 +423,12 @@ void RoverGameState::renderUI() {
 		
 		if (collectDataButtonPressed) {
 			collectDataButtonPressed = false;
-			
-			for(auto gimbal : gimbals){
-				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-				
-				magnos->getCoilSystem().scheduleCollection();
-			}
+//			
+//			for(auto gimbal : gimbals){
+//				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+//				
+//				magnos->getCoilSystem().scheduleCollection();
+//			}
 			
 		}
 	}
@@ -500,4 +467,6 @@ void RoverGameState::renderUI() {
 	ImGui::Text("Accel m/s^2=%.2f", acceleration);
 	ImGui::Text("Speed m/s=%.2f", speed);
 	ImGui::Text("Laser v/s=%.2f", laser);
-	ImGui::End();}
+	ImGui::End();
+	
+}

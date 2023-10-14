@@ -1,17 +1,18 @@
 #pragma once
 #include "CustomNode.h"
-#include "Battery.h"
+#include "components/Battery.hpp"
 #include "Settings.h"
 
 #include <axmol.h>
 
 #include <vector>
 
+class EVEngine;
 class LaserNode;
-
 
 class Car : public ax::Node {
 private:
+	std::shared_ptr<EVEngine> engine_;
 	ax::Node* carBody;
 	ax::Node* engineBox;
 	std::vector<ax::Node*> gimbals;

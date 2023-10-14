@@ -1,18 +1,8 @@
 #include "Car.h"
-#include "MaritimeGimbal3D.h"
+#include "components/Magnos.hpp"
+#include "components/EVEngine.hpp"
 #include "Utils3d.h"
 #include "Laser.h"
-
-
-MaritimeGimbal3D* createGimbal(int id, ax::Node* parent, ax::Vec3 position){
-	auto gimbal = MaritimeGimbal3D::create();
-	gimbal->loadData(id);
-	gimbal->setupGui();
-	gimbal->setPosition3D(position);
-	parent->addChild(gimbal);
-	gimbal->attachPinball();
-	return gimbal;
-}
 
 Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.001f), maxSteeringAngle(15) {
 	// Create car's body, gear box, and gimbals
@@ -47,34 +37,14 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.001f), maxSteeringA
 	engineBox->setPosition3D(ax::Vec3(0.65f, 0, 0));
 	engineBox->setRotation3D(ax::Vec3(0, 180, 0));
 	
-	gimbals.push_back(createGimbal(1, engineBox, ax::Vec3(-0.25, 0, 0)));
 	
-	if(number_of_gimbals > 1){
-		gimbals.push_back(createGimbal(2, engineBox, ax::Vec3(0.25, 0, 0)));
-	}
-
-	
-	if(number_of_gimbals > 2){
-		gimbals.push_back(createGimbal(3, engineBox, ax::Vec3(0, 0, -0.25)));
-	}
-	
-	if(number_of_gimbals > 3){
-		gimbals.push_back(createGimbal(4, engineBox, ax::Vec3(0, 0, 0.25)));
-	}
-	
-	if(number_of_gimbals > 4){
-			gimbals.push_back(createGimbal(5, engineBox, ax::Vec3(0, 0.25f, 0)));
-	}
-
-	if(number_of_gimbals > 5){
-			gimbals.push_back(createGimbal(6, engineBox, ax::Vec3(0, -0.25f, 0)));
-	}
-
 	for(int i = 0; i<number_of_lasers; ++i){
 		carBody->addChild(createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f)));
 	}
 	carBody->addChild(engineBox);
 	this->addChild(carBody);
+	
+	engine_ = std::make_shared<EVEngine>();
 	
 }
 
@@ -180,8 +150,13 @@ void Car::liftPedal(){
 	if(acceleration > 0){
 		acceleration = 0;
 	}
+	
+	engine_->decelerate();
+	
 }
 void Car::accelerate(float voltage) {
+	engine_->accelerate(voltage);
+	
 	// Define Tesla car properties (example values)
 //	const float maxVoltage = 400.0f; // Maximum voltage output in volts
 	const float maxVoltage = 40.0f; // Maximum voltage output in volts

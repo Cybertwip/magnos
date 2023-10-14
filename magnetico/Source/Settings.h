@@ -18,14 +18,6 @@ const bool enable_lasers = true;
 const int number_of_lasers = 6;
 }
 
-class Settings {
-public:	
-	static float desired_base_voltage;
-	static float desired_target_voltage;
-	static float desired_capacitor_voltage;
-};
-
-
 // Rocket parameters
 namespace {
 float scale_multiplier = 1;

@@ -28,13 +28,12 @@ cmake_minimum_required(VERSION 3.10)
 set(APP_NAME magnetico)
 
 project(${APP_NAME})
-#add_subdirectory(thirdparty/geant4)
 
-find_package(PkgConfig REQUIRED)
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modules") 
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modules/CommonSetup.cmake")
+CommonSetup()
 
-pkg_check_modules(MLPACK REQUIRED mlpack)
-pkg_check_modules(ARMADILLO REQUIRED armadillo)
-
+add_subdirectory(AirSim/cmake/AirLib)
 
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project
     if(XCODE)
@@ -180,10 +179,9 @@ if (NOT _AX_USE_PREBUILT)
     target_link_libraries(${APP_NAME} ${_AX_CORE_LIB})
 endif()
 
-target_include_directories(${APP_NAME} PRIVATE ${ARMADILLO_INCLUDE_DIRS} ${MLPACK_INCLUDE_DIRS})
-target_link_directories(${APP_NAME} PRIVATE ${ARMADILLO_LIBRARY_DIRS} ${MLPACK_LIBRARY_DIRS})
-
-target_link_libraries(${APP_NAME} ${MLPACK_LIBRARIES})
+target_link_libraries(${APP_NAME} AirLib)
+target_link_libraries(${APP_NAME} MavLinkCom)
+target_link_libraries(${APP_NAME} ${RPC_LIB})
 
 #set(_geant4_lib_use_suffix -static)
 #set(Geant4_LIBRARIES
@@ -206,6 +204,15 @@ endif()
 
 
 target_include_directories(${APP_NAME} PRIVATE ${GAME_INC_DIRS})
+
+
+target_include_directories(${APP_NAME} PRIVATE
+  ${AIRSIM_ROOT}/AirLib/
+  ${AIRSIM_ROOT}/AirLib/include
+  ${AIRSIM_ROOT}/MavLinkCom/include
+  ${AIRSIM_ROOT}/AirLib/deps/eigen3
+  ${RPC_LIB_INCLUDES}
+)
 
 
 # mark app resources, resource will be copy auto after mark
