@@ -7,6 +7,13 @@
 class Magnos;
 class RechargeableBattery;
 
+struct EVFeedback {
+	std::string status;
+	float peakEMF;
+	float baseEMF;
+	float EMF;
+};
+
 class EVEngine : public Node {
 public:
 	EVEngine();
@@ -14,7 +21,8 @@ public:
 	void init();
 	void update();
 
-	float getVoltage() const;
+	float getBatteryVoltage() const;
+	const EVFeedback& getMagnosFeedback() const;
 
 	void accelerate(float throttle);
 	void decelerate();
@@ -24,5 +32,7 @@ private:
 	std::shared_ptr<RechargeableBattery> battery_;
 
 	bool accelerating_;
+
+	EVFeedback feedback_;
 };
 

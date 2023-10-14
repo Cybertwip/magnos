@@ -85,7 +85,85 @@ void EVEngine::update(){
 			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
 		}
 	} 
+
+	float deltaTime = totalDelta;
+	static float guiCounter = 0;
+	static float guiBaseEMF = 0;
+	static float guiEMF = 0;
+	static float peakEMF = 0;
 	
+	guiCounter += deltaTime;
+	
+	float baseAccumulatedEMF = 0;
+	float accumulatedEMF = 0;
+	
+	bool any_calibration = false;
+	bool any_collection = false;
+	
+	for(auto magnos : gimbals_){
+		
+		float inducedEMF = abs(magnos->getAlternatorSystem().emf);
+		
+		if(!magnos->getCoilSystem().calibrating()){
+			baseAccumulatedEMF += magnos->getCoilSystem().lastBaseAccumulatedEMF;
+			accumulatedEMF += magnos->getCoilSystem().lastAccumulatedEMF;
+			//		recycledEMF = magnos->getCoilSystem().lastRecycledEMF;
+		}
+		
+		if(magnos->getCoilSystem().calibrating()){
+			any_calibration = true;
+		}
+		
+		if(magnos->getCoilSystem().collecting()){
+			any_collection = true;
+		}
+	}
+	
+	
+	if(guiCounter >= 1){
+		guiBaseEMF = baseAccumulatedEMF;
+		guiEMF = accumulatedEMF;
+		//		guiRecycledEMF = recycledEMF;
+		accumulatedEMF = 0;
+		guiCounter = 0;
+	}
+	
+	if (guiEMF > peakEMF){
+		if((!any_calibration) && !any_collection){
+			peakEMF = guiEMF;
+		} else {
+			guiEMF = 0;
+			peakEMF = 0;
+		}
+	}
+	
+	if(any_calibration || any_collection){
+		guiCounter = 0;
+		guiEMF = 0;
+		peakEMF = 0;
+		accumulatedEMF = 0;
+		baseAccumulatedEMF = 0;
+	}
+	
+	std::string status = "Running";
+	if(any_calibration){
+		status = "Calibrating";
+	} else {
+		if(any_collection){
+			status = "Collecting Data";
+		} else {
+			status = "Running";
+		}
+	}
+	// ImGui::Text("Input Voltage=%.4f", 1.5f);
+
+	// feedback.input = peakEMF;
+	feedback_.status = status;
+	feedback_.peakEMF = peakEMF;
+
+	feedback_.baseEMF = accumulatedEMF;
+	feedback_.EMF = baseAccumulatedEMF;
+
 	// if(car->anyLaserStatusOn() && enable_lasers){
 		
 	// 	float laserVoltage = 0;
@@ -129,7 +207,7 @@ void EVEngine::update(){
 	// }
 }
 
-float EVEngine::getVoltage() const {
+float EVEngine::getBatteryVoltage() const {
 	return battery_->getVoltage();
 }
 
@@ -139,4 +217,8 @@ void EVEngine::accelerate(float){
 
 void EVEngine::decelerate(){
 	accelerating_ = false;
+}
+
+const EVFeedback& EVEngine::getMagnosFeedback() const {
+	return feedback_;
 }
