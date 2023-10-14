@@ -152,10 +152,11 @@ void CarPawnSimApi::updateCarControls()
 	UAirBlueprintLib::LogMessageString("Target Gear: ", std::to_string(current_controls_.manual_gear), LogDebugLevel::Informational);
 	
 	UAirBlueprintLib::LogMessageString("Battery Voltage: ", std::to_string(pawn_api_->getEngine()->getBatteryVoltage()), LogDebugLevel::Informational);
-	
+
+	UAirBlueprintLib::LogMessageString("Status: ", pawn_api_->getEngine()->getMagnosFeedback().status, LogDebugLevel::Informational);
+
 	UAirBlueprintLib::LogMessageString("Base Feedback Voltage: ", std::to_string(pawn_api_->getEngine()->getMagnosFeedback().baseEMF), LogDebugLevel::Informational);
 
-	
 	UAirBlueprintLib::LogMessageString("Feedback Voltage: ", std::to_string(pawn_api_->getEngine()->getMagnosFeedback().EMF), LogDebugLevel::Informational);
 
 	UAirBlueprintLib::LogMessageString("Peak Voltage: ", std::to_string(pawn_api_->getEngine()->getMagnosFeedback().peakEMF), LogDebugLevel::Informational);
