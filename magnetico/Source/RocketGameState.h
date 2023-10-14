@@ -7,6 +7,7 @@ class RocketGameState : public GameState {
 private:
 	Rocket* rocket;
 	ax::Camera* _defaultCamera;
+	ax::MeshRenderer* earthRenderer;
 	
 	float cursorDeltaX = 0;
 	float cursorDeltaY = 0;

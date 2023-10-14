@@ -1,9 +1,11 @@
 
 #include "Physics.h"
+#include "Settings.h"
 
 RigidBody::RigidBody(float mass, ax::Vec3 position, ax::Vec3 velocity, ax::Vec3 acceleration, float restitution, float friction) :
 _mass(mass),
 _position(position),
+_lastPosition(position),
 _velocity(velocity),
 _acceleration(acceleration),
 _restitution(restitution),
@@ -13,9 +15,18 @@ _friction(friction)
 RigidBody::~RigidBody() {}
 
 void RigidBody::update(float deltaTime) {
-	// Update the velocity and position based on the acceleration and time step
+	// Calculate the displacement based on the current velocity and time step
+	ax::Vec3 displacement = _velocity * deltaTime;
+	
+	// Update the position based on the displacement
+	_position += displacement;
+		
+	// Update the last measured position
+	_lastPosition = _position;
+	
+	// Update the velocity based on the current acceleration
 	_velocity += _acceleration * deltaTime;
-	_position += _velocity * deltaTime;
+
 }
 
 void RigidBody::applyForce(ax::Vec3 force) {
@@ -28,7 +39,7 @@ ax::Vec3 RigidBody::getPosition() const {
 }
 
 ax::Vec3 RigidBody::getVelocity() const {
-	return _velocity;
+	return (_position - _lastPosition) / global_delta;
 }
 
 ax::Vec3 RigidBody::getAcceleration() const {

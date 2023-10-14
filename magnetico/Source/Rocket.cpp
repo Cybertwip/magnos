@@ -109,7 +109,7 @@ void Rocket::update(float dt) {
 
 	altitude = rocket_position.length() - earth_radius;
 
-	float force = _get_thrust_force(altitude) * dt;
+	float force = _get_thrust_force(altitude);
 	
 	ax::Vec3 thrust_vector(0, force, 0);
 	ax::Quaternion orientation_quaternion = get_rocket_orientation();
@@ -125,7 +125,7 @@ void Rocket::update(float dt) {
 	float rocket_speed = rocket_velocity.length();
 	ax::Vec3 rocket_direction = rocket_velocity.getNormalized();
 	float atmospheric_density = _get_atmospheric_density(altitude);
-	ax::Vec3 drag_force_components = -0.5 * atmospheric_density * current_drag_coefficient * current_cross_sectional_area * rocket_speed * rocket_speed * rocket_direction * dt;
+	ax::Vec3 drag_force_components = -0.5 * atmospheric_density * current_drag_coefficient * current_cross_sectional_area * rocket_speed * rocket_speed * rocket_direction;
 	
 	// Now, calculate the total drag force as a vector
 	ax::Vec3 drag_force = ax::Vec3(

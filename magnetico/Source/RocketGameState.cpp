@@ -2,6 +2,7 @@
 #include "RocketGameState.h"
 #include "Settings.h"
 #include "Rocket.h"
+#include "Utils3d.h"
 
 #include "ImGui/ImGuiPresenter.h"
 #include "imgui/imgui_internal.h"
@@ -24,10 +25,7 @@ bool RocketGameState::init() {
 	// Instantiate a Rocket object with the given parameters
 	// Coordinates for Stockholm, Sweden
 	float altitude_meters = 28.0;      // Altitude in meters above sea level (Stockholm
-	
-	// Convert latitude and longitude to Earth-centered coordinates
-	float earth_radius = 6371000.0f;  // Earth's radius in meters
-	
+		
 	float x = 0;
 	float y = (earth_radius + altitude_meters);
 	float z = 0;
@@ -48,9 +46,17 @@ bool RocketGameState::init() {
 						ax::Quaternion::identity()     // initial_orientation
 						);
 	
-	rocket->setPosition3D(ax::Vec3(0, 0, 0));
+	rocket->setPosition3D(ax::Vec3(x, y, z));
 	
 	this->addChild(rocket);
+	
+		
+	earthRenderer = ax::MeshRenderer::create("stella/earth.obj");
+	earthRenderer->setPosition3D(ax::Vec3(0, 0, 0));
+	earthRenderer->setScale(earth_radius * 2);
+		
+	this->addChild(earthRenderer);
+
 	return true;
 	
 }
@@ -58,9 +64,9 @@ bool RocketGameState::init() {
 void RocketGameState::setup(ax::Camera* defaultCamera){
 	_defaultCamera = defaultCamera;
 	_defaultCamera->setNearPlane(10);
-	_defaultCamera->setFarPlane(100000);
+	_defaultCamera->setFarPlane(1000000000);
 
-	_defaultCamera->setPosition3D(this->getWorldPosition3D());
+	_defaultCamera->setPosition3D(rocket->getWorldPosition3D());
 }
 
 void RocketGameState::onMouseMove(Event* event)
@@ -131,6 +137,7 @@ void RocketGameState::update(float delta) {
 	
 	_defaultCamera->setPosition3D(newPosition);
 	_defaultCamera->lookAt(targetPosition);
+//	_defaultCamera->lookAt(Vec3());
 
 
 	float altitude = rocket->get_altitude();

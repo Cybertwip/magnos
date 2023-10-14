@@ -125,6 +125,67 @@ ax::Mesh* createCuboid(float width, float height, float depth) {
 	return ax::Mesh::create(positions, normals, texs, indexArray);
 }
 
+ax::Mesh* createSphere(float radius, int segments, int rings) {
+	std::vector<float> positions;
+	std::vector<float> normals;
+	std::vector<float> texs;
+	std::vector<unsigned short> indices;
+	ax::IndexArray indexArray;
+	
+	// Generate sphere vertices, normals, texture coordinates, and indices
+	for (int i = 0; i <= rings; ++i) {
+		float v = static_cast<float>(i) / rings;
+		float theta = v * M_PI;
+		float sinTheta = sin(theta);
+		float cosTheta = cos(theta);
+		
+		for (int j = 0; j <= segments; ++j) {
+			float u = static_cast<float>(j) / segments;
+			float phi = u * M_PI * 2;
+			float sinPhi = sin(phi);
+			float cosPhi = cos(phi);
+			
+			float x = cosPhi * sinTheta;
+			float y = cosTheta;
+			float z = sinPhi * sinTheta;
+			
+			positions.push_back(radius * x);
+			positions.push_back(radius * y);
+			positions.push_back(radius * z);
+			
+			normals.push_back(x);
+			normals.push_back(y);
+			normals.push_back(z);
+			
+			texs.push_back(u);
+			texs.push_back(1.0f - v);
+		}
+	}
+	
+	// Generate sphere indices
+	for (int i = 0; i < rings; ++i) {
+		for (int j = 0; j < segments; ++j) {
+			int nextRow = i + 1;
+			int nextColumn = j + 1;
+			
+			indices.push_back(i * (segments + 1) + j);
+			indices.push_back(nextRow * (segments + 1) + j);
+			indices.push_back(nextRow * (segments + 1) + nextColumn);
+			
+			indices.push_back(i * (segments + 1) + j);
+			indices.push_back(nextRow * (segments + 1) + nextColumn);
+			indices.push_back(i * (segments + 1) + nextColumn);
+		}
+	}
+	
+	for (auto index : indices) {
+		indexArray.emplace_back(index);
+	}
+	
+	// Create the mesh and return it
+	return ax::Mesh::create(positions, normals, texs, indexArray);
+}
+
 ax::Mesh* createPlane(float width, float depth, int texRepeatX, int texRepeatY) {
 	// Calculate half-dimensions for convenience
 	float halfWidth = width / 2.0f;

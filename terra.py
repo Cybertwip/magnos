@@ -1041,7 +1041,7 @@ class Terra(Entity):
         global at_moon
         if at_moon:
             return
-        super_update(1)
+        super_update(2048)
 
         # while self.accumulated_time >= self.fixed_update_interval:
         #     self.accumulated_time -= self.fixed_update_interval

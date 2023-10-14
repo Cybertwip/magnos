@@ -25,6 +25,7 @@ public:
 	
 private:
 	ax::Vec3 _position;
+	ax::Vec3 _lastPosition;
 	ax::Vec3 _velocity;
 	ax::Vec3 _acceleration;
 	float _mass;
