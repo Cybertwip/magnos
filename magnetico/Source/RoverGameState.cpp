@@ -279,7 +279,8 @@ void RoverGameState::renderUI() {
 	ImGui::Text("Status=%s", status.c_str());
 	
 
-	ImGui::Text("Input Voltage=%.4f", 1.5f);
+	ImGui::Text("Coil Voltage Draw=%.4f", 1.5f);
+	ImGui::Text("Lasear Voltage Draw=%.4f", 5.0f);
 	ImGui::Text("Peak Voltage=%.4f", car->getEngine()->getMagnosFeedback().peakEMF);
 	
 	static int desired_voltage = Settings::engine_voltage;
