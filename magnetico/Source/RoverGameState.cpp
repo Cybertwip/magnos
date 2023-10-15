@@ -93,13 +93,9 @@ void RoverGameState::onMouseMove(Event* event)
 
 void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 {
-//	for(auto gimbal : gimbals){
-//		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//
-//		if(magnos->getCoilSystem().calibrating()){
-//			return;
-//		}
-//	}
+	if(car->isCalibrating()){
+		return;
+	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = true;
@@ -124,13 +120,10 @@ void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 
 void RoverGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 {
-//	for(auto gimbal : gimbals){
-//		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//
-//		if(magnos->getCoilSystem().calibrating()){
-//			return;
-//		}
-//	}
+
+	if(car->isCalibrating()){
+		return;
+	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = false;
@@ -150,36 +143,11 @@ void RoverGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 void RoverGameState::update(float) {
 	float totalDelta = global_delta / 1000.0f;
 	
-	bool anyDataCollectionMode = false;
-//	for(auto gimbal : gimbals){
-//		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//
-//		magnos->update(totalDelta);
-//
-//		totalCurrent += magnos->getCoilSystem().current;
-//
-//		totalResistance += 1 * 6;
-//
-//
-//		if(!anyDataCollectionMode){
-//			anyDataCollectionMode = magnos->getCoilSystem().collecting();
-//		}
-//
-//	}
+	bool anyDataCollectionMode = car->isCollecting();
 		
-//	if(accelerate || anyDataCollectionMode){
+	if(accelerate || anyDataCollectionMode){
 		
-//		float powerDraw = (2.5f / (float)gimbals.size()) * totalDelta;
-//
-//		float totalPowerDrawn = 0;
-//		for(auto gimbal : Settings::number_of_gimbals){
-//			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//
-//			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-//		}
-//
-//
-//		car->accelerate(totalPowerDrawn);
+		car->accelerate(0.0f); // @TODO throttle
 //
 //		if(enable_lasers){
 //			float laserVoltage = 5;
@@ -195,10 +163,10 @@ void RoverGameState::update(float) {
 //			car->charge(totalPowerDrawn);
 //
 //		}
-//	} else {
-//		car->liftPedal();
-//	}
-//
+	} else {
+		car->liftPedal();
+	}
+
 	
 	car->update(totalDelta);
 	if(car->anyLaserStatusOn() && enable_lasers){

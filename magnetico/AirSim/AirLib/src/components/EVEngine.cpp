@@ -103,18 +103,14 @@ void EVEngine::update(float){
 	
 	battery_->discharge(totalCurrent, totalDelta);
 
-
 	if(accelerating_ || anyDataCollectionMode){
 		
 		float powerDraw = (2.5f / (float)gimbals_.size()) * totalDelta;
 		
-		float totalPowerDrawn = 0;
 		for(auto magnos : gimbals_){
-			
-			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+			auto _ = magnos->getCoilSystem().withdrawPower(powerDraw);
 		}
-	} 
-
+	}
 	float deltaTime = totalDelta;
 	static float guiCounter = 0;
 //	static float guiBaseEMF = 0;
@@ -240,8 +236,19 @@ float EVEngine::getBatteryVoltage() const {
 	return battery_->getVoltage();
 }
 
-void EVEngine::accelerate(float){
+float EVEngine::accelerate(float){
 	accelerating_ = true;
+	
+	float powerDraw = (2.5f / (float)gimbals_.size()) * Settings::fixed_delta;
+	
+	float totalPowerDrawn = 0;
+	for(auto magnos : gimbals_){
+		
+		totalPowerDrawn += magnos->getCoilSystem().testWithdrawPower(powerDraw);
+	}
+	
+	return totalPowerDrawn;
+
 }
 
 void EVEngine::decelerate(){

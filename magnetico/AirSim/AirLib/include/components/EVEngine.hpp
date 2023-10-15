@@ -24,7 +24,7 @@ public:
 	float getBatteryVoltage() const;
 	const EVFeedback& getMagnosFeedback() const;
 
-	void accelerate(float throttle);
+	float accelerate(float throttle);
 	void decelerate();
 	
 	

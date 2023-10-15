@@ -46,6 +46,18 @@ float CoilSystem::withdrawPower(float power) {
 	return withdrawn;
 }
 
+float CoilSystem::testWithdrawPower(float power) {
+	if (power <= 0) {
+		// No valid power to withdraw, return 0
+		return 0.0f;
+	}
+	
+	// Calculate the amount that can be withdrawn, ensuring it doesn't go below zero
+	float withdrawn = std::min(power, accumulator.getVoltage());
+	
+	return withdrawn;
+}
+
 float CoilSystem::storePower(float power) {
 	if (power <= 0) {
 		// No valid power to store, return 0

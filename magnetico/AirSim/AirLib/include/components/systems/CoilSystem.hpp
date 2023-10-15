@@ -52,6 +52,7 @@ public:
 	~CoilSystem();
 	
 	float withdrawPower(float power);
+	float testWithdrawPower(float power);
 	float storePower(float power);
 	
 	void recalibrate();

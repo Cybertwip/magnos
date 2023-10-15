@@ -227,6 +227,38 @@ void Car::charge(float laserInput){
 	}
 }
 
+
+bool Car::isCalibrating(){
+	bool calibrating = false;
+	
+	for(auto magnos : engine_->getGimbals()){
+		
+		calibrating = magnos->getCoilSystem().calibrating();
+
+		if(calibrating){
+			break;
+		}
+	}
+	
+	return calibrating;
+}
+
+
+bool Car::isCollecting(){
+	bool collecting = false;
+	
+	for(auto magnos : engine_->getGimbals()){
+		
+		collecting = magnos->getCoilSystem().collecting();
+		
+		if(collecting){
+			break;
+		}
+	}
+	
+	return collecting;
+}
+
 bool Car::anyLaserStatusOn(){
 	bool lasersOn = false;
 	
@@ -268,8 +300,9 @@ void Car::liftPedal(){
 	engine_->decelerate();
 	
 }
+
 void Car::accelerate(float voltage) {
-	engine_->accelerate(voltage);
+	auto powerDrawn = engine_->accelerate(voltage);
 	
 	// Define Tesla car properties (example values)
 //	const float maxVoltage = 400.0f; // Maximum voltage output in volts
@@ -279,7 +312,7 @@ void Car::accelerate(float voltage) {
 	const float maxAcceleration = 8.0f; // Maximum acceleration in m/s^2
 	
 	// Scale the voltage input to acceleration based on Tesla car properties
-	acceleration += (voltage / maxVoltage) * maxAcceleration;
+	acceleration += (powerDrawn / maxVoltage) * maxAcceleration;
 	
 	// Ensure acceleration is within the valid range
 	if (acceleration > maxAcceleration) {

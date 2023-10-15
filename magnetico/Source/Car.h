@@ -15,7 +15,6 @@ private:
 	std::shared_ptr<EVEngine> engine_;
 	ax::Node* carBody;
 	ax::Node* engineBox;
-	std::vector<ax::Node*> gimbals;
 	ax::Node* frontLeftWheel;
 	ax::Node* frontRightWheel;
 	ax::Node* rearLeftWheel;
@@ -35,9 +34,9 @@ private:
 	float carOrientation = 0;
 	float brakePower = 0;
 	
-	ax::Node* innerNode;
-	ax::Node* middleNode;
-	ax::Node* outerNode;
+//	ax::Node* innerNode;
+//	ax::Node* middleNode;
+//	ax::Node* outerNode;
 	
 public:
 	Car();
@@ -57,6 +56,9 @@ public:
 	void accelerate(float value);
 	void applyFriction();
 	void updateMotion(float deltaTime);
+	
+	bool isCalibrating();
+	bool isCollecting();
 	
 	std::shared_ptr<EVEngine> getEngine();
 	
