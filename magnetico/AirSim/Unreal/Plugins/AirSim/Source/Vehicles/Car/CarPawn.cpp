@@ -265,7 +265,7 @@ void ACarPawn::Tick(float Delta)
 
 	engine_->setPosition3D(locationVector);
 	
-	engine_->update();
+	engine_->update(Delta);
 
     // Pass the engine RPM to the sound component
     UChaosWheeledVehicleMovementComponent* movement = CastChecked<UChaosWheeledVehicleMovementComponent>(getVehicleMovementComponent());
