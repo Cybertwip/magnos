@@ -6,15 +6,15 @@
 #include "Utils3d.h"
 #include "Laser.h"
 
-
 #include "ImGui/ImGuiPresenter.h"
 #include "imgui/imgui_internal.h"
 
+namespace{
 float quaternionDot(const ax::Quaternion& q1, const ax::Quaternion& q2) {
 	// Manually compute the dot product
 	return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 }
-namespace{
+
 // Current to Voltage conversion
 float currentToVoltage(float current, float resistance = 4.0f) {
 	return current * resistance;
@@ -31,9 +31,8 @@ float voltsToCurrent(float voltage, float resistance) {
 float mpsToKmph(float speedMps) {
 	return speedMps * 3.6;
 }
-
-
 }
+
 USING_NS_AX;
 
 
