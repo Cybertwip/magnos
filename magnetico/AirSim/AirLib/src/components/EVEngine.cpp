@@ -190,8 +190,8 @@ void EVEngine::update(float){
 	feedback_.status = status;
 	feedback_.peakEMF = peakEMF;
 
-	feedback_.baseEMF = accumulatedEMF;
-	feedback_.EMF = baseAccumulatedEMF;
+	feedback_.baseEMF = baseAccumulatedEMF;
+	feedback_.EMF = accumulatedEMF;
 
 	// if(car->anyLaserStatusOn() && enable_lasers){
 		
