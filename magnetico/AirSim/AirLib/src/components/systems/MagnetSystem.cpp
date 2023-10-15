@@ -79,6 +79,8 @@ std::shared_ptr<Node> MagnetSystem::attach(float radius, MagnetDirection directi
     _attachedEntities.push_back(coilEntity);
     
     auto magnet = std::make_shared<Magnet>(_attachedEntities, _attachedEntities.size());
+	
+	magnet->setPosition3D(position);
         
     magnets.push_back(magnet);
 	

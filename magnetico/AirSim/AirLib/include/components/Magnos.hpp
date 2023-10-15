@@ -32,9 +32,6 @@ public:
 	std::shared_ptr<Node> middleNode;
 	std::shared_ptr<Node> innerNode;
 	
-	std::shared_ptr<Node> outerRing;
-	std::shared_ptr<Node> middleRing;
-	std::shared_ptr<Node> innerRing;
 	std::shared_ptr<MagneticBall> pinball;
 	
 	std::unique_ptr<CoilSystem> outerCoilSystem;

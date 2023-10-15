@@ -2,17 +2,14 @@
 
 namespace {
 // Function to create a quaternion from an axis-angle representation
-void createQuaternionFromAxisAngle(const msr::airlib::Vector3r& axis, float rotationAngle, msr::airlib::Quaternionr& result) {
+msr::airlib::Quaternionr createQuaternionFromAxisAngle(const msr::airlib::Vector3r& axis, float rotationAngle) {
 	// Calculate the sine and cosine of half the angle
 	float halfAngle = rotationAngle / 2.0f;
 	float sinHalfAngle = sin(halfAngle);
 	float cosHalfAngle = cos(halfAngle);
 	
-	// Set the quaternion components
-	result.w() = cosHalfAngle;
-	result.x() = axis.x() * sinHalfAngle;
-	result.y() = axis.y() * sinHalfAngle;
-	result.z() = axis.z() * sinHalfAngle;
+	// Return the quaternion
+	return msr::airlib::Quaternionr(cosHalfAngle, axis.x() * sinHalfAngle, axis.y() * sinHalfAngle, axis.z() * sinHalfAngle);
 }
 
 
@@ -130,7 +127,6 @@ void Magnos::update(float) {
 		// Compute total induced EMF in the alternator
 		alternator.emf = totalEMF;
 		
-		
 		outerCoilSystem->update(alternator.emf, Settings::global_delta);
 		
 		updates++;
@@ -182,12 +178,11 @@ void Magnos::applyTorqueAndRotate(std::shared_ptr<Node> node, const msr::airlib:
 	float rotationAngle = newAngularSpeed * delta;
 	
 	// 6. Create the rotation and apply it (around Z-axis)
-	msr::airlib::Quaternionr rotation;
-	createQuaternionFromAxisAngle(axis, rotationAngle, rotation);
+	msr::airlib::Quaternionr rotation
+	= createQuaternionFromAxisAngle(axis, rotationAngle);
 	msr::airlib::Quaternionr currentRotation = node->getRotationQuat();
 	msr::airlib::Quaternionr newRotation = currentRotation * rotation;
 	node->setRotationQuat(newRotation);
-	
 }
 void Magnos::applyMagneticImpulse(float delta) {
 	auto ironBall = std::dynamic_pointer_cast<MagneticBall>(pinball);
@@ -265,7 +260,6 @@ void Magnos::init() {
 	// Outer Node Magnets with NORTH polarity
 	outerNode->addChild(outerCoilSystem->attach(outerRingRadius + 0.0024f, MagnetDirection::NORTH, MagnetPolarity::NORTH));
 	outerNode->addChild(outerCoilSystem->attach(outerRingRadius + 0.0024f, MagnetDirection::SOUTH, MagnetPolarity::SOUTH));
-	
 	outerNode->addChild(outerCoilSystem->attach(outerRingRadius + 0.0024f, MagnetDirection::EAST, MagnetPolarity::NORTH));
 	outerNode->addChild(outerCoilSystem->attach(outerRingRadius + 0.0024f, MagnetDirection::WEST, MagnetPolarity::SOUTH));
 	
@@ -280,13 +274,11 @@ void Magnos::init() {
 	
 	outerNode->addChild(outerMagnetSystem->attach(outerRingRadius + 0.0024f, MagnetDirection::NORTHEAST, MagnetPolarity::SOUTH));
 	outerNode->addChild(outerMagnetSystem->attach(outerRingRadius + 0.0024f, MagnetDirection::NORTHWEST, MagnetPolarity::NORTH));
-	
 	outerNode->addChild(outerMagnetSystem->attach(outerRingRadius + 0.0024f, MagnetDirection::SOUTHEAST, MagnetPolarity::SOUTH));
 	outerNode->addChild(outerMagnetSystem->attach(outerRingRadius + 0.0024f, MagnetDirection::SOUTHWEST, MagnetPolarity::NORTH));
 
 	middleNode->addChild(middleMagnetSystem->attach(middleRingRadius + 0.0016f, MagnetDirection::WEST, MagnetPolarity::SOUTH));
 	middleNode->addChild(middleMagnetSystem->attach((baseDistanceOffset - 0.01f) + 0.0016f, MagnetDirection::EAST, MagnetPolarity::NORTH));
-	
 	
 	innerNode->addChild(innerMagnetSystem->attach(innerRingRadius + 0.0016f, MagnetDirection::NORTH, MagnetPolarity::NORTH));
 	innerNode->addChild(innerMagnetSystem->attach(innerRingRadius + 0.0016f, MagnetDirection::SOUTH, MagnetPolarity::SOUTH));

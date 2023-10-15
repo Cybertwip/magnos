@@ -6,7 +6,7 @@ static long long timePrev = 0;
 static long long timeNow = 0;
 
 CoilSystem::CoilSystem(int id, float voltage, float resistance, float current, float coilTurns)
-	: coil_id(id), coilResistance(resistance), maxCurrent(current), turns(coilTurns),
+: coilResistance(resistance), maxCurrent(current), turns(coilTurns), coil_id(id),
 filterBase(VoltageController(32, Settings::desired_base_voltage, Settings::desired_base_voltage, false)),
 filterIncrease(VoltageController(32, Settings::desired_capacitor_voltage, Settings::desired_capacitor_voltage, true)){
 		
@@ -230,6 +230,8 @@ std::shared_ptr<Node> CoilSystem::attach(float radius, MagnetDirection direction
 	
 	auto coil = std::make_shared<Coil>(_attachedEntities, _attachedEntities.size());
 	
+	coil->setPosition3D(position);
+	
 	coils.push_back(coil);
 	
 	return coil;
@@ -247,14 +249,12 @@ void CoilSystem::scheduleCollection(){
 	schedule_recalibration_for_collection = true;
 }
 
-void CoilSystem::adjustCurrentBasedOn(float dt) {
+void CoilSystem::adjustCurrentBasedOn(float) {
     // Calculate desired current based on EMF error and resistance
     float emfError = accumulator.getCapacity() - accumulator.getVoltage();
     
     // Compute error for the PID
     float desiredCurrent = emfError / totalResistance;
-
-	float normalizedError = desiredCurrent / maxCurrent;
 	
     float currentAdjustment = 0;
 
@@ -349,7 +349,6 @@ void CoilSystem::update(float measuredEMF, float delta) {
 			adjustCurrentBasedOn(accumulationTime);
 		}
     }
-	
 	
 	if(data_collection_mode && !calibrating()){
 		

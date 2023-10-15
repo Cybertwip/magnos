@@ -7,9 +7,9 @@ std::shared_ptr<Magnos> createGimbal(int id, std::shared_ptr<Node> parent, msr::
 	auto gimbal = std::make_shared<Magnos>();
 	gimbal->loadData(id);
 	gimbal->init();
+	gimbal->attachPinball();
 	gimbal->setPosition3D(position);
 	parent->addChild(gimbal);
-	gimbal->attachPinball();
 	return gimbal;
 }
 
@@ -75,7 +75,10 @@ void EVEngine::init(){
 	}
 }
 
-void EVEngine::update(){
+void EVEngine::update(float){
+	
+	Node::update(Settings::fixed_delta);
+	
 	float totalDelta = Settings::global_delta / 1000.0f;
 	
 	float totalCurrent = 0.0f;
@@ -114,7 +117,7 @@ void EVEngine::update(){
 
 	float deltaTime = totalDelta;
 	static float guiCounter = 0;
-	static float guiBaseEMF = 0;
+//	static float guiBaseEMF = 0;
 	static float guiEMF = 0;
 	static float peakEMF = 0;
 	
@@ -147,7 +150,7 @@ void EVEngine::update(){
 	
 	
 	if(guiCounter >= 1){
-		guiBaseEMF = baseAccumulatedEMF;
+//		guiBaseEMF = baseAccumulatedEMF;
 		guiEMF = accumulatedEMF;
 		//		guiRecycledEMF = recycledEMF;
 		accumulatedEMF = 0;

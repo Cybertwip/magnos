@@ -61,6 +61,8 @@ std::shared_ptr<Node> AlternatorSystem::attach(float radius, MagnetDirection dir
 	
 	auto coil = std::make_shared<Coil>(_attachedEntities, _attachedEntities.size());
 	
+	coil->setPosition3D(position);
+	
 	coils.push_back(coil);
 	
 	return coil;

@@ -41,16 +41,134 @@ Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.001f), maxSteeringA
 	for(int i = 0; i<number_of_lasers; ++i){
 		carBody->addChild(createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f)));
 	}
+	
 	carBody->addChild(engineBox);
+	
 	this->addChild(carBody);
 	
 	engine_ = std::make_shared<EVEngine>();
+	
+	engine_->setPosition3D(msr::airlib::Vector3r(0, 0, 0));
+	engine_->init();
+//
+//	auto magnos = engine_->getGimbals()[0];
+//
+//	auto innerNode = ax::Node::create();
+//
+//	for(auto child : magnos->innerNode->getChildren()){
+//		auto cube = ax::MeshRenderer::create();
+//
+//		auto cubeMesh = createCube(0.01f);
+//
+//		cube->addMesh(cubeMesh);
+//
+//		cubeMesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+//
+//		cube->setTexture("gray.jpg");
+//
+//		innerNode->addChild(cube);
+//
+//		cube->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
+//	}
+//
+//	auto middleNode = ax::Node::create();
+//
+//
+//	for(auto child : magnos->middleNode->getChildren()){
+//		auto cube = ax::MeshRenderer::create();
+//
+//		auto cubeMesh = createCube(0.01f);
+//
+//		cube->addMesh(cubeMesh);
+//
+//		cubeMesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+//
+//		cube->setTexture("gray.jpg");
+//
+//		middleNode->addChild(cube);
+//
+//		cube->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
+//	}
+//
+//	auto outerNode = ax::Node::create();
+//
+//	for(auto child : magnos->outerNode->getChildren()){
+//		auto cube = ax::MeshRenderer::create();
+//
+//		auto cubeMesh = createCube(0.01f);
+//
+//		cube->addMesh(cubeMesh);
+//
+//		cubeMesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+//
+//		cube->setTexture("gray.jpg");
+//
+//		outerNode->addChild(cube);
+//
+//		cube->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
+//	}
+//
+//	this->innerNode = innerNode;
+//	this->middleNode = middleNode;
+//	this->outerNode = outerNode;
+//
+//	this->addChild(innerNode);
+//	this->addChild(middleNode);
+//	this->addChild(outerNode);
+
+//	for(auto child : magnos->middleNode->getChildren()){
+//		auto cube = ax::MeshRenderer::create();
+//
+//		auto cubeMesh = createCube(0.01f);
+//
+//		cube->addMesh(cubeMesh);
+//
+//		cubeMesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+//
+//		cube->setTexture("gray.jpg");
+//
+//		this->addChild(cube);
+//
+//		cube->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
+//	}
+	
 	
 }
 
 Car::~Car() {
 	// Release any allocated resources
 	// ...
+}
+
+void Car::update(float dt){
+//
+//	auto magnos = engine_->getGimbals()[0];
+//
+//	for(size_t i = 0; i<magnos->innerNode->getChildren().size(); ++i){
+//
+//		auto child = magnos->innerNode->getChildren()[i];
+//
+//		this->innerNode->getChildren().at(i)->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
+//	}
+//
+//
+//	for(size_t i = 0; i<magnos->middleNode->getChildren().size(); ++i){
+//
+//		auto child = magnos->middleNode->getChildren()[i];
+//
+//		this->middleNode->getChildren().at(i)->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
+//	}
+//
+//
+//	for(size_t i = 0; i<magnos->outerNode->getChildren().size(); ++i){
+//
+//		auto child = magnos->outerNode->getChildren()[i];
+//
+//		this->outerNode->getChildren().at(i)->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
+//	}
+
+	engine_->setPosition3D(msr::airlib::Vector3r(this->getWorldPosition3D().x, this->getWorldPosition3D().y, this->getWorldPosition3D().z));
+	engine_->update(dt);
 }
 
 ax::Node* Car::createLaserSystem(ax::Vec3 position){
@@ -93,10 +211,6 @@ float Car::getAcceleration() const{
 	return acceleration;
 }
 
-std::vector<ax::Node*> Car::getGimbals() const {
-	return this->gimbals;
-}
-
 std::vector<LaserNode*> Car::getLasers() const {
 	return lasers;
 }
@@ -106,7 +220,7 @@ void Car::steer(float angle) {
 	steeringAngle = std::min(std::max(angle, -maxSteeringAngle), maxSteeringAngle);
 }
 void Car::charge(float laserInput){
-	float dispersion = laserInput / (float)lasers.size();
+//	float dispersion = laserInput / (float)lasers.size();
 	
 	for(auto laser : lasers){
 		laser->setVoltageInput(laserInput);
@@ -298,6 +412,6 @@ void Car::updateMotion(float deltaTime) {
 	speed = newSpeed;
 }
 
-RechargeableBattery& Car::getBattery() {
-	return battery;
+std::shared_ptr<EVEngine> Car::getEngine() {
+	return engine_;
 }

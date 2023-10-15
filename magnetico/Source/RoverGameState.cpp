@@ -1,6 +1,7 @@
 #include "RoverGameState.h"
 
 #include "components/Magnos.hpp"
+#include "components/EVEngine.hpp"
 #include "Car.h"
 #include "Utils3d.h"
 #include "Laser.h"
@@ -90,7 +91,7 @@ void RoverGameState::onMouseMove(Event* event)
 }
 
 
-void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
+void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 {
 //	for(auto gimbal : gimbals){
 //		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
@@ -121,7 +122,7 @@ void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event* event)
 	}
 }
 
-void RoverGameState::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
+void RoverGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 {
 //	for(auto gimbal : gimbals){
 //		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
@@ -146,12 +147,8 @@ void RoverGameState::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 	
 }
 
-void RoverGameState::update(float delta) {
+void RoverGameState::update(float) {
 	float totalDelta = global_delta / 1000.0f;
-	
-	float totalCurrent = 0.0f;
-	float totalPower = 0.0f;
-	float totalResistance = 0.0f;
 	
 	bool anyDataCollectionMode = false;
 //	for(auto gimbal : gimbals){
@@ -169,9 +166,7 @@ void RoverGameState::update(float delta) {
 //		}
 //
 //	}
-	
-	car->getBattery().discharge(totalCurrent, totalDelta);
-	
+		
 //	if(accelerate || anyDataCollectionMode){
 		
 //		float powerDraw = (2.5f / (float)gimbals.size()) * totalDelta;
@@ -204,17 +199,19 @@ void RoverGameState::update(float delta) {
 //		car->liftPedal();
 //	}
 //
+	
+	car->update(totalDelta);
 	if(car->anyLaserStatusOn() && enable_lasers){
 		
-		float laserVoltage = 0;
+//		float laserVoltage = 0;
+//
+//		for(auto laser : car->getLasers()){
+//			laserVoltage += laser->getVoltageInput();
+//		}
 		
-		for(auto laser : car->getLasers()){
-			laserVoltage += laser->getVoltageInput();
-		}
+		//float powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
 		
-		float powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
-		
-		float totalPowerDrawn = 0;
+		//float totalPowerDrawn = 0;
 //		for(auto gimbal : gimbals){
 //			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
 //
@@ -305,94 +302,28 @@ void RoverGameState::renderUI() {
 	
 	ImGui::Begin("Engine");
 	
-	float deltaTime = ImGui::GetIO().DeltaTime;
-	static float guiCounter = 0;
-	static float guiBaseEMF = 0;
-	static float guiEMF = 0;
-	static float peakEMF = 0;
-	//static float recycledEMF = 0; // @TODO
-	//static float guiRecycledEMF = 0;
+	auto status = car->getEngine()->getMagnosFeedback().status;
+
 	
-	guiCounter += deltaTime;
+	ImGui::Text("Status=%s", status.c_str());
 	
-	float baseAccumulatedEMF = 0;
-	float accumulatedEMF = 0;
-	
-	bool any_calibration = false;
-	bool any_collection = false;
-//
-//	for(auto gimbal : gimbals){
-//		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//
-//		float inducedEMF = abs(magnos->getAlternatorSystem().emf);
-//
-//		if(!magnos->getCoilSystem().calibrating()){
-//			baseAccumulatedEMF += magnos->getCoilSystem().lastBaseAccumulatedEMF;
-//			accumulatedEMF += magnos->getCoilSystem().lastAccumulatedEMF;
-//			//		recycledEMF = magnos->getCoilSystem().lastRecycledEMF;
-//		}
-//
-//		if(magnos->getCoilSystem().calibrating()){
-//			any_calibration = true;
-//		}
-//
-//		if(magnos->getCoilSystem().collecting()){
-//			any_collection = true;
-//		}
-//	}
-//
-	
-	if(guiCounter >= 1){
-		guiBaseEMF = baseAccumulatedEMF;
-		guiEMF = accumulatedEMF;
-		//		guiRecycledEMF = recycledEMF;
-		accumulatedEMF = 0;
-		guiCounter = 0;
-	}
-	
-	if (guiEMF > peakEMF){
-		if((!any_calibration) && !any_collection){
-			peakEMF = guiEMF;
-		} else {
-			guiEMF = 0;
-			peakEMF = 0;
-		}
-	}
-	
-	if(any_calibration || any_collection){
-		guiCounter = 0;
-		guiEMF = 0;
-		peakEMF = 0;
-		accumulatedEMF = 0;
-		//		recycledEMF = 0;
-		//		guiRecycledEMF = 0;
-		baseAccumulatedEMF = 0;
-	}
-	
-	if(any_calibration){
-		ImGui::Text("Status=%s", "PID Calibration");
-	} else {
-		if(any_collection){
-			ImGui::Text("Status=%s", "Collecting Data");
-		} else {
-			ImGui::Text("Status=%s", "Running");
-		}
-	}
+
 	ImGui::Text("Input Voltage=%.4f", 1.5f);
-	ImGui::Text("Peak Voltage=%.4f", peakEMF);
-	
-	ImGui::Text("Target Voltage:");
+	ImGui::Text("Peak Voltage=%.4f", car->getEngine()->getMagnosFeedback().peakEMF);
 	
 	static int desired_voltage = Settings::desired_target_voltage;
-	static int last_voltage_increase = desired_voltage;
+	//static int last_voltage_increase = desired_voltage;
+
+	ImGui::Text("Target Voltage:%d", desired_voltage);
 	
-	if(any_calibration || any_collection){
-		ImGui::BeginDisabled();
-		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
-		ImGui::EndDisabled();
-	} else {
-		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
-	}
+//
+//	if(any_calibration || any_collection){
+//		ImGui::BeginDisabled();
+//		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
+//		ImGui::EndDisabled();
+//	} else {
+//		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
+//	}
 	
 //	if(last_voltage_increase != Settings::desired_target_voltage){
 //		Settings::desired_target_voltage = last_voltage_increase;
@@ -404,34 +335,34 @@ void RoverGameState::renderUI() {
 //
 //	}
 	
-	last_voltage_increase = desired_voltage;
+	//last_voltage_increase = desired_voltage;
 	
-	ImGui::Text("Base Voltage=%.4f", guiBaseEMF);
-	ImGui::Text("Base + Gain Voltage=%.4f", guiEMF);
+	ImGui::Text("Base Voltage=%.4f", car->getEngine()->getMagnosFeedback().baseEMF);
+	ImGui::Text("Base + Gain Voltage=%.4f", car->getEngine()->getMagnosFeedback().EMF);
 	//ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF); // @TODO maximize voltage
-	
-	if(any_collection || any_calibration){
-		ImGui::BeginDisabled();
-		ImGui::Button("Collect Data");
-		ImGui::EndDisabled();
-	} else {
-		bool collectDataButtonPressed = false;
-		
-		if (ImGui::Button("Collect Data")) {
-			collectDataButtonPressed = true;
-		}
-		
-		if (collectDataButtonPressed) {
-			collectDataButtonPressed = false;
-//			
-//			for(auto gimbal : gimbals){
-//				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//				
-//				magnos->getCoilSystem().scheduleCollection();
-//			}
-			
-		}
-	}
+//
+//	if(any_collection || any_calibration){
+//		ImGui::BeginDisabled();
+//		ImGui::Button("Collect Data");
+//		ImGui::EndDisabled();
+//	} else {
+//		bool collectDataButtonPressed = false;
+//
+//		if (ImGui::Button("Collect Data")) {
+//			collectDataButtonPressed = true;
+//		}
+//
+//		if (collectDataButtonPressed) {
+//			collectDataButtonPressed = false;
+////
+////			for(auto gimbal : gimbals){
+////				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
+////
+////				magnos->getCoilSystem().scheduleCollection();
+////			}
+//
+//		}
+//	}
 	
 	
 	//ImGui::Text("Induced Current=%.4f", inducedCurrent);
@@ -449,12 +380,12 @@ void RoverGameState::renderUI() {
 	
 	static float counter = 0;
 	
-	counter += deltaTime;
+	counter += fixed_delta;
 	
 	if(counter >= 1.0f){
 		counter = 0;
 		battery = 0;
-		battery = car->getBattery().getVoltage();
+		battery = car->getEngine()->getBatteryVoltage();
 		acceleration = car->getAcceleration();
 		speed = car->getSpeed();
 		laser = 0;

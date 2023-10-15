@@ -19,13 +19,19 @@ public:
 	EVEngine();
 	
 	void init();
-	void update();
+	void update(float dt) override;
 
 	float getBatteryVoltage() const;
 	const EVFeedback& getMagnosFeedback() const;
 
 	void accelerate(float throttle);
 	void decelerate();
+	
+	
+	//@TODO REMOVE
+	std::vector<std::shared_ptr<Magnos>> getGimbals() const {
+		return this->gimbals_;
+	}
 
 private:
 	std::vector<std::shared_ptr<Magnos>> gimbals_;

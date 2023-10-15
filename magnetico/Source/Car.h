@@ -35,8 +35,10 @@ private:
 	float carOrientation = 0;
 	float brakePower = 0;
 	
+	ax::Node* innerNode;
+	ax::Node* middleNode;
+	ax::Node* outerNode;
 	
-	RechargeableBattery battery = RechargeableBattery(battery_voltage, battery_voltage + 1, battery_voltage + 1, 0.9f, 0.95f);
 public:
 	Car();
 	virtual ~Car();
@@ -44,7 +46,6 @@ public:
 	bool anyLaserStatusOn();
 	ax::Node* createLaserSystem(ax::Vec3 position);
 
-	std::vector<ax::Node*> getGimbals() const;
 	std::vector<LaserNode*> getLasers() const;
 	
 	float getAcceleration() const;
@@ -57,7 +58,9 @@ public:
 	void applyFriction();
 	void updateMotion(float deltaTime);
 	
-	RechargeableBattery& getBattery();
+	std::shared_ptr<EVEngine> getEngine();
+	
+	void update(float dt) override;
 
 	CREATE_FUNC(Car);
 	

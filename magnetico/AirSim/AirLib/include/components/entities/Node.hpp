@@ -10,7 +10,10 @@ private:
 	msr::airlib::Vector3r position3D;
 	
 public:
-	Node(){
+	Node():
+	quaternion(msr::airlib::Quaternionr::Identity()),
+	currentAngularSpeed(0.0f),
+	position3D(msr::airlib::Vector3r(0, 0, 0)){
 		
 	}
 	
@@ -27,7 +30,6 @@ public:
 	}
 
 	msr::airlib::Vector3r getWorldPosition3D(){
-		
 		msr::airlib::Vector3r accumulatedPosition3D = getPosition3D();
 		
 		auto nodeParent = this->getParent();
@@ -52,22 +54,43 @@ public:
 	// Getter for angular speed
 	float getAngularSpeed() const {
 		return this->currentAngularSpeed;
-		
 	}
 	
 	// Setter for angular speed
 	void setAngularSpeed(float speed) {
-		
 		this->currentAngularSpeed = speed;
-		
 	}
 	
 	void addChild(std::shared_ptr<Node> child){
 		child->parent = shared_from_this();
 		children.push_back(child);
 	}
+		
+	virtual void update(float){
+		updateChildPositions();
+	}
+	
+	std::vector<std::shared_ptr<Node>> getChildren(){
+		return this->children;
+	}
 	
 private:
+	// Function to update the children's positions based on their parent's position and rotation
+	void updateChildPositions() {
+		for (auto child : children) {
+			// Calculate the child's position relative to the parent's position and rotation
+			msr::airlib::Vector3r childRelativePosition = child->getPosition3D();
+			msr::airlib::Vector3r childPosition = (quaternion * childRelativePosition);
+			
+			// Update the child's position
+			child->setPosition3D(childPosition);
+			
+			// Recursively update the child's children positions
+			child->updateChildPositions();
+		}
+	}
+	
+
 	std::shared_ptr<Node> parent;
 	
 	std::vector<std::shared_ptr<Node>> children;
