@@ -8,10 +8,6 @@ private:
 	
 	ax::Camera* _defaultCamera;
 	
-
-	std::vector<Node*> gimbals;
-	
-	
 	std::string emf;
 	std::string current;
 	

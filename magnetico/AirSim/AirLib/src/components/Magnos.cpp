@@ -33,7 +33,7 @@ msr::airlib::Vector3r directionFromAngle(float angleInDegrees) {
 
 
 // This function returns a direction vector given an angle from the North (positive Z-axis)
-void Magnos::calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::AttachedEntity& magnet) {
+float Magnos::calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::AttachedEntity& magnet) {
 	auto ironBall = std::dynamic_pointer_cast<MagneticBall>(pinball);
 	float ballMagneticMoment = ironBall->get_magnetization() * ironBall->calculate_volume();
 	
@@ -58,7 +58,7 @@ void Magnos::calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::Attac
 	float flux = length * coil.area; // assuming coil's face is perpendicular to B
 	
 	// Update the flux through the coil due to this magnetic field
-	coil.flux = flux;
+	return flux;
 }
 
 
@@ -112,7 +112,7 @@ void Magnos::update(float) {
 			
 			for (auto& entity : outerEntities) {
 				// Compute flux for the current coil based on each entity's position
-				calculateFlux(coil, entity);
+				coil.flux += calculateFlux(coil, entity);
 			}
 			
 			if(firstRun){
@@ -120,10 +120,32 @@ void Magnos::update(float) {
 			}
 			
 			totalEMF += calculateCoilEMF(coil, Settings::fixed_delta);
-
 		}
 		
+		for (auto& coil : coils) {
+			// Reset the coil's flux before summing from all entities
+			bool firstRun = false;
+			if(coil.flux == 0){
+				firstRun = true;
+			}
+			coil.previousFlux = coil.flux;
+			coil.flux = 0.0f;
+			
+			for (auto& entity : innerEntities) {
+				// Compute flux for the current coil based on each entity's position
+				calculateFlux(coil, entity);
+				
+				coil.flux += calculateFlux(coil, entity);
 
+			}
+			
+			if(firstRun){
+				coil.previousFlux = coil.flux;
+			}
+			
+			totalEMF += calculateCoilEMF(coil, Settings::fixed_delta);
+		}
+		
 		// Compute total induced EMF in the alternator
 		alternator.emf = totalEMF;
 		
@@ -185,8 +207,6 @@ void Magnos::applyTorqueAndRotate(std::shared_ptr<Node> node, const msr::airlib:
 	node->setRotationQuat(newRotation);
 }
 void Magnos::applyMagneticImpulse(float delta) {
-	auto ironBall = std::dynamic_pointer_cast<MagneticBall>(pinball);
-	
 	// Combine magnetic forces
 	auto forces = outerCoilSystem->combineFieldsOrForces(getWorldPosition3D());
 	

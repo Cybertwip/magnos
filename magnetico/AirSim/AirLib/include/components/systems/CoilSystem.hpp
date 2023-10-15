@@ -14,23 +14,21 @@ namespace Settings {
 
 	const float fixed_delta = 1.0f / 60.0f;
 
-	const float battery_voltage = 48;
+	const float battery_voltage = 64;
 
-	const int data_collection_bin_size = 4 /* mb */ * 1000 * 1024 ;
+	const int data_collection_bin_size = 1 /* kb */ * 64 * 1024 ;
 
 	const float error_trial = 0.25f;
 
 	const float desired_base_voltage = 1.5f;
 
-	const int number_of_gimbals = 6;
+	const int number_of_gimbals = 12;
 
-	const int data_collection_mode_cycles = 2048 / number_of_gimbals;
+	const int data_collection_mode_cycles = (72 * 2) / number_of_gimbals;
 
-	const int max_voltage = 100 * number_of_gimbals / 3 * 2;
+	const float engine_voltage = 800;
 
-	const float desired_target_voltage = max_voltage;
-
-	const float desired_capacitor_voltage = 5.0f;
+	const float desired_capacitor_voltage = 24.0f;
 }
 
 class CoilSystem : public CoilEntity {
@@ -40,7 +38,7 @@ public:
 	float emf;
 	
 	float current = 0;
-	Capacitor accumulator = Capacitor(Settings::desired_target_voltage / (float)Settings::number_of_gimbals);
+	Capacitor accumulator = Capacitor(Settings::engine_voltage / (float)Settings::number_of_gimbals);
 
 	float turns;
 	
@@ -116,6 +114,9 @@ private:
 
 	VoltageController filterBase;
 	VoltageController filterIncrease;
+	
+	MovingAverageFilter totalEMFAverageFilter = MovingAverageFilter(240);
+	MovingAverageFilter baseEMFAverageFilter = MovingAverageFilter(240);
 	
 	float designedEMFPerSecond;
 	std::function<void(int, float)> onVoltagePeak = nullptr;

@@ -14,7 +14,14 @@ float quaternionDot(const ax::Quaternion& q1, const ax::Quaternion& q2) {
 	// Manually compute the dot product
 	return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 }
+namespace{
+// Current to Voltage conversion
+float currentToVoltage(float current, float resistance = 4.0f) {
+	return current * resistance;
+}
 
+
+}
 USING_NS_AX;
 
 
@@ -148,43 +155,41 @@ void RoverGameState::update(float) {
 	if(accelerate || anyDataCollectionMode){
 		
 		car->accelerate(0.0f); // @TODO throttle
-//
-//		if(enable_lasers){
-//			float laserVoltage = 5;
-//			powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
-//
-//			totalPowerDrawn = 0;
-//			for(auto gimbal : gimbals){
-//				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//
-//				totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-//			}
-//
-//			car->charge(totalPowerDrawn);
-//
-//		}
+
 	} else {
 		car->liftPedal();
 	}
 
 	
+	if(enable_lasers){
+		float laserVoltage = 5;
+		float powerDraw = (laserVoltage / Settings::number_of_gimbals) * totalDelta;
+		
+		float totalPowerDrawn = 0;
+		for(auto magnos : car->getEngine()->getGimbals()){
+			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+		}
+		
+		car->charge(totalPowerDrawn);
+		
+	}
+	
 	car->update(totalDelta);
 	if(car->anyLaserStatusOn() && enable_lasers){
 		
-//		float laserVoltage = 0;
-//
-//		for(auto laser : car->getLasers()){
-//			laserVoltage += laser->getVoltageInput();
-//		}
+		float laserVoltage = 0;
+
+		for(auto laser : car->getLasers()){
+			laserVoltage += laser->getVoltageInput();
+		}
 		
-		//float powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
+		float powerDraw = (laserVoltage / Settings::number_of_gimbals) * totalDelta;
 		
-		//float totalPowerDrawn = 0;
-//		for(auto gimbal : gimbals){
-//			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//
-//			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-//		}
+		float totalPowerDrawn = 0;
+		for(auto magnos : car->getEngine()->getGimbals()){
+
+			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+		}
 	}
 	
 	if(steer){
@@ -245,23 +250,22 @@ void RoverGameState::update(float) {
 	
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
-//
-//	if(enable_lasers){
-//		for(auto laser : car->getLasers()){
-//			float storedPower = 0;
-//			float powerToStore = (laser->getAccumulatedVoltage() / (float)gimbals.size()) * totalDelta;
-//			for(auto gimbal : gimbals){
-//				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//				storedPower += magnos->getCoilSystem().storePower(powerToStore);
-//			}
-//
-//			if(storedPower != 0){
-//				laser->dischargeAccumulatedVoltage(storedPower);
-//			}
-//
-//		}
-//
-//	}
+
+	if(enable_lasers){
+		for(auto laser : car->getLasers()){
+			float storedPower = 0;
+			float powerToStore = (laser->getAccumulatedVoltage() / (float)Settings::number_of_gimbals) * totalDelta;
+			for(auto magnos : car->getEngine()->getGimbals()){
+				storedPower += magnos->getCoilSystem().storePower(powerToStore);
+			}
+
+			if(storedPower != 0){
+				laser->dischargeAccumulatedVoltage(storedPower);
+			}
+
+		}
+
+	}
 	
 }
 
@@ -272,14 +276,13 @@ void RoverGameState::renderUI() {
 	
 	auto status = car->getEngine()->getMagnosFeedback().status;
 
-	
 	ImGui::Text("Status=%s", status.c_str());
 	
 
 	ImGui::Text("Input Voltage=%.4f", 1.5f);
 	ImGui::Text("Peak Voltage=%.4f", car->getEngine()->getMagnosFeedback().peakEMF);
 	
-	static int desired_voltage = Settings::desired_target_voltage;
+	static int desired_voltage = Settings::engine_voltage;
 	//static int last_voltage_increase = desired_voltage;
 
 	ImGui::Text("Target Voltage:%d", desired_voltage);
@@ -305,8 +308,22 @@ void RoverGameState::renderUI() {
 	
 	//last_voltage_increase = desired_voltage;
 	
+	float laserOutput = 0;
+	float laserInput = 0;
+	for(auto laserNode : car->getLasers()){
+		laserOutput += laserNode->getGuiMeasure();
+		laserInput += laserNode->getVoltageInput();
+	}
+
+	float coilInput = 0;
+	for(auto magnos : car->getEngine()->getGimbals()){
+		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::number_of_gimbals);
+	}
+	
+
+	ImGui::Text("Input Voltage=%.4f", laserInput + coilInput);
 	ImGui::Text("Base Voltage=%.4f", car->getEngine()->getMagnosFeedback().baseEMF);
-	ImGui::Text("Base + Gain Voltage=%.4f", car->getEngine()->getMagnosFeedback().EMF);
+	ImGui::Text("Base + Gain Voltage=%.4f", car->getEngine()->getMagnosFeedback().EMF + laserOutput);
 	//ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF); // @TODO maximize voltage
 //
 //	if(any_collection || any_calibration){

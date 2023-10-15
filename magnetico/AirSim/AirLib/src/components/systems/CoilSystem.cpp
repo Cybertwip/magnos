@@ -102,9 +102,9 @@ void CoilSystem::resetAccumulators(){
 	timePrev = 0;
 	timeNow = 0;
 	
-	filterBase = VoltageController(32, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
+	filterBase = VoltageController(240, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
 	
-	filterIncrease = VoltageController(32, designedEMFPerSecond, Settings::desired_capacitor_voltage, true);
+	filterIncrease = VoltageController(240, Settings::engine_voltage / Settings::number_of_gimbals, Settings::desired_capacitor_voltage, true);
 	
 	this->current = 0;
 
@@ -171,20 +171,57 @@ void CoilSystem::setCurrentFromVoltage(float voltage) {
     this->current = std::clamp(this->current, 0.0f, maxCurrent);  // Ensure it doesn't exceed maxCurrent
 }
 
+//msr::airlib::Vector3r CoilSystem::computeMagneticField(CoilEntity::AttachedEntity& coil, const msr::airlib::Vector3r& origin, const msr::airlib::Vector3r& point, MagnetPolarity polarity) const
+//{
+//	msr::airlib::Vector3r direction = (point - origin).normalized();
+//	float distance = (point - origin).norm();  // Calculate the distance using the norm() method.
+//
+//	// Avoid division by zero by checking if distance is very small and returning a zero field in that case.
+//	if (distance < 1e-6) {
+//		return msr::airlib::Vector3r::Zero();
+//	}
+//
+//	// Magnetic permeability of free space (μ₀)
+//	const float mu0 = 4 * M_PI * 1e-7;  // T·m/A
+//
+//	// Permeability of copper (typically close to zero for non-magnetic materials)
+//	const float mu_copper = 1e-9;  // T·m/A (approximation for non-magnetic materials)
+//
+//	float magnitude = (this->current * coil.turns * mu_copper) / (2 * M_PI * distance);
+//
+//	// Reverse the direction if the polarity is SOUTH
+//	if (polarity == MagnetPolarity::SOUTH) {
+//		magnitude = -magnitude;
+//	}
+//
+//	return direction * magnitude;
+//}
+
 msr::airlib::Vector3r CoilSystem::computeMagneticField(CoilEntity::AttachedEntity& coil, const msr::airlib::Vector3r& origin, const msr::airlib::Vector3r& point, MagnetPolarity polarity) const
 {
 	msr::airlib::Vector3r direction = (point - origin).normalized();
-	float distance = sqrt(pow(origin.x() - point.x(), 2) + pow(origin.y() - point.y(), 2) + pow(origin.z() - point.z(), 2));
-    float magnitude = (this->current * coil.turns) / (2 * M_PI * distance);
-    
-    // Reverse the direction if the polarity is SOUTH
-    if(polarity == MagnetPolarity::SOUTH) {
-        magnitude = -magnitude;
-    }
-    
-    return direction * magnitude;
+	float distance = (point - origin).norm();  // Calculate the distance using the norm() method.
+	
+	// Avoid division by zero by checking if distance is very small and returning a zero field in that case.
+	if (distance < 1e-6) {
+		return msr::airlib::Vector3r::Zero();
+	}
+	
+	// Magnetic permeability of free space (μ₀)
+	const float mu0 = 4 * M_PI * 1e-7;  // T·m/A
+	
+	// Permeability of iron (typical value for ferromagnetic materials)
+	const float mu_iron = 4 * M_PI * 1e-3;  // T·m/A (typical value for ferromagnetic materials)
+	
+	float magnitude = (this->current * coil.turns * mu_iron) / (2 * M_PI * distance);
+	
+	// Reverse the direction if the polarity is SOUTH
+	if (polarity == MagnetPolarity::SOUTH) {
+		magnitude = -magnitude;
+	}
+	
+	return direction * magnitude;
 }
-
 
 msr::airlib::Vector3r CoilSystem::combineFieldsOrForces(const msr::airlib::Vector3r& origin) {
 	msr::airlib::Vector3r totalField(0, 0, 0);
@@ -284,9 +321,6 @@ void CoilSystem::adjustCurrentBasedOn(float) {
 
         if(calibration){
             calibration = false;
-			          
-			accumulator = Capacitor(designedEMFPerSecond); // @TODO go to max voltage
-
 			data_collection_mode = false;
 			
 			if(!hasML || schedule_data_collection_mode){
@@ -421,32 +455,45 @@ void CoilSystem::update(float measuredEMF, float delta) {
 	if(accumulationTime == Settings::global_delta * 60){
 		accumulationTime = 0.0f;
 
-		if(accumulator.getVoltage() > accumulator.getCapacity()){
-			
-//			if(!calibrating()){
-//				accumulatedEMF = filterIncrease.controlVoltage(accumulatedEMF);
-//			}
-//
-		} else if (accumulator.getVoltage() < accumulator.getCapacity() && !calibrating()){
+		if (accumulator.getVoltage() < accumulator.getCapacity() && !calibrating()){
 			float storedVoltage = filterIncrease.getCapacitorVoltage();
 			
 //			 try to keep up
 			float recycledConsumption = filterIncrease.consumeFromCapacitor(std::min(storedVoltage, accumulator.getCapacity() - accumulator.getVoltage()));
 			
 			accumulator.charge(recycledConsumption);
-		}
+		} 
 
-		lastBaseAccumulatedEMF = baseAccumulatedEMF;
-		lastAccumulatedEMF = accumulator.getVoltage();
-		lastRecycledEMF = recycledEMF;
-		
-		if(accumulator.getVoltage() >= accumulator.getCapacity() || (accumulator.getVoltage() >= accumulator.getCapacity() && calibrating())){
-
-			if(onVoltagePeak){
-				onVoltagePeak(coil_id - 1, accumulator.getVoltage());
-			}
+		if(calibrating()){
+			lastBaseAccumulatedEMF = baseAccumulatedEMF;
+			lastAccumulatedEMF = accumulator.getVoltage();
+			lastRecycledEMF = recycledEMF;
 			
-			//accumulator.discharge(accumulator.getCapacity());
+			if(accumulator.getVoltage() >= accumulator.getCapacity() || (accumulator.getVoltage() >= accumulator.getCapacity() && calibrating())){
+				
+				if(onVoltagePeak){
+					onVoltagePeak(coil_id - 1, accumulator.getVoltage());
+				}
+				
+			}
+		}
+		
+	} else {
+		if(!calibrating()){
+			
+			lastBaseAccumulatedEMF =
+			baseEMFAverageFilter.filter(baseAccumulatedEMF);
+			lastAccumulatedEMF = 			totalEMFAverageFilter.filter(accumulator.getVoltage());
+//			lastRecycledEMF = recycledEMF;
+			
+			if(accumulator.getVoltage() >= accumulator.getCapacity() || (accumulator.getVoltage() >= accumulator.getCapacity() && calibrating())){
+				
+				if(onVoltagePeak){
+					onVoltagePeak(coil_id - 1, accumulator.getVoltage());
+				}
+				
+				//accumulator.discharge(accumulator.getCapacity());
+			}
 		}
 	}
 

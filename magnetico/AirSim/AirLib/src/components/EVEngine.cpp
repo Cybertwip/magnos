@@ -31,28 +31,33 @@ EVEngine::EVEngine(){
 }
 
 void EVEngine::init(){
-	gimbals_.push_back(createGimbal(1, shared_from_this(), msr::airlib::Vector3r(-0.25, 0, 0)));
 	
-	if(Settings::number_of_gimbals > 1){
-		gimbals_.push_back(createGimbal(2, shared_from_this(), msr::airlib::Vector3r(0.25, 0, 0)));
+	for(int i = 0; i<Settings::number_of_gimbals; ++i){
+		gimbals_.push_back(createGimbal(i + 1, shared_from_this(), msr::airlib::Vector3r(0, 0, 0)));
 	}
 	
-	if(Settings::number_of_gimbals > 2){
-		gimbals_.push_back(createGimbal(3, shared_from_this(), msr::airlib::Vector3r(0, 0, -0.25)));
-	}
-	
-	if(Settings::number_of_gimbals > 3){
-		gimbals_.push_back(createGimbal(4, shared_from_this(), msr::airlib::Vector3r(0, 0, 0.25)));
-	}
-	
-	if(Settings::number_of_gimbals > 4){
-		gimbals_.push_back(createGimbal(5, shared_from_this(), msr::airlib::Vector3r(0, 0.25f, 0)));
-	}
-	
-	if(Settings::number_of_gimbals > 5){
-		gimbals_.push_back(createGimbal(6, shared_from_this(), msr::airlib::Vector3r(0, -0.25f, 0)));
-	}
-
+//	gimbals_.push_back(createGimbal(1, shared_from_this(), msr::airlib::Vector3r(-0.25, 0, 0)));
+//
+//	if(Settings::number_of_gimbals > 1){
+//		gimbals_.push_back(createGimbal(2, shared_from_this(), msr::airlib::Vector3r(0.25, 0, 0)));
+//	}
+//
+//	if(Settings::number_of_gimbals > 2){
+//		gimbals_.push_back(createGimbal(3, shared_from_this(), msr::airlib::Vector3r(0, 0, -0.25)));
+//	}
+//
+//	if(Settings::number_of_gimbals > 3){
+//		gimbals_.push_back(createGimbal(4, shared_from_this(), msr::airlib::Vector3r(0, 0, 0.25)));
+//	}
+//
+//	if(Settings::number_of_gimbals > 4){
+//		gimbals_.push_back(createGimbal(5, shared_from_this(), msr::airlib::Vector3r(0, 0.25f, 0)));
+//	}
+//
+//	if(Settings::number_of_gimbals > 5){
+//		gimbals_.push_back(createGimbal(6, shared_from_this(), msr::airlib::Vector3r(0, -0.25f, 0)));
+//	}
+//
 	battery_ = std::make_shared<RechargeableBattery>(Settings::battery_voltage, 
 													 Settings::battery_voltage + 1, 
 													 Settings::battery_voltage + 1, 
@@ -60,7 +65,7 @@ void EVEngine::init(){
 													 0.95f);
 	
 	for(auto magnos : gimbals_){
-		magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::desired_target_voltage / Settings::number_of_gimbals);
+		magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::engine_voltage / Settings::number_of_gimbals);
 	}
 
 	
@@ -100,12 +105,11 @@ void EVEngine::update(float){
 		
 	}
 	
-	
 	battery_->discharge(totalCurrent, totalDelta);
 
 	if(accelerating_ || anyDataCollectionMode){
 		
-		float powerDraw = (2.5f / (float)gimbals_.size()) * totalDelta;
+		float powerDraw = (totalCurrent / (float)gimbals_.size()) * totalDelta;
 		
 		for(auto magnos : gimbals_){
 			auto _ = magnos->getCoilSystem().withdrawPower(powerDraw);
@@ -113,7 +117,6 @@ void EVEngine::update(float){
 	}
 	float deltaTime = totalDelta;
 	static float guiCounter = 0;
-//	static float guiBaseEMF = 0;
 	static float guiEMF = 0;
 	static float peakEMF = 0;
 	
@@ -127,7 +130,7 @@ void EVEngine::update(float){
 	
 	for(auto magnos : gimbals_){
 		
-		float inducedEMF = abs(magnos->getAlternatorSystem().emf);
+		//float inducedEMF = abs(magnos->getAlternatorSystem().emf);
 		
 		if(!magnos->getCoilSystem().calibrating()){
 			baseAccumulatedEMF += magnos->getCoilSystem().lastBaseAccumulatedEMF;
@@ -145,13 +148,7 @@ void EVEngine::update(float){
 	}
 	
 	
-	if(guiCounter >= 1){
-//		guiBaseEMF = baseAccumulatedEMF;
-		guiEMF = accumulatedEMF;
-		//		guiRecycledEMF = recycledEMF;
-		accumulatedEMF = 0;
-		guiCounter = 0;
-	}
+	guiEMF = accumulatedEMF;
 	
 	if (guiEMF > peakEMF){
 		if((!any_calibration) && !any_collection){

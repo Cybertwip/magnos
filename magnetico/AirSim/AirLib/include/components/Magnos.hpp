@@ -13,7 +13,7 @@ private:
 	static constexpr float B0 = 0.01;  // Example value in teslas for a standard lab magnet
 
 public:	
-	void calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::AttachedEntity& magnet);
+	float calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::AttachedEntity& magnet);
 	
 	float calculateCoilEMF(const CoilEntity::AttachedEntity& coil, float delta);
 	

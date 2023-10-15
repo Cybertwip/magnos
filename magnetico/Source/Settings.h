@@ -5,7 +5,7 @@ namespace{
 float global_delta = 16;
 float fixed_delta = 1.0f / 60.0f;
 const bool enable_lasers = true;
-const int number_of_lasers = 6;
+const int number_of_lasers = 20;
 }
 
 // Rocket parameters

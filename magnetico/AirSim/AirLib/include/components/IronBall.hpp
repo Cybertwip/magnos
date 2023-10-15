@@ -8,7 +8,6 @@ class IronBall : public MagneticBall {
 	static constexpr float M_s = 1.7e6;  // Saturation magnetization for Iron (in A/m)
 protected:
 	float get_density() const override;
-
 	
 	float get_relative_permeability() const override;
 	

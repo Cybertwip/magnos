@@ -4,7 +4,7 @@
 #include "Utils3d.h"
 #include "Laser.h"
 
-Car::Car() : acceleration(0.0f), maxSpeed(10.0f), friction(0.001f), maxSteeringAngle(15) {
+Car::Car() : acceleration(0.0f), maxSpeed(116.0f), friction(0.001f), maxSteeringAngle(15) {
 	// Create car's body, gear box, and gimbals
 	std::vector<ax::Node*> wheelsContainer;
 	
@@ -275,7 +275,7 @@ bool Car::anyLaserStatusOn(){
 
 void Car::brake(float brakePedalInput) {
 	// Calculate the braking force based on brake pedal input
-	float maxBrakeForce = 500.0f; // Adjust for realism
+	float maxBrakeForce = 50000.0f; // Adjust for realism
 	float brakingForce = maxBrakeForce * brakePedalInput;
 	
 	// Apply the braking force to decelerate the car
