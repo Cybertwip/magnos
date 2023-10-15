@@ -34,6 +34,8 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modules/CommonSetup.cmake"
 CommonSetup()
 
 add_subdirectory(AirSim/cmake/AirLib)
+add_subdirectory(AirSim/cmake/MavLinkCom)
+add_subdirectory(AirSim/cmake/rpclib_wrapper)
 
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project
     if(XCODE)
@@ -178,6 +180,8 @@ endif()
 if (NOT _AX_USE_PREBUILT)
     target_link_libraries(${APP_NAME} ${_AX_CORE_LIB})
 endif()
+
+CommonTargetLink()
 
 target_link_libraries(${APP_NAME} AirLib)
 target_link_libraries(${APP_NAME} MavLinkCom)
