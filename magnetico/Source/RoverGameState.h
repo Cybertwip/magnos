@@ -1,5 +1,6 @@
 #pragma once
 #include "GameState.h"
+#include "components/MovingAverageFilter.hpp"
 
 class Car;
 
@@ -50,5 +51,7 @@ public:
 	virtual void renderUI() override;
 
 	CREATE_FUNC(RoverGameState);
+
+	MovingAverageFilter inputAverageFilter = MovingAverageFilter(240);
 
 };

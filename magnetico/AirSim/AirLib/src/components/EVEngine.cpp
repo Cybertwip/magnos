@@ -23,6 +23,17 @@ float voltsToCurrent(float voltage, float resistance) {
 	
 	return voltage / resistance;
 }
+
+
+float currentToVolts(float current, float resistance) {
+	if (resistance <= 0.0f) {
+		std::cerr << "Error: Resistance must be greater than 0." << std::endl;
+		return 0.0f; // You can choose how to handle the error.
+	}
+	
+	return current * resistance;
+}
+
 }
 
 
@@ -61,15 +72,14 @@ void EVEngine::init(){
 	battery_ = std::make_shared<RechargeableBattery>(Settings::battery_voltage, 
 													 Settings::battery_voltage + 1, 
 													 Settings::battery_voltage + 1, 
-													 0.9f, 
+													 0.8f,
 													 0.95f);
 	
 	for(auto magnos : gimbals_){
 		magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::engine_voltage / Settings::number_of_gimbals);
 	}
 
-	
-	std::function<void(int, float)> onVoltagePeak = [this](int index, float charge){	battery_->charge(voltsToCurrent(charge, 6), Settings::global_delta / 1000.0f);
+	std::function<void(int, float)> onVoltagePeak = [this](int index, float charge){	battery_->charge(voltsToCurrent(charge, Settings::circuit_resistance) / Settings::fixed_delta, Settings::fixed_delta);
 		auto magnos = gimbals_[index];
 		
 		magnos->getCoilSystem().accumulator.discharge(charge);
@@ -83,39 +93,41 @@ void EVEngine::init(){
 void EVEngine::update(float){
 	
 	Node::update(Settings::fixed_delta);
-	
-	float totalDelta = Settings::global_delta / 1000.0f;
-	
-	float totalCurrent = 0.0f;
-	float totalPower = 0.0f;
-	float totalResistance = 0.0f;
-	
+			
 	bool anyDataCollectionMode = false;
 	for(auto magnos : gimbals_){
 		
-		magnos->update(totalDelta);
+		magnos->update(Settings::fixed_delta);
 		
-		totalCurrent += magnos->getCoilSystem().current;
+		float totalPowerDrawn = 0.0f;
 		
-		totalResistance += 1 * 6;
-		
+		totalPowerDrawn += currentToVolts(magnos->getCoilSystem().current, Settings::circuit_resistance) * Settings::fixed_delta;
+
+		battery_->discharge(voltsToCurrent(totalPowerDrawn / Settings::fixed_delta, Settings::circuit_resistance), Settings::fixed_delta);
+				
 		if(!anyDataCollectionMode){
 			anyDataCollectionMode = magnos->getCoilSystem().collecting();
 		}
-		
 	}
 	
-	battery_->discharge(totalCurrent, totalDelta);
-
 	if(accelerating_ || anyDataCollectionMode){
+		float powerDraw = 0;
 		
-		float powerDraw = (totalCurrent / (float)gimbals_.size()) * totalDelta;
+		powerDraw += Settings::engine_voltage;
 		
+		powerDraw /= Settings::number_of_gimbals;
+		
+		powerDraw *= Settings::fixed_delta;
+		
+		float totalPowerDrawn = 0.0f;
 		for(auto magnos : gimbals_){
-			auto _ = magnos->getCoilSystem().withdrawPower(powerDraw);
+			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
 		}
+		
+		battery_->discharge(voltsToCurrent(totalPowerDrawn / Settings::fixed_delta, Settings::circuit_resistance), Settings::fixed_delta);
 	}
-	float deltaTime = totalDelta;
+	
+	float deltaTime = Settings::fixed_delta;
 	static float guiCounter = 0;
 	static float guiEMF = 0;
 	static float peakEMF = 0;
@@ -236,16 +248,23 @@ float EVEngine::getBatteryVoltage() const {
 float EVEngine::accelerate(float){
 	accelerating_ = true;
 	
-	float powerDraw = (2.5f / (float)gimbals_.size()) * Settings::fixed_delta;
+	float totalDelta = Settings::global_delta / 1000.0f;
+
+	float powerDraw = 0;
 	
-	float totalPowerDrawn = 0;
+	powerDraw += Settings::engine_voltage;
+	
+	powerDraw /= Settings::number_of_gimbals;
+	
+	powerDraw *= totalDelta;
+	
+	float totalPowerDrawn = 0.0f;
 	for(auto magnos : gimbals_){
-		
 		totalPowerDrawn += magnos->getCoilSystem().testWithdrawPower(powerDraw);
+		totalPowerDrawn += currentToVolts(magnos->getCoilSystem().current, Settings::circuit_resistance);
 	}
 	
 	return totalPowerDrawn;
-
 }
 
 void EVEngine::decelerate(){

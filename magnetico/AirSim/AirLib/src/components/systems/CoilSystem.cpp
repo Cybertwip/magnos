@@ -444,16 +444,14 @@ void CoilSystem::update(float measuredEMF, float delta) {
 				if(onVoltagePeak){
 					onVoltagePeak(coil_id - 1, accumulator.getVoltage());
 				}
-
 			}
-
-
 		}
 		
 	}
 	
-	if(accumulationTime == Settings::global_delta * 60){
-		accumulationTime = 0.0f;
+//	if(accumulationTime == Settings::global_delta * 60){
+	if(true){
+//		accumulationTime = 0.0f;
 
 		if (accumulator.getVoltage() < accumulator.getCapacity() && !calibrating()){
 			float storedVoltage = filterIncrease.getCapacitorVoltage();
@@ -464,29 +462,50 @@ void CoilSystem::update(float measuredEMF, float delta) {
 			accumulator.charge(recycledConsumption);
 		} 
 
-		if(calibrating()){
-			lastBaseAccumulatedEMF = baseAccumulatedEMF;
-			lastAccumulatedEMF = accumulator.getVoltage();
-			lastRecycledEMF = recycledEMF;
+		
+		//			lastRecycledEMF = recycledEMF;
+		
+		if(accumulator.getVoltage() >= accumulator.getCapacity()){
 			
-			if(accumulator.getVoltage() >= accumulator.getCapacity() || (accumulator.getVoltage() >= accumulator.getCapacity() && calibrating())){
-				
-				if(onVoltagePeak){
-					onVoltagePeak(coil_id - 1, accumulator.getVoltage());
-				}
-				
+			lastBaseAccumulatedEMF = baseAccumulatedEMF;
+			
+			lastAccumulatedEMF = 			totalEMFAverageFilter.filter(accumulator.getVoltage());
+
+			lastAccumulatedEMF = 			filterIncrease.controlVoltage(accumulator.getVoltage());
+
+			if(onVoltagePeak){
+				onVoltagePeak(coil_id - 1, accumulator.getVoltage());
 			}
+			
+			//accumulator.discharge(accumulator.getCapacity());
 		}
+
+//		if(calibrating()){
+//			lastBaseAccumulatedEMF = baseAccumulatedEMF;
+//			lastAccumulatedEMF = accumulator.getVoltage();
+//			lastRecycledEMF = recycledEMF;
+//
+//			if(accumulator.getVoltage() >= accumulator.getCapacity() || (accumulator.getVoltage() >= accumulator.getCapacity() && calibrating())){
+//
+//				if(onVoltagePeak){
+//					onVoltagePeak(coil_id - 1, accumulator.getVoltage());
+//				}
+//
+//			}
+//		}
 		
 	} else {
 		if(!calibrating()){
 			
 			lastBaseAccumulatedEMF =
-			baseEMFAverageFilter.filter(baseAccumulatedEMF);
-			lastAccumulatedEMF = 			totalEMFAverageFilter.filter(accumulator.getVoltage());
+			filterBase.controlVoltage(baseAccumulatedEMF);
+			lastAccumulatedEMF = 			filterIncrease.controlVoltage(accumulator.getVoltage());
+			
 //			lastRecycledEMF = recycledEMF;
 			
 			if(accumulator.getVoltage() >= accumulator.getCapacity() || (accumulator.getVoltage() >= accumulator.getCapacity() && calibrating())){
+				
+				lastAccumulatedEMF = 			totalEMFAverageFilter.filter(lastAccumulatedEMF);
 				
 				if(onVoltagePeak){
 					onVoltagePeak(coil_id - 1, accumulator.getVoltage());

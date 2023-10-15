@@ -5,6 +5,8 @@
 #include "extensions/Particle3D/PU/PUParticleSystem3D.h"
 #include "extensions/Particle3D/PU/PUEmitter.h"
 
+#include "components/systems/CoilSystem.hpp"
+
 #include <iostream>
 
 
@@ -12,7 +14,7 @@
 // Constants specific to the photodetector
 const float SENSITIVITY = 0.8f;   // Sensitivity factor (adjust as needed)
 const float DARK_CURRENT = 0.03f;   // Dark current (Amps, typically very small)
-const float LOAD_RESISTANCE = 1.0f; // Load resistor value (Ohms, adjust as needed)
+const float LOAD_RESISTANCE = 6.0f; // Load resistor value (Ohms, adjust as needed)
 
 // Function to convert light frequency to voltage
 float convertLightToVoltage(float frequency, float delta_time) {
@@ -115,8 +117,8 @@ void Laser::setVoltageInput(float voltage) {
 	} else {
 		voltageInput += voltage;
 		
-		if(voltageInput >= 2.5f){
-			voltageInput = 2.5f;
+		if(voltageInput >= Settings::desired_laser_voltage){
+			voltageInput = Settings::desired_laser_voltage;
 		}
 	}
 }
@@ -132,7 +134,7 @@ void Laser::calculateLaserPower() const {
 }
 
 LaserNode::LaserNode(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput, float laserFrequency)
-: accumulatedCurrent(0.0f), accumulatedVoltage(0.0f), totalTime(1.0f), timeElapsed(0.0f), frequency(laserFrequency) {
+: accumulatedVoltage(0.0f), totalTime(1.0f), timeElapsed(0.0f), frequency(laserFrequency) {
 	laser = new Laser(apertureRadius, isConvexLens, focalLength, voltageInput);
 	
 	laser->autorelease();
@@ -194,7 +196,7 @@ void LaserNode::setVoltageInput(float voltage)
 {
 	laser->setVoltageInput(voltage);
 
-	if(getVoltageInput() >= 2.5f){
+	if(getVoltageInput() >= Settings::desired_laser_voltage){
 		if(laserLight->getState() == ax::ParticleSystem3D::State::STOP){
 			laserLight->startParticleSystem();
 		}
@@ -253,7 +255,7 @@ void LaserNode::update(float dt) {
 	
 	// Simulate the optical system and accumulate values based on delta time (dt)
 	
-	if(getVoltageInput() >= 2.5f){
+	if(getVoltageInput() >= Settings::desired_laser_voltage){
 		simulateOpticalSystem(dt);
 	}
 	

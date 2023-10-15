@@ -4,6 +4,18 @@
 #include "Utils3d.h"
 #include "Laser.h"
 
+
+namespace{
+float voltsToCurrent(float voltage, float resistance) {
+	if (resistance == 0.0f) {
+		// Avoid division by zero
+		return 0.0f;
+	}
+	
+	return voltage / resistance;
+}
+
+}
 Car::Car() : acceleration(0.0f), maxSpeed(116.0f), friction(0.001f), maxSteeringAngle(15) {
 	// Create car's body, gear box, and gimbals
 	std::vector<ax::Node*> wheelsContainer;
@@ -38,7 +50,7 @@ Car::Car() : acceleration(0.0f), maxSpeed(116.0f), friction(0.001f), maxSteering
 	engineBox->setRotation3D(ax::Vec3(0, 180, 0));
 	
 	
-	for(int i = 0; i<number_of_lasers; ++i){
+	for(int i = 0; i<Settings::number_of_lasers; ++i){
 		carBody->addChild(createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f)));
 	}
 	
@@ -219,12 +231,13 @@ void Car::steer(float angle) {
 	// Clamp the steering angle within the valid range
 	steeringAngle = std::min(std::max(angle, -maxSteeringAngle), maxSteeringAngle);
 }
-void Car::charge(float laserInput){
-//	float dispersion = laserInput / (float)lasers.size();
-	
+
+void Car::charge(float laserInput, float delta){
 	for(auto laser : lasers){
 		laser->setVoltageInput(laserInput);
 	}
+	
+	engine_->getBattery()->discharge(voltsToCurrent(laserInput, 6), delta);
 }
 
 
@@ -298,7 +311,6 @@ void Car::liftPedal(){
 	}
 	
 	engine_->decelerate();
-	
 }
 
 void Car::accelerate(float voltage) {

@@ -20,6 +20,18 @@ float currentToVoltage(float current, float resistance = 4.0f) {
 	return current * resistance;
 }
 
+float voltsToCurrent(float voltage, float resistance) {
+	if (resistance == 0.0f) {
+		// Avoid division by zero
+		return 0.0f;
+	}
+	
+	return voltage / resistance;
+}
+float mpsToKmph(float speedMps) {
+	return speedMps * 3.6;
+}
+
 
 }
 USING_NS_AX;
@@ -161,8 +173,8 @@ void RoverGameState::update(float) {
 	}
 
 	
-	if(enable_lasers){
-		float laserVoltage = 5;
+	if(Settings::enable_lasers){
+		float laserVoltage = Settings::desired_laser_voltage;
 		float powerDraw = (laserVoltage / Settings::number_of_gimbals) * totalDelta;
 		
 		float totalPowerDrawn = 0;
@@ -170,27 +182,10 @@ void RoverGameState::update(float) {
 			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
 		}
 		
-		car->charge(totalPowerDrawn);
-		
+		car->charge(totalPowerDrawn / totalDelta, totalDelta);
 	}
 	
 	car->update(totalDelta);
-	if(car->anyLaserStatusOn() && enable_lasers){
-		
-		float laserVoltage = 0;
-
-		for(auto laser : car->getLasers()){
-			laserVoltage += laser->getVoltageInput();
-		}
-		
-		float powerDraw = (laserVoltage / Settings::number_of_gimbals) * totalDelta;
-		
-		float totalPowerDrawn = 0;
-		for(auto magnos : car->getEngine()->getGimbals()){
-
-			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-		}
-	}
 	
 	if(steer){
 		car->steer(steerAngle);
@@ -210,7 +205,7 @@ void RoverGameState::update(float) {
 		car->updateMotion(totalDelta);
 	}
 	
-	if(enable_lasers){
+	if(Settings::enable_lasers){
 		for(auto laser : car->getLasers()){
 			laser->update(totalDelta);
 		}
@@ -251,18 +246,15 @@ void RoverGameState::update(float) {
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
 
-	if(enable_lasers){
+	if(Settings::enable_lasers){
 		for(auto laser : car->getLasers()){
-			float storedPower = 0;
-			float powerToStore = (laser->getAccumulatedVoltage() / (float)Settings::number_of_gimbals) * totalDelta;
-			for(auto magnos : car->getEngine()->getGimbals()){
-				storedPower += magnos->getCoilSystem().storePower(powerToStore);
-			}
+			float storedPower = laser->getAccumulatedVoltage();
 
 			if(storedPower != 0){
 				laser->dischargeAccumulatedVoltage(storedPower);
 			}
-
+			
+			car->getEngine()->getBattery()->charge(voltsToCurrent(storedPower, Settings::circuit_resistance) / Settings::fixed_delta, Settings::fixed_delta);
 		}
 
 	}
@@ -277,8 +269,6 @@ void RoverGameState::renderUI() {
 	auto status = car->getEngine()->getMagnosFeedback().status;
 
 	ImGui::Text("Status=%s", status.c_str());
-	
-
 	ImGui::Text("Coil Voltage Draw=%.4f", 1.5f);
 	ImGui::Text("Lasear Voltage Draw=%.4f", 5.0f);
 	ImGui::Text("Peak Voltage=%.4f", car->getEngine()->getMagnosFeedback().peakEMF);
@@ -321,8 +311,7 @@ void RoverGameState::renderUI() {
 		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::number_of_gimbals);
 	}
 	
-
-	ImGui::Text("Input Voltage=%.4f", laserInput + coilInput);
+	ImGui::Text("Input Voltage=%d", (int)inputAverageFilter.filter(laserInput + coilInput));
 	ImGui::Text("Base Voltage=%.4f", car->getEngine()->getMagnosFeedback().baseEMF);
 	ImGui::Text("Base + Gain Voltage=%.4f", car->getEngine()->getMagnosFeedback().EMF + laserOutput);
 	//ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF); // @TODO maximize voltage
@@ -382,7 +371,7 @@ void RoverGameState::renderUI() {
 	
 	ImGui::Text("Battery Voltage=%.2f", battery);
 	ImGui::Text("Accel m/s^2=%.2f", acceleration);
-	ImGui::Text("Speed m/s=%.2f", speed);
+	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
 	ImGui::Text("Laser v/s=%.2f", laser);
 	ImGui::End();
 	

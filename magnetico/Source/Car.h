@@ -49,7 +49,7 @@ public:
 	
 	float getAcceleration() const;
 	float getSpeed() const;
-	void charge(float amount);
+	void charge(float amountl, float delta);
 	void brake(float amount);
 	void steer(float angle); // Function to set the steering angle
 	void liftPedal();

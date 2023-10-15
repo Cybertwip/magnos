@@ -14,21 +14,27 @@ namespace Settings {
 
 	const float fixed_delta = 1.0f / 60.0f;
 
-	const float battery_voltage = 64;
+	const float battery_voltage = 500;
 
-	const int data_collection_bin_size = 1 /* kb */ * 64 * 1024 ;
+	const int data_collection_bin_size = 1 /* kb */ * 128 * 1024;
 
 	const float error_trial = 0.25f;
 
 	const float desired_base_voltage = 1.5f;
+	const float desired_laser_voltage = 5.0f;
 
-	const int number_of_gimbals = 12;
+	const int number_of_gimbals = 6;
 
 	const int data_collection_mode_cycles = (72 * 2) / number_of_gimbals;
 
-	const float engine_voltage = 800;
+	const float engine_voltage = 400;
 
 	const float desired_capacitor_voltage = 24.0f;
+
+	const float circuit_resistance = 120.0f;
+
+	const bool enable_lasers = false;
+	const int number_of_lasers = 4;
 }
 
 class CoilSystem : public CoilEntity {

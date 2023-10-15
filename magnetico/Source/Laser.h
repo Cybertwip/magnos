@@ -80,7 +80,6 @@ private:
 	Laser* laser; // Laser instance
 	ax::PUParticleSystem3D* laserLight; // PointLight for laser beam
 
-	float accumulatedCurrent;
 	float accumulatedVoltage;
 	float totalTime;  // Added member to keep track of total time
 	float timeElapsed;  // Added member to keep track of time elapsed
@@ -88,8 +87,8 @@ private:
 
 	float maxAccumulatedVoltage = 20;
 	
-	float voltagePerSecond;
-	float guiMeasure;
+	float voltagePerSecond = 0.0f;
+	float guiMeasure = 0.0f;
 	
 	std::vector<float> currentSamples;
 

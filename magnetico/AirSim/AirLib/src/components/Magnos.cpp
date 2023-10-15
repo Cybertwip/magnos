@@ -192,7 +192,7 @@ void Magnos::applyTorqueAndRotate(std::shared_ptr<Node> node, const msr::airlib:
 	float oldAngularSpeed = node->getAngularSpeed();
 	float newAngularSpeed = oldAngularSpeed + angularAcceleration * delta;
 	
-	float damping = 0.1f;
+	float damping = 0.9f;
 	newAngularSpeed *= damping;
 	node->setAngularSpeed(newAngularSpeed);
 	

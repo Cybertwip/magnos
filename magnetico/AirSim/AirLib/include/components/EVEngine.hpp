@@ -32,6 +32,10 @@ public:
 	std::vector<std::shared_ptr<Magnos>> getGimbals() const {
 		return this->gimbals_;
 	}
+	
+	std::shared_ptr<RechargeableBattery> getBattery() const {
+		return this->battery_;
+	}
 
 private:
 	std::vector<std::shared_ptr<Magnos>> gimbals_;
