@@ -245,7 +245,7 @@ float EVEngine::getBatteryVoltage() const {
 	return battery_->getVoltage();
 }
 
-float EVEngine::accelerate(float){
+float EVEngine::accelerate(float throttle){
 	accelerating_ = true;
 	
 	float totalDelta = Settings::global_delta / 1000.0f;
@@ -257,6 +257,8 @@ float EVEngine::accelerate(float){
 	powerDraw /= Settings::number_of_gimbals;
 	
 	powerDraw *= totalDelta;
+	
+	powerDraw *= throttle;
 	
 	float totalPowerDrawn = 0.0f;
 	for(auto magnos : gimbals_){

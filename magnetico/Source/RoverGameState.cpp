@@ -166,7 +166,7 @@ void RoverGameState::update(float) {
 		
 	if(accelerate || anyDataCollectionMode){
 		
-		car->accelerate(0.0f); // @TODO throttle
+		car->accelerate(0.5f); // @TODO throttle
 
 	} else {
 		car->liftPedal();

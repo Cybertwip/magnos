@@ -313,8 +313,8 @@ void Car::liftPedal(){
 	engine_->decelerate();
 }
 
-void Car::accelerate(float voltage) {
-	auto powerDrawn = engine_->accelerate(voltage);
+void Car::accelerate(float throttle) {
+	auto powerDrawn = engine_->accelerate(throttle);
 	
 	// Define Tesla car properties (example values)
 //	const float maxVoltage = 400.0f; // Maximum voltage output in volts
@@ -325,6 +325,8 @@ void Car::accelerate(float voltage) {
 	
 	// Scale the voltage input to acceleration based on Tesla car properties
 	acceleration += (powerDrawn / maxVoltage) * maxAcceleration;
+	
+	acceleration *= throttle;
 	
 	// Ensure acceleration is within the valid range
 	if (acceleration > maxAcceleration) {
