@@ -33,7 +33,7 @@ namespace Settings {
 
 	const float circuit_resistance = 120.0f;
 
-	const bool enable_lasers = false;
+	const bool enable_lasers = true;
 	const int number_of_lasers = 4;
 }
 

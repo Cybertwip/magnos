@@ -88,7 +88,7 @@ void EVEngine::init(){
 	}
 	
 	for(int i = 0; i<Settings::number_of_lasers; ++i){
-		lasers_.push_back(std::make_shared<Laser>(0.02f, true, 0.1f, 0.0f, 40));
+		lasers_.push_back(std::make_shared<Laser>(0.02f, true, 0.1f, 0.0f, 5000));
 	}
 
 }
