@@ -66,7 +66,6 @@ bool RoverGameState::init() {
 	this->addChild(planeRenderer);
 	
 	return true;
-	
 }
 
 void RoverGameState::setup(ax::Camera* defaultCamera){

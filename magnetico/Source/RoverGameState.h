@@ -83,6 +83,4 @@ public:
 	
 	// Create a ChronoENGINE physical system
 	ChSystemNSC sys;
-
-
 };
