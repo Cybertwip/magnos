@@ -4,6 +4,7 @@
 
 #include "common/Common.hpp"
 
+class Laser;
 class Magnos;
 class RechargeableBattery;
 
@@ -32,17 +33,20 @@ public:
 	std::vector<std::shared_ptr<Magnos>> getGimbals() const {
 		return this->gimbals_;
 	}
-	
+
+	std::vector<std::shared_ptr<Laser>> getLasers() const {
+		return this->lasers_;
+	}
+
 	std::shared_ptr<RechargeableBattery> getBattery() const {
 		return this->battery_;
 	}
 
 private:
 	std::vector<std::shared_ptr<Magnos>> gimbals_;
+	std::vector<std::shared_ptr<Laser>> lasers_;
 	std::shared_ptr<RechargeableBattery> battery_;
-
 	bool accelerating_;
-
 	EVFeedback feedback_;
 };
 

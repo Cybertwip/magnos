@@ -1,6 +1,7 @@
 #include "components/EVEngine.hpp"
 #include "components/Magnos.hpp"
 #include "components/Battery.hpp"
+#include "components/Laser.hpp"
 
 namespace {
 std::shared_ptr<Magnos> createGimbal(int id, std::shared_ptr<Node> parent, msr::airlib::Vector3r position){
@@ -13,8 +14,6 @@ std::shared_ptr<Magnos> createGimbal(int id, std::shared_ptr<Node> parent, msr::
 	return gimbal;
 }
 
-
-
 float voltsToCurrent(float voltage, float resistance) {
 	if (resistance == 0.0f) {
 		// Avoid division by zero
@@ -23,7 +22,6 @@ float voltsToCurrent(float voltage, float resistance) {
 	
 	return voltage / resistance;
 }
-
 
 float currentToVolts(float current, float resistance) {
 	if (resistance <= 0.0f) {
@@ -88,12 +86,41 @@ void EVEngine::init(){
 	for(auto magnos : gimbals_){
 		magnos->getCoilSystem().setOnVoltagePeakCallback(onVoltagePeak);
 	}
+	
+	for(int i = 0; i<Settings::number_of_lasers; ++i){
+		lasers_.push_back(std::make_shared<Laser>(0.02f, true, 0.1f, 0.0f, 40));
+	}
+
 }
 
 void EVEngine::update(float){
 	
 	Node::update(Settings::fixed_delta);
+	
+	if(Settings::enable_lasers){
+		for(auto laser : lasers_){
+			laser->update(Settings::fixed_delta);
+		}
+	}
 			
+	if(Settings::enable_lasers){
+		float laserVoltage = Settings::desired_laser_voltage;
+		float powerDraw = (laserVoltage / Settings::number_of_gimbals) * Settings::fixed_delta;
+		
+		float totalPowerDrawn = 0;
+		for(auto magnos : gimbals_){
+			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
+		}
+			
+		float laserInput = totalPowerDrawn / Settings::fixed_delta;
+		
+		for(auto laser : lasers_){
+			laser->setVoltageInput(laserInput);
+		}
+		
+		battery_->discharge(voltsToCurrent(laserInput, 6), Settings::fixed_delta);
+	}
+	
 	bool anyDataCollectionMode = false;
 	for(auto magnos : gimbals_){
 		
@@ -197,48 +224,19 @@ void EVEngine::update(float){
 
 	feedback_.baseEMF = baseAccumulatedEMF;
 	feedback_.EMF = accumulatedEMF;
-
-	// if(car->anyLaserStatusOn() && enable_lasers){
-		
-	// 	float laserVoltage = 0;
-		
-	// 	for(auto laser : car->getLasers()){
-	// 		laserVoltage += laser->getVoltageInput();
-	// 	}
-		
-	// 	float powerDraw = (laserVoltage / (float)gimbals.size()) * totalDelta;
-		
-	// 	float totalPowerDrawn = 0;
-	// 	for(auto gimbal : gimbals){
-	// 		auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-			
-	// 		totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-	// 	}
-	// }
 	
-	
-	// if(enable_lasers){
-	// 	for(auto laser : car->getLasers()){
-	// 		laser->update(totalDelta);
-	// 	}
-	// }
-	
-	// if(enable_lasers){
-	// 	for(auto laser : car->getLasers()){
-	// 		float storedPower = 0;
-	// 		float powerToStore = (laser->getAccumulatedVoltage() / (float)gimbals.size()) * totalDelta;
-	// 		for(auto gimbal : gimbals){
-	// 			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-	// 			storedPower += magnos->getCoilSystem().storePower(powerToStore);
-	// 		}
+	if(Settings::enable_lasers){
+		for(auto laser : lasers_){
+			float storedPower = laser->getAccumulatedVoltage();
 			
-	// 		if(storedPower != 0){
-	// 			laser->dischargeAccumulatedVoltage(storedPower);
-	// 		}
+			if(storedPower != 0){
+				laser->dischargeAccumulatedVoltage(storedPower);
+			}
 			
-	// 	}
+			battery_->charge(voltsToCurrent(storedPower, Settings::circuit_resistance) / Settings::fixed_delta, Settings::fixed_delta);
+		}
 		
-	// }
+	}
 }
 
 float EVEngine::getBatteryVoltage() const {

@@ -2,9 +2,9 @@
 
 #include "components/Magnos.hpp"
 #include "components/EVEngine.hpp"
+#include "components/Laser.hpp"
 #include "Car.h"
 #include "Utils3d.h"
-#include "Laser.h"
 
 #include "ImGui/ImGuiPresenter.h"
 #include "imgui/imgui_internal.h"
@@ -170,19 +170,6 @@ void RoverGameState::update(float) {
 	} else {
 		car->liftPedal();
 	}
-
-	
-	if(Settings::enable_lasers){
-		float laserVoltage = Settings::desired_laser_voltage;
-		float powerDraw = (laserVoltage / Settings::number_of_gimbals) * totalDelta;
-		
-		float totalPowerDrawn = 0;
-		for(auto magnos : car->getEngine()->getGimbals()){
-			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
-		}
-		
-		car->charge(totalPowerDrawn / totalDelta, totalDelta);
-	}
 	
 	car->update(totalDelta);
 	
@@ -203,13 +190,7 @@ void RoverGameState::update(float) {
 	if(!anyDataCollectionMode){
 		car->updateMotion(totalDelta);
 	}
-	
-	if(Settings::enable_lasers){
-		for(auto laser : car->getLasers()){
-			laser->update(totalDelta);
-		}
-	}
-	
+		
 	// Get the car's position
 	Vec3 carPosition = car->getPosition3D();
 	
@@ -244,19 +225,6 @@ void RoverGameState::update(float) {
 	
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
-
-	if(Settings::enable_lasers){
-		for(auto laser : car->getLasers()){
-			float storedPower = laser->getAccumulatedVoltage();
-
-			if(storedPower != 0){
-				laser->dischargeAccumulatedVoltage(storedPower);
-			}
-			
-			car->getEngine()->getBattery()->charge(voltsToCurrent(storedPower, Settings::circuit_resistance) / Settings::fixed_delta, Settings::fixed_delta);
-		}
-
-	}
 	
 }
 
@@ -300,7 +268,7 @@ void RoverGameState::renderUI() {
 	
 	float laserOutput = 0;
 	float laserInput = 0;
-	for(auto laserNode : car->getLasers()){
+	for(auto laserNode : car->getEngine()->getLasers()){
 		laserOutput += laserNode->getGuiMeasure();
 		laserInput += laserNode->getVoltageInput();
 	}
@@ -363,7 +331,7 @@ void RoverGameState::renderUI() {
 		acceleration = car->getAcceleration();
 		speed = car->getSpeed();
 		laser = 0;
-		for(auto laserNode : car->getLasers()){
+		for(auto laserNode : car->getEngine()->getLasers()){
 			laser += laserNode->getGuiMeasure();
 		}
 	}

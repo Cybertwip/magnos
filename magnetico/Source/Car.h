@@ -20,8 +20,7 @@ private:
 	ax::Node* rearLeftWheel;
 	ax::Node* rearRightWheel;
 	ax::Node* rearSuspension;
-	std::vector<LaserNode*> lasers;
-
+	
 	// Member variables for acceleration and friction
 	float acceleration;
 	float maxSpeed;
@@ -43,9 +42,6 @@ public:
 	virtual ~Car();
 	
 	bool anyLaserStatusOn();
-	ax::Node* createLaserSystem(ax::Vec3 position);
-
-	std::vector<LaserNode*> getLasers() const;
 	
 	float getAcceleration() const;
 	float getSpeed() const;

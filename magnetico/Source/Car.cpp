@@ -1,21 +1,9 @@
 #include "Car.h"
 #include "components/Magnos.hpp"
 #include "components/EVEngine.hpp"
+#include "components/Laser.hpp"
 #include "Utils3d.h"
-#include "Laser.h"
 
-
-namespace{
-float voltsToCurrent(float voltage, float resistance) {
-	if (resistance == 0.0f) {
-		// Avoid division by zero
-		return 0.0f;
-	}
-	
-	return voltage / resistance;
-}
-
-}
 Car::Car() : acceleration(0.0f), maxSpeed(116.0f), friction(0.001f), maxSteeringAngle(15) {
 	// Create car's body, gear box, and gimbals
 	std::vector<ax::Node*> wheelsContainer;
@@ -48,11 +36,6 @@ Car::Car() : acceleration(0.0f), maxSpeed(116.0f), friction(0.001f), maxSteering
 	// Create and position gimbals
 	engineBox->setPosition3D(ax::Vec3(0.65f, 0, 0));
 	engineBox->setRotation3D(ax::Vec3(0, 180, 0));
-	
-	
-	for(int i = 0; i<Settings::number_of_lasers; ++i){
-		carBody->addChild(createLaserSystem(ax::Vec3(-0.2f, 0.0f, 0.0f)));
-	}
 	
 	carBody->addChild(engineBox);
 	
@@ -183,38 +166,6 @@ void Car::update(float dt){
 	engine_->update(dt);
 }
 
-ax::Node* Car::createLaserSystem(ax::Vec3 position){
-	
-	// Create a LaserNode instance
-	auto laserNode = LaserNode::create(0.02f, true, 0.1f, 0.0f, 40); // Set your laser parameters
-	
-	// Set the position and add the LaserNode to the scene
-	laserNode->setPosition3D(position); // Adjust the position as needed
-	
-	lasers.push_back(laserNode);
-	
-	auto laserEmitter = createCube(0.1f);
-	auto laserReceiver = createCube(0.1f);
-	auto laserSystem = ax::Node::create();
-	
-	auto emitter = ax::MeshRenderer::create();
-	auto receiver = ax::MeshRenderer::create();
-	emitter->addMesh(laserEmitter);
-	receiver->addMesh(laserReceiver);
-	emitter->setPosition3D(ax::Vec3(engineBox->getPositionX() - 0.2f, 0, 0));
-	receiver->setPosition3D(ax::Vec3(emitter->getPositionX() - 1.5f, 0, 0));
-	emitter->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-	receiver->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-	emitter->setTexture("black.jpg");
-	receiver->setTexture("black.jpg");
-	
-	emitter->addChild(laserNode);
-	laserSystem->addChild(emitter);
-	laserSystem->addChild(receiver);
-	
-	return laserSystem;
-}
-
 float Car::getSpeed() const{
 	return speed;
 }
@@ -223,23 +174,10 @@ float Car::getAcceleration() const{
 	return acceleration;
 }
 
-std::vector<LaserNode*> Car::getLasers() const {
-	return lasers;
-}
-
 void Car::steer(float angle) {
 	// Clamp the steering angle within the valid range
 	steeringAngle = std::min(std::max(angle, -maxSteeringAngle), maxSteeringAngle);
 }
-
-void Car::charge(float laserInput, float delta){
-	for(auto laser : lasers){
-		laser->setVoltageInput(laserInput);
-	}
-	
-	engine_->getBattery()->discharge(voltsToCurrent(laserInput, 6), delta);
-}
-
 
 bool Car::isCalibrating(){
 	bool calibrating = false;
@@ -275,7 +213,7 @@ bool Car::isCollecting(){
 bool Car::anyLaserStatusOn(){
 	bool lasersOn = false;
 	
-	for(auto laser : lasers){
+	for(auto laser : engine_->getLasers()){
 		lasersOn = laser->getVoltageInput() == 2.5f;
 		
 		if(lasersOn){

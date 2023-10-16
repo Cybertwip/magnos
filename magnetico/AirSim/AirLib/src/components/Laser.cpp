@@ -1,13 +1,6 @@
 
-#include "Laser.h"
-#include "Utils3d.h"
-
-#include "extensions/Particle3D/PU/PUParticleSystem3D.h"
-#include "extensions/Particle3D/PU/PUEmitter.h"
-
+#include "components/Laser.hpp"
 #include "components/systems/CoilSystem.hpp"
-
-#include <iostream>
 
 
 // Photonic Oscillator
@@ -73,20 +66,21 @@ float currentToVoltage(float current, float resistance = 4.0f) {
 }
 
 // Constructor to initialize the Laser object
-Laser::Laser(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput) {
+Laser::Laser(float apertureRadius, float isConvexLens, float focalLength, float voltageInput, float frequency) {
 	this->apertureRadius = apertureRadius;
 	this->isConvexLens = isConvexLens;
 	this->focalLength = focalLength;
 	this->voltageInput = voltageInput;
+	this->frequency = frequency;
 }
 
 // Set the aperture radius
-void Laser::setApertureRadius(double radius) {
+void Laser::setApertureRadius(float radius) {
 	apertureRadius = radius;
 }
 
 // Get the aperture radius
-double Laser::getApertureRadius() const {
+float Laser::getApertureRadius() const {
 	return apertureRadius;
 }
 
@@ -101,12 +95,12 @@ bool Laser::isConvex() const {
 }
 
 // Set the focal length of the lens
-void Laser::setFocalLength(double length) {
+void Laser::setFocalLength(float length) {
 	focalLength = length;
 }
 
 // Get the focal length of the lens
-double Laser::getFocalLength() const {
+float Laser::getFocalLength() const {
 	return focalLength;
 }
 
@@ -132,124 +126,7 @@ float Laser::getVoltageInput() const {
 void Laser::calculateLaserPower() const {
 	// Simplified power calculation (not accounting for real-world optics)
 }
-
-LaserNode::LaserNode(double apertureRadius, bool isConvexLens, double focalLength, double voltageInput, float laserFrequency)
-: accumulatedVoltage(0.0f), totalTime(1.0f), timeElapsed(0.0f), frequency(laserFrequency) {
-	laser = new Laser(apertureRadius, isConvexLens, focalLength, voltageInput);
-	
-	laser->autorelease();
-		
-	addChild(laser);
-	
-	// Initialize the laser light (PointLight)
-	createLaserLight();
-	updateLaserLightColor();
-}
-
-LaserNode::~LaserNode()
-{
-}
-
-LaserNode* LaserNode::create(double apertureRadius, bool isConvexLens, float focalLength, float voltageInput, float frequency)
-{
-	auto node = new LaserNode(apertureRadius, isConvexLens, focalLength, voltageInput, frequency);
-	if (node && node->init())
-	{
-		node->autorelease();
-		return node;
-	}
-	AX_SAFE_DELETE(node);
-	return nullptr;
-}
-
-void LaserNode::setApertureRadius(double radius)
-{
-	laser->setApertureRadius(radius);
-}
-
-double LaserNode::getApertureRadius() const
-{
-	return laser->getApertureRadius();
-}
-
-void LaserNode::setLensType(bool convex)
-{
-	laser->setLensType(convex);
-}
-
-bool LaserNode::isConvex() const
-{
-	return laser->isConvex();
-}
-
-void LaserNode::setFocalLength(double length)
-{
-	laser->setFocalLength(length);
-}
-
-double LaserNode::getFocalLength() const
-{
-	return laser->getFocalLength();
-}
-
-void LaserNode::setVoltageInput(float voltage)
-{
-	laser->setVoltageInput(voltage);
-
-	if(getVoltageInput() >= Settings::desired_laser_voltage){
-		if(laserLight->getState() == ax::ParticleSystem3D::State::STOP){
-			laserLight->startParticleSystem();
-		}
-	} else {
-		if(laserLight->getState() == ax::ParticleSystem3D::State::RUNNING){
-			laserLight->stopParticleSystem();
-		}
-	}
-	// Update the laser light's color based on the voltage
-	//updateLaserLightColor();
-}
-
-float LaserNode::getVoltageInput() const
-{
-	return laser->getVoltageInput();
-}
-
-void LaserNode::calculateLaserPower()
-{
-	laser->calculateLaserPower();
-}
-
-void LaserNode::createLaserLight()
-{
-	auto ps =
-	ax::PUParticleSystem3D::create("scripts/electricBeamSystem.pu");
-	//ps->startParticleSystem();
-	
-	ps->stopParticleSystem();
-	
-	ps->setOpacity(50);
-
-	ps->setRotation3D(ax::Vec3(0, 0, -90));
-	this->addChild(ps);
-
-	laserLight = ps;
-	
-}
-
-void LaserNode::updateLaserLightColor()
-{
-	auto laserColor = ax::Color3B(255, 0, 0); // Default color (red)
-	double voltage = laser->getVoltageInput();
-	if (voltage > 2.0) {
-		// Increase the green component to make it yellow for higher voltage
-		laserColor.g = static_cast<GLubyte>((voltage - 2.0) * 255.0);
-	}
-	
-	laserLight->setColor(laserColor); // Set the laser light's color
-}
-
-
-void LaserNode::update(float dt) {
+void Laser::update(float dt) {
 	// Update the laser light's color based on the amplified voltage
 	//updateLaserLightColor();
 	
@@ -271,7 +148,8 @@ void LaserNode::update(float dt) {
 		voltagePerSecond = 0;
 	}
 }
-void LaserNode::simulateOpticalSystem(float dt) {
+
+void Laser::simulateOpticalSystem(float dt) {
  	// Apply photodetector
 	float currentSample = convertLightToVoltage(frequency, dt);
 	
@@ -285,11 +163,11 @@ void LaserNode::simulateOpticalSystem(float dt) {
 	
 }
 
-float LaserNode::getAccumulatedVoltage() const {
+float Laser::getAccumulatedVoltage() const {
 	return accumulatedVoltage;
 }
 
-void LaserNode::dischargeAccumulatedVoltage(float dischargeAmount) {
+void Laser::dischargeAccumulatedVoltage(float dischargeAmount) {
 	accumulatedVoltage -= dischargeAmount;
 	
 	// Ensure accumulatedVoltage doesn't go below zero
@@ -298,6 +176,6 @@ void LaserNode::dischargeAccumulatedVoltage(float dischargeAmount) {
 	}
 }
 
-float LaserNode::getGuiMeasure() const {
+float Laser::getGuiMeasure() const {
 	return guiMeasure;
 }
