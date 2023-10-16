@@ -25,12 +25,16 @@
 
 cmake_minimum_required(VERSION 3.10)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(AIRLIB_CXX_STD ${CMAKE_CXX_STANDARD} CACHE STRING "AIRLIB_CXX_STD")
+set(AIRSIM_ROOT ${CMAKE_CURRENT_LIST_DIR}/AirSim CACHE STRING "AIRSIM_ROOT")
+
 set(APP_NAME magnetico)
 
 project(${APP_NAME})
-
-set(AIRSIM_ROOT ${CMAKE_CURRENT_LIST_DIR}/AirSim CACHE STRING "AIRSIM_ROOT")
-set(CHRONO_ROOT ${CMAKE_CURRENT_LIST_DIR}/chrono CACHE STRING "CHRONO_ROOT")
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modules") 
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modules/CommonSetup.cmake")
@@ -39,7 +43,8 @@ CommonSetup()
 add_subdirectory(AirSim/cmake/AirLib)
 add_subdirectory(AirSim/cmake/MavLinkCom)
 add_subdirectory(AirSim/cmake/rpclib_wrapper)
-add_subdirectory(chrono)
+
+find_package (Chrono)
 
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project
     if(XCODE)

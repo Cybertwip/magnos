@@ -4,10 +4,6 @@ project(GazeboDrone)
 
 set(AIRSIM_ROOT ..)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 11)
-endif()
-
 find_package(gazebo REQUIRED)
 
 include_directories(

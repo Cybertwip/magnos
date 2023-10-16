@@ -29,12 +29,8 @@
 
 #include "ImGui/ImGuiPresenter.h"
 
-
-
-
 USING_NS_AX;
 USING_NS_AX_EXT;
-
 
 // Print useful error message instead of segfaulting when files are not there.
 static void problemLoading(const char* filename)
