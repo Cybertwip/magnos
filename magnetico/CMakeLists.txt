@@ -29,6 +29,9 @@ set(APP_NAME magnetico)
 
 project(${APP_NAME})
 
+set(AIRSIM_ROOT ${CMAKE_CURRENT_LIST_DIR}/AirSim CACHE STRING "AIRSIM_ROOT")
+set(CHRONO_ROOT ${CMAKE_CURRENT_LIST_DIR}/chrono CACHE STRING "CHRONO_ROOT")
+
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modules") 
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modules/CommonSetup.cmake")
 CommonSetup()
@@ -36,6 +39,7 @@ CommonSetup()
 add_subdirectory(AirSim/cmake/AirLib)
 add_subdirectory(AirSim/cmake/MavLinkCom)
 add_subdirectory(AirSim/cmake/rpclib_wrapper)
+add_subdirectory(chrono)
 
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project
     if(XCODE)
@@ -187,6 +191,8 @@ target_link_libraries(${APP_NAME} AirLib)
 target_link_libraries(${APP_NAME} MavLinkCom)
 target_link_libraries(${APP_NAME} ${RPC_LIB})
 
+target_link_libraries(${APP_NAME} ChronoEngine ChronoEngine_vehicle ChronoModels_robot)
+
 #set(_geant4_lib_use_suffix -static)
 #set(Geant4_LIBRARIES
 # Geant4::G4Tree${_geant4_lib_use_suffix}
@@ -211,13 +217,13 @@ target_include_directories(${APP_NAME} PRIVATE ${GAME_INC_DIRS})
 
 
 target_include_directories(${APP_NAME} PRIVATE
+  ${CHRONO_ROOT}/src
   ${AIRSIM_ROOT}/AirLib/
   ${AIRSIM_ROOT}/AirLib/include
   ${AIRSIM_ROOT}/MavLinkCom/include
   ${AIRSIM_ROOT}/AirLib/deps/eigen3
   ${RPC_LIB_INCLUDES}
 )
-
 
 # mark app resources, resource will be copy auto after mark
 ax_setup_app_config(${APP_NAME})

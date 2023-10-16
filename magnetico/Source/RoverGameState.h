@@ -2,6 +2,33 @@
 #include "GameState.h"
 #include "components/MovingAverageFilter.hpp"
 
+#include "chrono_models/robot/curiosity/Curiosity.h"
+#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChBodyEasy.h"
+#include "chrono/assets/ChTexture.h"
+
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/utils/ChUtilsGeometry.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/assets/ChBoxShape.h"
+
+#ifdef CHRONO_POSTPROCESS
+#include "chrono_postprocess/ChGnuPlot.h"
+#endif
+
+#include "chrono/assets/ChVisualSystem.h"
+#ifdef CHRONO_IRRLICHT
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+using namespace chrono::irrlicht;
+#endif
+#ifdef CHRONO_VSG
+#include "chrono_vsg/ChVisualSystemVSG.h"
+using namespace chrono::vsg3d;
+#endif
+
+using namespace chrono;
+using namespace chrono::curiosity;
+
 class Car;
 
 class RoverGameState : public GameState {
@@ -53,5 +80,9 @@ public:
 	CREATE_FUNC(RoverGameState);
 
 	MovingAverageFilter inputAverageFilter = MovingAverageFilter(240);
+	
+	// Create a ChronoENGINE physical system
+	ChSystemNSC sys;
+
 
 };

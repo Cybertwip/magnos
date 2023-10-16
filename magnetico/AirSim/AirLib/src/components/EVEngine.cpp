@@ -44,29 +44,6 @@ void EVEngine::init(){
 	for(int i = 0; i<Settings::number_of_gimbals; ++i){
 		gimbals_.push_back(createGimbal(i + 1, shared_from_this(), msr::airlib::Vector3r(0, 0, 0)));
 	}
-	
-//	gimbals_.push_back(createGimbal(1, shared_from_this(), msr::airlib::Vector3r(-0.25, 0, 0)));
-//
-//	if(Settings::number_of_gimbals > 1){
-//		gimbals_.push_back(createGimbal(2, shared_from_this(), msr::airlib::Vector3r(0.25, 0, 0)));
-//	}
-//
-//	if(Settings::number_of_gimbals > 2){
-//		gimbals_.push_back(createGimbal(3, shared_from_this(), msr::airlib::Vector3r(0, 0, -0.25)));
-//	}
-//
-//	if(Settings::number_of_gimbals > 3){
-//		gimbals_.push_back(createGimbal(4, shared_from_this(), msr::airlib::Vector3r(0, 0, 0.25)));
-//	}
-//
-//	if(Settings::number_of_gimbals > 4){
-//		gimbals_.push_back(createGimbal(5, shared_from_this(), msr::airlib::Vector3r(0, 0.25f, 0)));
-//	}
-//
-//	if(Settings::number_of_gimbals > 5){
-//		gimbals_.push_back(createGimbal(6, shared_from_this(), msr::airlib::Vector3r(0, -0.25f, 0)));
-//	}
-//
 	battery_ = std::make_shared<RechargeableBattery>(Settings::battery_voltage, 
 													 Settings::battery_voltage + 1, 
 													 Settings::battery_voltage + 1, 
@@ -90,7 +67,6 @@ void EVEngine::init(){
 	for(int i = 0; i<Settings::number_of_lasers; ++i){
 		lasers_.push_back(std::make_shared<Laser>(0.02f, true, 0.1f, 0.0f, 5000));
 	}
-
 }
 
 void EVEngine::update(float){
