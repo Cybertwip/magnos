@@ -2,6 +2,8 @@
 #include "Physics.h"
 #include "Settings.h"
 
+#include "components/systems/CoilSystem.hpp"
+
 RigidBody::RigidBody(float mass, ax::Vec3 position, ax::Vec3 velocity, ax::Vec3 acceleration, float restitution, float friction) :
 _mass(mass),
 _position(position),
@@ -39,7 +41,7 @@ ax::Vec3 RigidBody::getPosition() const {
 }
 
 ax::Vec3 RigidBody::getVelocity() const {
-	return (_position - _lastPosition) / global_delta;
+	return (_position - _lastPosition) / Settings::global_delta;
 }
 
 ax::Vec3 RigidBody::getAcceleration() const {

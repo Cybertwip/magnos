@@ -93,8 +93,8 @@ void CoilSystem::setOnVoltagePeakCallback(std::function<void(int, float)> onVolt
 }
 
 void CoilSystem::resetAccumulators(){
-	accumulationTime = 0.0f;
-	accumulator = Capacitor(designedEMFPerSecond); // @TODO make it fixed
+	accumulationTime = 0;
+	accumulator.discharge(accumulator.getVoltage()); // @TODO make it fixed
 	baseAccumulatedEMF = 0;
 	lastBaseAccumulatedEMF = 0;
 	lastAccumulatedEMF = 0;
@@ -300,16 +300,16 @@ void CoilSystem::scheduleCollection(){
 
 void CoilSystem::adjustCurrentBasedOn(float) {
     // Calculate desired current based on EMF error and resistance
-    float emfError = accumulator.getCapacity() - accumulator.getVoltage();
+    float emfError = 1.0f - (accumulator.getVoltage() / accumulator.getCapacity());
     
     // Compute error for the PID
-    float desiredCurrent = emfError / totalResistance;
+    float desiredCurrent = (emfError * accumulator.getCapacity())  / totalResistance;
 	
     float currentAdjustment = 0;
 
-	float fixedDelta = (timeNow - timePrev) / 1000.0f;
+	float fixedDelta = Settings::fixed_delta;
 	
-    if(pidCurrent.calibrate(emfError / accumulator.getCapacity(), desiredCurrent, fixedDelta, timeNow)){
+    if(pidCurrent.calibrate(emfError, desiredCurrent, fixedDelta, timeNow)){
                                 
         currentAdjustment = pidCurrent.getRelayState() ? 0 : maxCurrent;
         
@@ -323,12 +323,11 @@ void CoilSystem::adjustCurrentBasedOn(float) {
             calibration = false;
 			data_collection_mode = false;
 			
+			this->resetAccumulators();
+
 			if(!hasML || schedule_data_collection_mode){
 				schedule_data_collection_mode = false;
 				data_collection_mode = true;
-			
-				this->resetAccumulators();
-
 			}
 			
 			
@@ -338,7 +337,6 @@ void CoilSystem::adjustCurrentBasedOn(float) {
 
         }
 		
-        
         if(hasML && !data_collection_mode){
             // Check if conditions are met to retrain
             if(fabs(emfError) > Settings::error_trial && !schedule_data_collection_mode) {
@@ -388,9 +386,11 @@ void CoilSystem::update(float measuredEMF, float delta) {
 	}
 	
 	timePrev = timeNow;
-	timeNow += delta;
+	timeNow += Settings::global_delta;
+	
+	accumulationTime += Settings::global_delta;
 
-	if((accumulator.getVoltage() != accumulator.getCapacity() && !calibrating()) || (calibrating() && accumulationTime >= Settings::global_delta * 60)){
+	if((accumulator.getVoltage() != accumulator.getCapacity() && !calibrating()) || (calibrating() && accumulationTime % 1000 == 0)){
 		if(!data_collection_mode){
 			adjustCurrentBasedOn(accumulationTime);
 		}
@@ -399,16 +399,18 @@ void CoilSystem::update(float measuredEMF, float delta) {
 	if(data_collection_mode && !calibrating()){
 		
 		// Calculate desired current based on EMF error and resistance
-		float emfError = accumulator.getCapacity() - accumulator.getVoltage();
+		float emfError = 1.0f - (accumulator.getVoltage() / accumulator.getCapacity());
 		
+		// Compute error for the PID
+
 		if(emfError != 0.0f){
 			
 			// Compute error for the PID
-			float desiredCurrent = emfError / totalResistance;
-			
+			float desiredCurrent = (emfError * accumulator.getCapacity())  / totalResistance;
+
 			float currentAdjustment = 0;
 			
-			float fixedDelta = (timeNow - timePrev) / 1000.0f;
+			float fixedDelta = Settings::fixed_delta;
 			
 			currentAdjustment = pidCurrent.compute(desiredCurrent, fixedDelta);
 			
@@ -449,10 +451,7 @@ void CoilSystem::update(float measuredEMF, float delta) {
 		
 	}
 	
-//	if(accumulationTime == Settings::global_delta * 60){
 	if(true){
-//		accumulationTime = 0.0f;
-
 		if (accumulator.getVoltage() < accumulator.getCapacity() && !calibrating()){
 			float storedVoltage = filterIncrease.getCapacitorVoltage();
 			

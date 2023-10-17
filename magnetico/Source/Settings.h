@@ -1,10 +1,6 @@
 #pragma once
 #include <cmath>
 
-namespace{
-float global_delta = 16;
-float fixed_delta = 1.0f / 60.0f;
-}
 
 // Rocket parameters
 namespace {

@@ -26,6 +26,8 @@
 #include "AppDelegate.h"
 #include "HelloWorldScene.h"
 
+#include "components/systems/CoilSystem.hpp"
+
 #define USE_AUDIO_ENGINE 1
 
 #if USE_AUDIO_ENGINE
@@ -66,7 +68,7 @@ bool AppDelegate::applicationDidFinishLaunching()
 	
     // initialize director
 	Configuration::getInstance()->setValue("axmol.gl.projection", Value("3d"));
-	Configuration::getInstance()->setValue("axmol.fps", Value(60));
+	Configuration::getInstance()->setValue("axmol.fps", Value(Settings::fps));
     auto director = Director::getInstance();
 	director->setDefaultValues();
 	

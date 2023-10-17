@@ -130,13 +130,9 @@ void EVEngine::update(float){
 		battery_->discharge(voltsToCurrent(totalPowerDrawn / Settings::fixed_delta, Settings::circuit_resistance), Settings::fixed_delta);
 	}
 	
-	float deltaTime = Settings::fixed_delta;
-	static float guiCounter = 0;
 	static float guiEMF = 0;
 	static float peakEMF = 0;
-	
-	guiCounter += deltaTime;
-	
+		
 	float baseAccumulatedEMF = 0;
 	float accumulatedEMF = 0;
 	
@@ -175,7 +171,6 @@ void EVEngine::update(float){
 	}
 	
 	if(any_calibration || any_collection){
-		guiCounter = 0;
 		guiEMF = 0;
 		peakEMF = 0;
 		accumulatedEMF = 0;
@@ -222,7 +217,7 @@ float EVEngine::getBatteryVoltage() const {
 float EVEngine::accelerate(float throttle){
 	accelerating_ = true;
 	
-	float totalDelta = Settings::global_delta / 1000.0f;
+	float totalDelta = Settings::fixed_delta;
 
 	float powerDraw = 0;
 	

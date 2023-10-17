@@ -10,9 +10,10 @@ namespace mlpack{
 }
 
 namespace Settings {
-	const float global_delta = 1.0f / 420.0f * 1000;
-
-	const float fixed_delta = 1.0f / 420.0f;
+	const float fps = 480;
+	const float fixed_update = 480;
+	const long global_delta = 1.0f / fixed_update * 1000;
+	const float fixed_delta = 1.0f / fixed_update;
 
 	const float battery_voltage = 500;
 
@@ -29,11 +30,11 @@ namespace Settings {
 
 	const float engine_voltage = 400;
 
-	const float desired_capacitor_voltage = 24.0f;
+	const float desired_capacitor_voltage = 1.5f;
 
 	const float circuit_resistance = 120.0f;
 
-	const bool enable_lasers = true;
+	const bool enable_lasers = false;
 	const int number_of_lasers = 4;
 }
 
@@ -110,9 +111,9 @@ private:
 	bool calibration = true;
 
 	const int numberOfCoils = 6;
-	const float totalResistance = coilResistance * numberOfCoils;
+	const float totalResistance = Settings::circuit_resistance;
 	float baseAccumulatedEMF = 0.0f;
-	float accumulationTime = 0.0f;
+	long long accumulationTime = 0;
 	float recycledEMF = 0;
 	
 

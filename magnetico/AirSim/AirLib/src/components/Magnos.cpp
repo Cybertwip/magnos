@@ -149,7 +149,7 @@ void Magnos::update(float) {
 		// Compute total induced EMF in the alternator
 		alternator.emf = totalEMF;
 		
-		outerCoilSystem->update(alternator.emf, Settings::global_delta);
+		outerCoilSystem->update(alternator.emf, Settings::fixed_delta);
 		
 		updates++;
 	} while(updates < cycles_per_collection);

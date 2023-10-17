@@ -159,7 +159,7 @@ void BasicCarGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 }
 
 void BasicCarGameState::update(float) {
-	float totalDelta = global_delta / 1000.0f;
+	float totalDelta = Settings::fixed_delta;
 	
 	bool anyDataCollectionMode = car->isCollecting();
 		
@@ -275,10 +275,10 @@ void BasicCarGameState::renderUI() {
 
 	float coilInput = 0;
 	for(auto magnos : car->getEngine()->getGimbals()){
-		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::number_of_gimbals);
+		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::circuit_resistance);
 	}
 	
-	ImGui::Text("Input Voltage=%d", (int)inputAverageFilter.filter(laserInput + coilInput));
+	ImGui::Text("Input Voltage=%.2f",  car->isCalibrating() ? 0 : inputAverageFilter.filter(laserInput + coilInput));
 	ImGui::Text("Base Voltage=%.4f", car->getEngine()->getMagnosFeedback().baseEMF);
 	ImGui::Text("Base + Gain Voltage=%.4f", car->getEngine()->getMagnosFeedback().EMF + laserOutput);
 	//ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF); // @TODO maximize voltage
@@ -322,9 +322,11 @@ void BasicCarGameState::renderUI() {
 	
 	static float counter = 0;
 	
-	counter += fixed_delta;
+	int cycles_per_collection = Settings::fixed_update / Settings::fps;
+
+	counter += Settings::fixed_delta;
 	
-	if(counter >= 1.0f){
+	if(counter >= 1.0f / (float)cycles_per_collection){
 		counter = 0;
 		battery = 0;
 		battery = car->getEngine()->getBatteryVoltage();

@@ -25,7 +25,10 @@
 
 #include "HelloWorldScene.h"
 #include "RoverGameState.h"
+#include "BasicCarGameState.h"
 #include "RocketGameState.h"
+
+#include "components/systems/CoilSystem.hpp"
 
 #include "ImGui/ImGuiPresenter.h"
 
@@ -65,7 +68,7 @@ bool HelloWorld::init()
 	// Enable mouse input (optional, if not already enabled)
 	_director->getOpenGLView()->setCursorVisible(true);
 
-	this->currentGameState = RoverGameState::create();
+	this->currentGameState = BasicCarGameState::create();
 	
 	this->addChild(currentGameState);
 	
@@ -92,9 +95,17 @@ void HelloWorld::onExit()
 
 void HelloWorld::onImGuiDraw()
 {
-	ImGui::SetNextWindowPos(ImVec2(10, 600), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(10, 550), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Sim Mode");
-	
+		
+	// Button to switch to RoverGameState
+	if (ImGui::Button("Car"))
+	{
+		this->removeAllChildren();
+		this->currentGameState = BasicCarGameState::create();
+		this->currentGameState->setup(_defaultCamera);
+		this->addChild(currentGameState);
+	}
 	// Button to switch to RoverGameState
 	if (ImGui::Button("Rover"))
 	{
@@ -103,6 +114,8 @@ void HelloWorld::onImGuiDraw()
 		this->currentGameState->setup(_defaultCamera);
 		this->addChild(currentGameState);
 	}
+	
+	
 	
 	// Button to switch to another state (replace with your other state's name)
 	if (ImGui::Button("Rocket"))
@@ -135,6 +148,15 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 
 void HelloWorld::update(float delta)
 {
-	this->currentGameState->update(delta);
+	int cycles_per_collection = Settings::fixed_update / Settings::fps;
+	
+	int updates = 0;
+	
+	do{
+		this->currentGameState->update(delta);
+		
+		updates++;
+	} while(updates < cycles_per_collection);
+
 }
 

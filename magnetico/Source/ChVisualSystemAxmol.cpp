@@ -564,9 +564,9 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
 			//renderer->setMaterial(mesh->getMaterial());
 
-			mesh->setTexture("white.jpg");
-			renderer->setTexture("white.jpg");
-			renderer->setColor(ax::Color3B::RED);
+			mesh->setTexture("doge.jpg");
+			renderer->setTexture("doge.jpg");
+			renderer->setColor(ax::Color3B::WHITE);
 
 			node->addChild(renderer);
 			

@@ -197,7 +197,7 @@ bool RoverGameState::init() {
 	driver = chrono_types::make_shared<CuriositySpeedDriver>(0.5, 12.0);
 	
 	rover->SetDriver(driver);
-	rover->Initialize(ChFrame<>(ChVector<>(-5, -0.2, 0), QUNIT));
+	rover->Initialize(ChFrame<>(ChVector<>(-5, -0.5, 0), QUNIT));
 
 	std::cout << "Curiosity total mass: " << rover->GetRoverMass() << std::endl;
 	std::cout << "  chassis:            " << rover->GetChassis()->GetBody()->GetMass() << std::endl;
