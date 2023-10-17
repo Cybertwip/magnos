@@ -75,7 +75,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 
 set(VCS_REVISION "")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+option(CMAKE_EXPORT_COMPILE_COMMANDS "Export compile commands" ON)
 
 #-----------------------------------------------------------------------------
 # Enable CTest

@@ -551,12 +551,12 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			auto renderer = ax::MeshRenderer::create();
 			
 			renderer->addMesh(cuboid);
-			
+
 			renderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
 			
-			renderer->setTexture("white.jpg");
+			renderer->setTexture("red.jpg");
 
-//			node->addChild(renderer);
+			node->addChild(renderer);
 			
 			
 			ax::Vec3 position = ax::Vec3(shape_frame.GetPos().x(),
@@ -564,12 +564,13 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 										 shape_frame.GetPos().z());
 			
 			
-			ax::Quaternion rotation = ax::Quaternion(shape_frame.GetRot().eigen().w(),
-													 shape_frame.GetRot().eigen().z(),
-													 shape_frame.GetRot().eigen().y(),
-													 shape_frame.GetRot().eigen().x());
-			node->setPosition3D(position);
-			node->setRotationQuat(rotation);
+			
+			ax::Quaternion rotation = ax::Quaternion(shape_frame.GetRot().e1(),
+													 shape_frame.GetRot().e2(),
+													 shape_frame.GetRot().e3(),
+													 shape_frame.GetRot().e0());
+			renderer->setPosition3D(position);
+			renderer->setRotationQuat(rotation);
 
 			
 			//            if (cubeMesh) {

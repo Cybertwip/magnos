@@ -4,7 +4,7 @@
 # Cannot be used stand-alone (it is loaded by parent CMake configuration file)
 #=============================================================================
 
-option(ENABLE_MODULE_VEHICLE "Enable the Chrono Vehicle module" OFF)
+option(ENABLE_MODULE_VEHICLE "Enable the Chrono Vehicle module" ON)
 
 # Return now if this module is not enabled
 if(NOT ENABLE_MODULE_VEHICLE)

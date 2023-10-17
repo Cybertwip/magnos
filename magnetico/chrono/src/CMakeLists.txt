@@ -8,7 +8,7 @@
 # Optionally enable building the various programs
 #-----------------------------------------------------------------------------
 
-option(BUILD_DEMOS "Build demo programs" ON)
+option(BUILD_DEMOS "Build demo programs" OFF)
 option(BUILD_BENCHMARKING "Build benchmark tests" OFF)
 
 #-----------------------------------------------------------------------------

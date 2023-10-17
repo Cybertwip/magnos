@@ -95,6 +95,9 @@ public:
 	// Create a ChronoENGINE physical system
 	ChSystemNSC sys;
 	std::unique_ptr<Curiosity> rover;
+	std::shared_ptr<CuriosityDCMotorControl> driver;
 	std::shared_ptr<ChVisualSystem> vis;
+	
+	float stallTorque = 300;
 
 };

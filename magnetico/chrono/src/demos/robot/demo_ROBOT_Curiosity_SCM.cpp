@@ -82,6 +82,8 @@ const std::string out_dir = GetChronoOutputPath() + "CURIOSITY_SCM";
 // -----------------------------------------------------------------------------
 
 int main(int argc, char* argv[]) {
+	SetChronoDataPath("/opt/homebrew/share/chrono/data/");
+
     GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
     // Global parameter for moving patch size:
@@ -90,7 +92,7 @@ int main(int argc, char* argv[]) {
     // Create the Chrono system and Curiosity rover
     ChSystemSMC sys;
     Curiosity rover(&sys, chassis_type, wheel_type);
-    rover.SetDriver(chrono_types::make_shared<CuriositySpeedDriver>(1.0, CH_C_PI));
+    rover.SetDriver(chrono_types::make_shared<CuriositySpeedDriver>(10.0, CH_C_PI * 120));
     rover.Initialize(ChFrame<>(ChVector<>(-5, -0.2, 0), Q_from_AngX(-CH_C_PI / 2)));
 
     // Create obstacles

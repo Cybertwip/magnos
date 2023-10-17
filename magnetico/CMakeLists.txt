@@ -44,7 +44,8 @@ add_subdirectory(AirSim/cmake/AirLib)
 add_subdirectory(AirSim/cmake/MavLinkCom)
 add_subdirectory(AirSim/cmake/rpclib_wrapper)
 
-find_package(Chrono)
+find_package(Chrono REQUIRED COMPONENTS Vehicle)
+
 
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project
     if(XCODE)

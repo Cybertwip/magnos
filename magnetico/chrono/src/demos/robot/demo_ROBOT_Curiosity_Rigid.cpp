@@ -66,10 +66,13 @@ void CreateTerrain(ChSystem& sys);
 
 int main(int argc, char* argv[]) {
     GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+	
+	SetChronoDataPath("/opt/homebrew/share/chrono/data/");
+
     // Create a ChronoENGINE physical system
     ChSystemNSC sys;
     sys.Set_G_acc(ChVector<>(0, 0, -9.81));
-
+	
     collision::ChCollisionModel::SetDefaultSuggestedEnvelope(0.0025);
     collision::ChCollisionModel::SetDefaultSuggestedMargin(0.0025);
 
