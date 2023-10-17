@@ -17,6 +17,11 @@
 #endif
 
 #include "chrono/assets/ChVisualSystem.h"
+
+#ifdef CHRONO_IRRLICHT
+#undef CHRONO_IRRLICHT
+#endif
+
 #ifdef CHRONO_IRRLICHT
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 using namespace chrono::irrlicht;
@@ -90,5 +95,6 @@ public:
 	// Create a ChronoENGINE physical system
 	ChSystemNSC sys;
 	std::unique_ptr<Curiosity> rover;
+	std::shared_ptr<ChVisualSystem> vis;
 
 };

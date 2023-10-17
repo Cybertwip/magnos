@@ -6,6 +6,8 @@
 #include "Car.h"
 #include "Utils3d.h"
 
+#include "ChVisualSystemAxmol.h"
+
 #include "ImGui/ImGuiPresenter.h"
 #include "imgui/imgui_internal.h"
 
@@ -85,18 +87,40 @@ bool RoverGameState::init() {
 	auto driver = chrono_types::make_shared<CuriosityDCMotorControl>();
 	
 	rover->SetDriver(driver);
-	rover->Initialize(ChFrame<>(ChVector<double>(0, 0, 0.2), QUNIT));
-	
+	rover->Initialize(ChFrame<>(ChVector<>(0, 0, 0), QUNIT));
+
 	std::cout << "Curiosity total mass: " << rover->GetRoverMass() << std::endl;
 	std::cout << "  chassis:            " << rover->GetChassis()->GetBody()->GetMass() << std::endl;
 	std::cout << "  wheel:              " << rover->GetWheel(CuriosityWheelID::C_LF)->GetBody()->GetMass() << std::endl;
 	std::cout << std::endl;
 
 	
+	auto vis_axmol = chrono_types::make_shared<chrono::axmol::ChVisualSystemAxmol>();
+	vis_axmol->AttachSystem(&sys);
+
+	vis_axmol->Initialize(this);
+	
+	vis = vis_axmol;
+	
 	return true;
 }
 
 void RoverGameState::setup(ax::Camera* defaultCamera){
+	
+	// Create a directional light
+	auto directionalLight = DirectionLight::create(Vec3(0, -1, -0.25f), Color3B::WHITE);
+	this->addChild(directionalLight);
+	auto directionalLight2 = DirectionLight::create(Vec3(0, 1, 0.25f), Color3B::WHITE);
+	this->addChild(directionalLight2);
+
+	// Create a point light
+	auto pointLight = PointLight::create(Vec3(0, 5, 5), Color3B::WHITE, 100.0f);
+	this->addChild(pointLight);
+	
+	// Create a spot light
+	auto spotLight = SpotLight::create(Vec3(0, 5, 0), Vec3(0, -1, 0), Color3B::WHITE, 30, 45, 100.0f);
+	this->addChild(spotLight);
+
 	_defaultCamera = defaultCamera;
 	
 	_defaultCamera->setNearPlane(0.01f);
@@ -104,15 +128,28 @@ void RoverGameState::setup(ax::Camera* defaultCamera){
 	_defaultCamera->setFOV(90);
 	_defaultCamera->setZoom(1);
 	
-	_defaultCamera->setPosition3D(Vec3(5, 5, 1));
+	_defaultCamera->setPosition3D(Vec3(5, 5, 5));
 	_defaultCamera->setRotation3D(Vec3(0, 0, 0));
 	
 	_defaultCamera->lookAt(Vec3(0, 0, 0));
+	
+	
 }
 
 void RoverGameState::onMouseMove(Event* event)
 {
+	EventMouse* e = static_cast<EventMouse*>(event);
+	// Get the cursor delta since the last frame
 	
+	prevCursorX = cursorX;
+	prevCursorY = cursorY;
+	
+	cursorX = e->getDelta().x;
+	cursorY = e->getDelta().y;
+	
+	cursorDeltaX = cursorX - prevCursorX;
+	cursorDeltaY = cursorY - prevCursorY;
+
 }
 
 
@@ -132,14 +169,44 @@ void RoverGameState::update(float) {
 	// Update Curiosity controls
 	rover->Update();
 	
-	// Read rover chassis velocity
-	////std::cout <<"Rover speed: " << rover.GetChassisVel() << std::endl;
-	
-	// Read rover chassis acceleration
-	////std::cout << "Rover acceleration: "<< rover.GetChassisAcc() << std::endl;
-	
 	sys.DoStepDynamics(Settings::fixed_delta);
 
+	
+	
+	// Get the car's position
+	Vec3 carPosition = Vec3(0, 0, 0);
+	
+	// Calculate new camera rotation angles based on normalized cursor deltas
+	horizontalAngle += cursorDeltaX * sensitivity;
+	verticalAngle -= cursorDeltaY * sensitivity;
+	
+	// Define the vertical angle constraints (adjust as needed)
+	float minVerticalAngle = AX_DEGREES_TO_RADIANS(0); // Minimum vertical angle (degrees)
+	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(60.0f); // Maximum vertical angle (degrees)
+	
+	// Clamp the vertical angle within the specified range
+	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
+	
+	// Calculate the new camera position relative to the car
+	float distanceFromCar = 3.0f; // Adjust the distance as needed
+	float cameraHeight = 2.0f;   // Adjust the height as needed
+	
+	// Calculate the camera's offset from the car based on angles
+	float horizontalOffset = distanceFromCar * sinf(horizontalAngle);
+	float verticalOffset = distanceFromCar * cosf(horizontalAngle) * sinf(verticalAngle);
+	float depthOffset = distanceFromCar * cosf(horizontalAngle) * cosf(verticalAngle);
+	
+	Vec3 cameraOffset(horizontalOffset, cameraHeight + verticalOffset, depthOffset);
+	
+	// Calculate the new camera position
+	Vec3 newPosition = carPosition + cameraOffset;
+	
+	// Set the camera's new position and look-at point
+	_defaultCamera->setPosition3D(newPosition);
+	_defaultCamera->lookAt(carPosition);
+	
+	cursorDeltaX = 0;
+	cursorDeltaY = 0;
 }
 
 void RoverGameState::renderUI() {
