@@ -81,6 +81,14 @@ public:
 
 	MovingAverageFilter inputAverageFilter = MovingAverageFilter(240);
 	
+	// The options are Scarecrow and FullRover
+	CuriosityChassisType chassis_type = CuriosityChassisType::FullRover;
+	
+	// Specify rover wheel type
+	// The options are RealWheel, SimpleWheel, and CylWheel
+	CuriosityWheelType wheel_type = CuriosityWheelType::RealWheel;
 	// Create a ChronoENGINE physical system
 	ChSystemNSC sys;
+	std::unique_ptr<Curiosity> rover;
+
 };

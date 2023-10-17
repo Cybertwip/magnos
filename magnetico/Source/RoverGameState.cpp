@@ -20,6 +20,36 @@ float mpsToKmph(float speedMps) {
 	return speedMps * 3.6;
 }
 
+void CreateTerrain(ChSystem& sys) {
+	// Create the ground and obstacles
+	auto ground_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+	auto ground = chrono_types::make_shared<ChBodyEasyBox>(30, 30, 1, 1000, true, true, ground_mat);
+	ground->SetPos(ChVector<>(0, 0, -0.5));
+	ground->SetBodyFixed(true);
+	ground->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"), 60, 45);
+	sys.Add(ground);
+	
+	// Create the first step of the stair-shaped obstacle
+	auto mbox_1 = chrono_types::make_shared<ChBodyEasyBox>(2.4, 1.4, 0.1, 1000, true, true, ground_mat);
+	mbox_1->SetPos(ChVector<>(3, 1, 0.05));
+	mbox_1->SetBodyFixed(true);
+	mbox_1->SetCollide(true);
+	sys.Add(mbox_1);
+	
+	// Create the second step of the stair-shaped obstacle
+	auto mbox_2 = chrono_types::make_shared<ChBodyEasyBox>(1.6, 1.2, 0.2, 1000, true, true, ground_mat);
+	mbox_2->SetPos(ChVector<>(3, 1, 0.1));
+	mbox_2->SetBodyFixed(true);
+	mbox_2->SetCollide(true);
+	sys.Add(mbox_2);
+	
+	// Create the third step of the stair-shaped obstacle
+	auto mbox_3 = chrono_types::make_shared<ChBodyEasyBox>(0.8, 1.0, 0.3, 1000, true, true, ground_mat);
+	mbox_3->SetPos(ChVector<>(3, 1, 0.15));
+	mbox_3->SetBodyFixed(true);
+	mbox_3->SetCollide(true);
+	sys.Add(mbox_3);
+}
 }
 
 USING_NS_AX;
@@ -37,33 +67,31 @@ bool RoverGameState::init() {
 		return false;
 	}
 	
+	// Path to Chrono data files (textures, etc.)
+	SetChronoDataPath(CHRONO_DATA_DIR);
+
+	rover = std::make_unique<Curiosity>(&sys, chassis_type, wheel_type);
 	
-	car = Car::create();
-	this->addChild(car);
+	sys.Set_G_acc(ChVector<>(0, 0, -9.81));
 	
-	auto director = Director::getInstance();
+	collision::ChCollisionModel::SetDefaultSuggestedEnvelope(0.0025);
+	collision::ChCollisionModel::SetDefaultSuggestedMargin(0.0025);
 	
-	director->setClearColor(Color4F(0.0f, 0.0f, 1.0f, 1.0f));
+	// Create terrain and obstacles
+	CreateTerrain(sys);
+
+	// Create a Curiosity rover and the asociated driver
+	////auto driver = chrono_types::make_shared<CuriositySpeedDriver>(1.0, 5.0);
+	auto driver = chrono_types::make_shared<CuriosityDCMotorControl>();
 	
-	auto plane = createPlane(1024, 1024, 1, 1);
+	rover->SetDriver(driver);
+	rover->Initialize(ChFrame<>(ChVector<double>(0, 0, 0.2), QUNIT));
 	
-	ax::MeshRenderer* planeRenderer = ax::MeshRenderer::create();
-	planeRenderer->addMesh(plane);
-	auto material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false);
-	
-	Texture2D::TexParams tRepeatParams;  // set texture parameters
-	tRepeatParams.magFilter = tRepeatParams.minFilter = backend::SamplerFilter::NEAREST;
-	tRepeatParams.sAddressMode                        = backend::SamplerAddressMode::REPEAT;
-	tRepeatParams.tAddressMode                        = backend::SamplerAddressMode::REPEAT;
-	
-	auto checkerTexture = Director::getInstance()->getTextureCache()->addImage("checker.png");
-	
-	checkerTexture->setTexParameters(tRepeatParams);
-	
-	planeRenderer->setMaterial(material);
-	planeRenderer->setTexture(checkerTexture);
-	planeRenderer->setPositionY(-1.25f / 2 - 0.3f);
-	this->addChild(planeRenderer);
+	std::cout << "Curiosity total mass: " << rover->GetRoverMass() << std::endl;
+	std::cout << "  chassis:            " << rover->GetChassis()->GetBody()->GetMass() << std::endl;
+	std::cout << "  wheel:              " << rover->GetWheel(CuriosityWheelID::C_LF)->GetBody()->GetMass() << std::endl;
+	std::cout << std::endl;
+
 	
 	return true;
 }
@@ -75,7 +103,8 @@ void RoverGameState::setup(ax::Camera* defaultCamera){
 	_defaultCamera->setFarPlane(10000);
 	_defaultCamera->setFOV(90);
 	_defaultCamera->setZoom(1);
-	_defaultCamera->setPosition3D(Vec3(1.5f, 1.5f, -1.5f));
+	
+	_defaultCamera->setPosition3D(Vec3(5, 5, 1));
 	_defaultCamera->setRotation3D(Vec3(0, 0, 0));
 	
 	_defaultCamera->lookAt(Vec3(0, 0, 0));
@@ -83,137 +112,34 @@ void RoverGameState::setup(ax::Camera* defaultCamera){
 
 void RoverGameState::onMouseMove(Event* event)
 {
-	EventMouse* e = static_cast<EventMouse*>(event);
-	// Get the cursor delta since the last frame
 	
-	prevCursorX = cursorX;
-	prevCursorY = cursorY;
-	
-	cursorX = e->getDelta().x;
-	cursorY = e->getDelta().y;
-	
-	cursorDeltaX = cursorX - prevCursorX;
-	cursorDeltaY = cursorY - prevCursorY;
 }
 
 
 void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 {
-	if(car->isCalibrating()){
-		return;
-	}
 	
-	if(code == EventKeyboard::KeyCode::KEY_SPACE){
-		accelerate = true;
-	}
-	
-	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
-		steer = true;
-		steerAngle = -6;
-	}
-	
-	
-	if(code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
-		steer = true;
-		steerAngle = 6;
-	}
-	
-	
-	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
-		brake = true;
-	}
 }
 
 void RoverGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 {
 
-	if(car->isCalibrating()){
-		return;
-	}
-	
-	if(code == EventKeyboard::KeyCode::KEY_SPACE){
-		accelerate = false;
-	}
-	
-	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
-		steer = false;
-		steerAngle = 0;
-	}
-	
-	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
-		brake = false;
-	}
 	
 }
 
 void RoverGameState::update(float) {
-	float totalDelta = global_delta / 1000.0f;
 	
-	bool anyDataCollectionMode = car->isCollecting();
-		
-	if(accelerate || anyDataCollectionMode){
-		
-		car->accelerate(0.5f); // @TODO throttle
+	// Update Curiosity controls
+	rover->Update();
+	
+	// Read rover chassis velocity
+	////std::cout <<"Rover speed: " << rover.GetChassisVel() << std::endl;
+	
+	// Read rover chassis acceleration
+	////std::cout << "Rover acceleration: "<< rover.GetChassisAcc() << std::endl;
+	
+	sys.DoStepDynamics(Settings::fixed_delta);
 
-	} else {
-		car->liftPedal();
-	}
-	
-	car->update(totalDelta);
-	
-	if(steer){
-		car->steer(steerAngle);
-	} else {
-		car->steer(0);
-	}
-	
-	if(brake){
-		float brakePedalInput = 1.0f; // Adjust as needed
-		car->brake(brakePedalInput);
-	} else {
-		float brakePedalInput = 0; // Adjust as needed
-		car->brake(brakePedalInput);
-	}
-	
-	if(!anyDataCollectionMode){
-		car->updateMotion(totalDelta);
-	}
-		
-	// Get the car's position
-	Vec3 carPosition = car->getPosition3D();
-	
-	// Calculate new camera rotation angles based on normalized cursor deltas
-	horizontalAngle += cursorDeltaX * sensitivity;
-	verticalAngle -= cursorDeltaY * sensitivity;
-	
-	// Define the vertical angle constraints (adjust as needed)
-	float minVerticalAngle = AX_DEGREES_TO_RADIANS(0); // Minimum vertical angle (degrees)
-	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(60.0f); // Maximum vertical angle (degrees)
-	
-	// Clamp the vertical angle within the specified range
-	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
-	
-	// Calculate the new camera position relative to the car
-	float distanceFromCar = 3.0f; // Adjust the distance as needed
-	float cameraHeight = 2.0f;   // Adjust the height as needed
-	
-	// Calculate the camera's offset from the car based on angles
-	float horizontalOffset = distanceFromCar * sinf(horizontalAngle);
-	float verticalOffset = distanceFromCar * cosf(horizontalAngle) * sinf(verticalAngle);
-	float depthOffset = distanceFromCar * cosf(horizontalAngle) * cosf(verticalAngle);
-	
-	Vec3 cameraOffset(horizontalOffset, cameraHeight + verticalOffset, depthOffset);
-	
-	// Calculate the new camera position
-	Vec3 newPosition = carPosition + cameraOffset;
-	
-	// Set the camera's new position and look-at point
-	_defaultCamera->setPosition3D(newPosition);
-	_defaultCamera->lookAt(carPosition);
-	
-	cursorDeltaX = 0;
-	cursorDeltaY = 0;
-	
 }
 
 void RoverGameState::renderUI() {
@@ -221,113 +147,12 @@ void RoverGameState::renderUI() {
 	
 	ImGui::Begin("Engine");
 	
-	auto status = car->getEngine()->getMagnosFeedback().status;
-
-	ImGui::Text("Status=%s", status.c_str());
-	ImGui::Text("Coil Voltage Draw=%.4f", 1.5f);
-	ImGui::Text("Lasear Voltage Draw=%.4f", 5.0f);
-	ImGui::Text("Peak Voltage=%.4f", car->getEngine()->getMagnosFeedback().peakEMF);
-	
-	static int desired_voltage = Settings::engine_voltage;
-	//static int last_voltage_increase = desired_voltage;
-
-	ImGui::Text("Target Voltage:%d", desired_voltage);
-	
-//
-//	if(any_calibration || any_collection){
-//		ImGui::BeginDisabled();
-//		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
-//		ImGui::EndDisabled();
-//	} else {
-//		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
-//	}
-	
-//	if(last_voltage_increase != Settings::desired_target_voltage){
-//		Settings::desired_target_voltage = last_voltage_increase;
-//		for(auto gimbal : gimbals){
-//			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//			magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::desired_target_voltage / number_of_gimbals);
-//			magnos->getCoilSystem().recalibrate();
-//		}
-//
-//	}
-	
-	//last_voltage_increase = desired_voltage;
-	
-	float laserOutput = 0;
-	float laserInput = 0;
-	for(auto laserNode : car->getEngine()->getLasers()){
-		laserOutput += laserNode->getGuiMeasure();
-		laserInput += laserNode->getVoltageInput();
-	}
-
-	float coilInput = 0;
-	for(auto magnos : car->getEngine()->getGimbals()){
-		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::number_of_gimbals);
-	}
-	
-	ImGui::Text("Input Voltage=%d", (int)inputAverageFilter.filter(laserInput + coilInput));
-	ImGui::Text("Base Voltage=%.4f", car->getEngine()->getMagnosFeedback().baseEMF);
-	ImGui::Text("Base + Gain Voltage=%.4f", car->getEngine()->getMagnosFeedback().EMF + laserOutput);
-	//ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF); // @TODO maximize voltage
-//
-//	if(any_collection || any_calibration){
-//		ImGui::BeginDisabled();
-//		ImGui::Button("Collect Data");
-//		ImGui::EndDisabled();
-//	} else {
-//		bool collectDataButtonPressed = false;
-//
-//		if (ImGui::Button("Collect Data")) {
-//			collectDataButtonPressed = true;
-//		}
-//
-//		if (collectDataButtonPressed) {
-//			collectDataButtonPressed = false;
-////
-////			for(auto gimbal : gimbals){
-////				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-////
-////				magnos->getCoilSystem().scheduleCollection();
-////			}
-//
-//		}
-//	}
-	
-	
-	//ImGui::Text("Induced Current=%.4f", inducedCurrent);
 	ImGui::End();
 	
 	ImGui::SetNextWindowPos(ImVec2(960, 60), ImGuiCond_FirstUseEver);
 	
 	ImGui::Begin("Car");
 	
-	
-	static float battery = 0;
-	static float acceleration = 0;
-	static float speed = 0;
-	static float laser = 0;
-	
-	static float counter = 0;
-	
-	counter += fixed_delta;
-	
-	if(counter >= 1.0f){
-		counter = 0;
-		battery = 0;
-		battery = car->getEngine()->getBatteryVoltage();
-		acceleration = car->getAcceleration();
-		speed = car->getSpeed();
-		laser = 0;
-		for(auto laserNode : car->getEngine()->getLasers()){
-			laser += laserNode->getGuiMeasure();
-		}
-	}
-	
-	ImGui::Text("Battery Voltage=%.2f", battery);
-	ImGui::Text("Accel m/s^2=%.2f", acceleration);
-	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
-	ImGui::Text("Laser v/s=%.2f", laser);
 	ImGui::End();
 	
 }

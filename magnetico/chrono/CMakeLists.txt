@@ -64,7 +64,7 @@ message(STATUS "The target processor is ${CMAKE_SYSTEM_PROCESSOR}")
 # Get rid of cmake RPATH warning on OSX
 if(APPLE)
     set(CMAKE_MACOSX_RPATH OFF)
-    set(CMAKE_INSTALL_PREFIX=/opt/homebrew CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
+    set(CMAKE_INSTALL_PREFIX /opt/homebrew)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -75,7 +75,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 
 set(VCS_REVISION "")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
 
 #-----------------------------------------------------------------------------
 # Enable CTest

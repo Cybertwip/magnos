@@ -197,6 +197,8 @@ target_link_libraries(${APP_NAME} MavLinkCom)
 target_link_libraries(${APP_NAME} ${RPC_LIB})
 target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})
 
+target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+
 #set(_geant4_lib_use_suffix -static)
 #set(Geant4_LIBRARIES
 # Geant4::G4Tree${_geant4_lib_use_suffix}
