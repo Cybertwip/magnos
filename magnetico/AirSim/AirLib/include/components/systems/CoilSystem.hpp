@@ -10,9 +10,9 @@ namespace mlpack{
 }
 
 namespace Settings {
-	const float global_delta = 16;
+	const float global_delta = 1.0f / 420.0f * 1000;
 
-	const float fixed_delta = 1.0f / 60.0f;
+	const float fixed_delta = 1.0f / 420.0f;
 
 	const float battery_voltage = 500;
 

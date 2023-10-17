@@ -12,6 +12,8 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/assets/ChBoxShape.h"
 
+#include "chrono_vehicle/terrain/SCMTerrain.h"
+
 #ifdef CHRONO_POSTPROCESS
 #include "chrono_postprocess/ChGnuPlot.h"
 #endif
@@ -95,7 +97,8 @@ public:
 	// Create a ChronoENGINE physical system
 	ChSystemNSC sys;
 	std::unique_ptr<Curiosity> rover;
-	std::shared_ptr<CuriosityDCMotorControl> driver;
+	std::unique_ptr<vehicle::SCMTerrain> terrain;
+	std::shared_ptr<CuriositySpeedDriver> driver;
 	std::shared_ptr<ChVisualSystem> vis;
 	
 	float stallTorque = 300;

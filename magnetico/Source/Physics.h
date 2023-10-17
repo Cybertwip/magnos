@@ -3,7 +3,6 @@
 
 #include <axmol.h>
 
-
 class RigidBody {
 public:
 	RigidBody(float mass, ax::Vec3 position, ax::Vec3 velocity, ax::Vec3 acceleration, float restitution, float friction);

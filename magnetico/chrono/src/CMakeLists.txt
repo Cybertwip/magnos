@@ -21,7 +21,7 @@ endif()
 #-----------------------------------------------------------------------------
 # Choose to build either shared or static libraries as default
 #-----------------------------------------------------------------------------
-option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
 #-----------------------------------------------------------------------------
 # Optionally use static runtime library (MSVC only)

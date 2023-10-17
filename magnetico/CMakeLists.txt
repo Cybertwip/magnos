@@ -29,10 +29,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Get rid of cmake RPATH warning on OSX
 if(APPLE)
-    set(CMAKE_MACOSX_RPATH OFF)
-    set(CMAKE_INSTALL_PREFIX /opt/homebrew)
+    set(CMAKE_OSX_ARCHITECTURES arm64)
 endif()
 
 set(AIRLIB_CXX_STD ${CMAKE_CXX_STANDARD} CACHE STRING "AIRLIB_CXX_STD")
@@ -50,7 +48,7 @@ add_subdirectory(AirSim/cmake/AirLib)
 add_subdirectory(AirSim/cmake/MavLinkCom)
 add_subdirectory(AirSim/cmake/rpclib_wrapper)
 
-find_package(Chrono REQUIRED COMPONENTS Vehicle)
+find_package(Chrono COMPONENTS Vehicle)
 
 
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project

@@ -70,7 +70,7 @@ void ChVisualSystemAxmol::Initialize(ax::Node* parent){
 		container->addChild(node.second);
 	}
 	
-	container->setRotation3D(ax::Vec3(270, 45, 0));
+	container->setRotation3D(ax::Vec3(0, 0, 0));
 	parent->addChild(container);
 }
 
@@ -97,9 +97,22 @@ void ChVisualSystemAxmol::OnSetup(ChSystem* sys) {
 }
 
 void ChVisualSystemAxmol::OnUpdate(ChSystem* sys) {
-//    for (auto& node : m_nodes) {
-//        node.second->UpdateChildren();
-//    }
+    for (auto& node : m_nodes) {
+		ChFrame<> shape_frame = node.first->GetVisualModelFrame();
+		
+		ax::Vec3 position = ax::Vec3(shape_frame.GetPos().x(),
+									 shape_frame.GetPos().y(),
+									 shape_frame.GetPos().z());
+		
+		ax::Quaternion rotation = ax::Quaternion(shape_frame.GetRot().e1(),
+												 shape_frame.GetRot().e2(),
+												 shape_frame.GetRot().e3(),
+												 shape_frame.GetRot().e0());
+		
+		
+		node.second->setPosition3D(position);
+		node.second->setRotationQuat(rotation);
+    }
 }
 
 void ChVisualSystemAxmol::OnClear(ChSystem* sys) {
@@ -374,8 +387,6 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			ax::Vec3 position = ax::Vec3(shape_frame.GetPos().x(),
 										 shape_frame.GetPos().y(),
 										 shape_frame.GetPos().z());
-			
-			
 
 			ax::Quaternion rotation = ax::Quaternion(shape_frame.GetRot().e1(),
 													 shape_frame.GetRot().e2(),
@@ -433,9 +444,13 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			
 			renderer->addMesh(mesh);
 			
-			renderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
+			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
+			
+			//renderer->setMaterial(mesh->getMaterial());
 
 			renderer->setTexture("white.jpg");
+			
+			renderer->setColor(ax::Color3B::GRAY);
 
 			node->addChild(renderer);
 			
@@ -450,12 +465,6 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 													 shape_frame.GetRot().e3(),
 													 shape_frame.GetRot().e0());
 
-			std::cout << "//////////////////" << std::endl;
-			std::cout << "X: " << rotation.x << std::endl;
-			std::cout << "Y: " << rotation.y << std::endl;
-			std::cout << "Z: " << rotation.z << std::endl;
-			std::cout << "w: " << rotation.w << std::endl;
-			std::cout << "//////////////////" << std::endl;
 			renderer->setPosition3D(position);
 			renderer->setRotationQuat(rotation);
 
@@ -546,15 +555,18 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 //            }
         } else if (auto box = std::dynamic_pointer_cast<ChBoxShape>(shape)) {
 			
-			auto cuboid = createCuboid(box->GetHalflengths().x(), box->GetHalflengths().y(), box->GetHalflengths().z());
+			auto mesh = createCuboid(box->GetHalflengths().x(), box->GetHalflengths().y(), box->GetHalflengths().z());
 			
 			auto renderer = ax::MeshRenderer::create();
 			
-			renderer->addMesh(cuboid);
+			renderer->addMesh(mesh);
 
-			renderer->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
-			
-			renderer->setTexture("red.jpg");
+			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
+			//renderer->setMaterial(mesh->getMaterial());
+
+			mesh->setTexture("white.jpg");
+			renderer->setTexture("white.jpg");
+			renderer->setColor(ax::Color3B::RED);
 
 			node->addChild(renderer);
 			

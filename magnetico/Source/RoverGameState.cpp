@@ -9,7 +9,6 @@
 #include "chrono/physics/ChInertiaUtils.h"
 
 #include "chrono_vehicle/ChVehicleModelData.h"
-#include "chrono_vehicle/terrain/SCMTerrain.h"
 
 #include "ChVisualSystemAxmol.h"
 
@@ -56,6 +55,7 @@ void CreateTerrain(ChSystem& sys) {
 	mbox_3->SetBodyFixed(true);
 	mbox_3->SetCollide(true);
 	sys.Add(mbox_3);
+
 }
 }
 
@@ -77,13 +77,16 @@ bool RoverGameState::init() {
 	// Path to Chrono data files (textures, etc.)
 	SetChronoDataPath(CHRONO_DATA_DIR);
 
-	rover = std::make_unique<Curiosity>(&sys, chassis_type, wheel_type);
-	
+	collision::ChCollisionModel::SetDefaultSuggestedEnvelope(0.0025);
+	collision::ChCollisionModel::SetDefaultSuggestedMargin(0.0025);
+
 	sys.Set_G_acc(ChVector<>(0, 0, -9.81));
+
+	rover = std::make_unique<Curiosity>(&sys, chassis_type, wheel_type);
 	
 	// Global parameter for moving patch size:
 	double wheel_range = 0.5;
-	
+
 	// Create obstacles
 	std::vector<std::shared_ptr<ChBodyAuxRef>> rock;
 	std::vector<std::string> rock_meshfile = {
@@ -103,11 +106,11 @@ bool RoverGameState::init() {
 	};
 	double rock_density = 8000;
 	std::shared_ptr<ChMaterialSurface> rock_mat = ChMaterialSurface::DefaultMaterial(sys.GetContactMethod());
-	
+
 	for (int i = 0; i < 6; i++) {
 		auto mesh = chrono::geometry::ChTriangleMeshConnected::CreateFromWavefrontFile(GetChronoDataFile(rock_meshfile[i]), false, true);
 		mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(rock_scale[i]));
-		
+
 		double mass;
 		ChVector<> cog;
 		ChMatrix33<> inertia;
@@ -115,7 +118,7 @@ bool RoverGameState::init() {
 		ChMatrix33<> principal_inertia_rot;
 		ChVector<> principal_I;
 		ChInertiaUtils::PrincipalInertia(inertia, principal_I, principal_inertia_rot);
-		
+
 		auto body = chrono_types::make_shared<ChBodyAuxRef>();
 		sys.Add(body);
 		body->SetBodyFixed(false);
@@ -123,79 +126,78 @@ bool RoverGameState::init() {
 		body->SetFrame_COG_to_REF(ChFrame<>(cog, principal_inertia_rot));
 		body->SetMass(mass * rock_density);
 		body->SetInertiaXX(rock_density * principal_I);
-		
+
 		body->GetCollisionModel()->ClearModel();
 		body->GetCollisionModel()->AddTriangleMesh(rock_mat, mesh, false, false, VNULL, ChMatrix33<>(1),
 												   0.005);
 		body->GetCollisionModel()->BuildModel();
 		body->SetCollide(true);
-		
+
 		auto mesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
 		mesh_shape->SetMesh(mesh);
 		mesh_shape->SetBackfaceCull(true);
 		body->AddVisualShape(mesh_shape);
-		
+
 		rock.push_back(body);
 	}
-	
+
 	// Create the SCM deformable terrain
-	vehicle::SCMTerrain terrain(&sys);
+//	terrain = std::make_unique<vehicle::SCMTerrain>(&sys);
 	
+	CreateTerrain(sys);
+
 	// Displace/rotate the terrain reference plane.
 	// Note that SCMTerrain uses a default ISO reference frame (Z up). Since the mechanism is modeled here in
 	// a Y-up global frame, we rotate the terrain plane by -90 degrees about the X axis.
-	terrain.SetPlane(ChCoordsys<>(ChVector<>(0, -0.5, 0), Q_from_AngX(-CH_C_PI_2)));
+//	terrain->SetPlane(ChCoordsys<>(ChVector<>(0, -0.5, 0), Q_from_AngX(-CH_C_PI_2)));
 	
 	// Use a regular grid
-	double length = 14;
-	double width = 4;
+	double length = 70;
+	double width = 20;
 	// SCM grid spacing
-	double mesh_resolution = 0.02;
-	
+	double mesh_resolution = 1;
+
 	// Enable/disable bulldozing effects
-	bool enable_bulldozing = true;
-	
+	bool enable_bulldozing = false;
+
 	// Enable/disable moving patch feature
-	bool enable_moving_patch = true;
+	bool enable_moving_patch = false;
 
-	terrain.Initialize(length, width, mesh_resolution);
-	
+//	terrain->Initialize(length, width, mesh_resolution);
+
 	// Set the soil terramechanical parameters
-	terrain.SetSoilParameters(0.82e6,   // Bekker Kphi
-							  0.14e4,   // Bekker Kc
-							  1.0,      // Bekker n exponent
-							  0.017e4,  // Mohr cohesive limit (Pa)
-							  35,       // Mohr friction limit (degrees)
-							  1.78e-2,  // Janosi shear coefficient (m)
-							  2e8,      // Elastic stiffness (Pa/m), before plastic yield, must be > Kphi
-							  3e4       // Damping (Pa s/m), proportional to negative vertical speed (optional)
-							  );
-	
+//	terrain->SetSoilParameters(0.82e6,   // Bekker Kphi
+//							  0.14e4,   // Bekker Kc
+//							  1.0,      // Bekker n exponent
+//							  0.017e4,  // Mohr cohesive limit (Pa)
+//							  35,       // Mohr friction limit (degrees)
+//							  1.78e-2,  // Janosi shear coefficient (m)
+//							  2e8,      // Elastic stiffness (Pa/m), before plastic yield, must be > Kphi
+//							  3e4       // Damping (Pa s/m), proportional to negative vertical speed (optional)
+//							  );
+
 	// Set up bulldozing factors
-	terrain.EnableBulldozing(enable_bulldozing);
-	terrain.SetBulldozingParameters(55,  // angle of friction for erosion of displaced material at the border of the rut
-									1,   // displaced material vs downward pressed material.
-									5,   // number of erosion refinements per timestep
-									6);  // number of concentric vertex selections subject to erosion
-	
-	// Enable moving patches (for SCM efficiency)
-	if (enable_moving_patch) {
-		// add moving patch for each rover wheel
-		for (const auto& wheel : rover->GetWheels())
-			terrain.AddMovingPatch(wheel->GetBody(), VNULL, ChVector<>(0.5, 2 * wheel_range, 2 * wheel_range));
-		
-		// add moving patch for each obstacles
-		for (int i = 0; i < 6; i++)
-			terrain.AddMovingPatch(rock[i], VNULL, ChVector<>(2.0, 2.0, 2.0));
-	}
+//	terrain->EnableBulldozing(enable_bulldozing);
+//	terrain->SetBulldozingParameters(55,  // angle of friction for erosion of displaced material at the border of the rut
+//									1,   // displaced material vs downward pressed material.
+//									5,   // number of erosion refinements per timestep
+//									6);  // number of concentric vertex selections subject to erosion
+//
+//	// Enable moving patches (for SCM efficiency)
+//	if (enable_moving_patch) {
+//		// add moving patch for each rover wheel
+//		for (const auto& wheel : rover->GetWheels())
+//			terrain->AddMovingPatch(wheel->GetBody(), VNULL, ChVector<>(0.5, 2 * wheel_range, 2 * wheel_range));
+//
+//		// add moving patch for each obstacles
+//		for (int i = 0; i < 6; i++)
+//			terrain->AddMovingPatch(rock[i], VNULL, ChVector<>(2.0, 2.0, 2.0));
+//	}
 
-
-	// Create a Curiosity rover and the asociated driver
-	////auto driver = chrono_types::make_shared<CuriositySpeedDriver>(1.0, 5.0);
-	driver = chrono_types::make_shared<CuriosityDCMotorControl>();
+	driver = chrono_types::make_shared<CuriositySpeedDriver>(0.5, 12.0);
 	
 	rover->SetDriver(driver);
-	rover->Initialize(ChFrame<>(ChVector<>(0, 0, 0), QUNIT));
+	rover->Initialize(ChFrame<>(ChVector<>(-5, -0.2, 0), QUNIT));
 
 	std::cout << "Curiosity total mass: " << rover->GetRoverMass() << std::endl;
 	std::cout << "  chassis:            " << rover->GetChassis()->GetBody()->GetMass() << std::endl;
@@ -222,13 +224,18 @@ void RoverGameState::setup(ax::Camera* defaultCamera){
 	this->addChild(directionalLight2);
 
 	// Create a point light
-	auto pointLight = PointLight::create(Vec3(0, 5, 5), Color3B::WHITE, 100.0f);
+	auto pointLight = PointLight::create(Vec3(0, 5, 5), Color3B::WHITE, 1000.0f);
 	this->addChild(pointLight);
 	
 	// Create a spot light
-	auto spotLight = SpotLight::create(Vec3(0, 5, 0), Vec3(0, -1, 0), Color3B::WHITE, 30, 45, 100.0f);
+	auto spotLight = SpotLight::create(Vec3(0, 5, 0), Vec3(0, 1, 0), Color3B::WHITE, 30, 45, 1000.0f);
 	this->addChild(spotLight);
 
+	
+	auto skybox = ax::Skybox::create("white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg");
+	
+	this->addChild(skybox);
+	
 	_defaultCamera = defaultCamera;
 	
 	_defaultCamera->setNearPlane(0.01f);
@@ -239,7 +246,7 @@ void RoverGameState::setup(ax::Camera* defaultCamera){
 	_defaultCamera->setPosition3D(Vec3(5, 5, 5));
 	_defaultCamera->setRotation3D(Vec3(0, 0, 0));
 	
-	_defaultCamera->lookAt(Vec3(0, 0, 0));
+	_defaultCamera->lookAt(Vec3(0, 0, 0), Vec3(0, 0, 1));
 	
 	
 }
@@ -269,13 +276,13 @@ void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 	
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
 		steer = true;
-		steerAngle = -6;
+		steerAngle = 6;
 	}
 	
 	
 	if(code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
 		steer = true;
-		steerAngle = 6;
+		steerAngle = -6;
 	}
 	
 	
@@ -308,18 +315,25 @@ void RoverGameState::update(float) {
 	
 	// Update Curiosity controls
 	rover->Update();
-	
-	sys.DoStepDynamics(Settings::global_delta);
-	
+
+	sys.DoStepDynamics(Settings::fixed_delta);
 	
 	if(accelerate){
 		stallTorque += 1200 * Settings::fixed_delta;
-		driver->SetMotorStallTorque(stallTorque, CuriosityWheelID::C_LM);
-		driver->SetMotorStallTorque(stallTorque, CuriosityWheelID::C_RM);
+//		driver->SetMotorStallTorque(stallTorque, CuriosityWheelID::C_LM);
+//		driver->SetMotorStallTorque(stallTorque, CuriosityWheelID::C_RM);
 	}
+	
+	if(steer){
+		driver->SetSteering(steerAngle);
+	} else {
+		driver->SetSteering(0);
+	}
+
  
 	// Get the car's position
-	Vec3 carPosition = Vec3(0, 0, 0);
+	auto roverPosition = rover->GetChassisPos();
+	Vec3 carPosition = Vec3(roverPosition.x(), roverPosition.y(), roverPosition.z());
 	
 	// Calculate new camera rotation angles based on normalized cursor deltas
 	horizontalAngle += cursorDeltaX * sensitivity;
@@ -341,14 +355,14 @@ void RoverGameState::update(float) {
 	float verticalOffset = distanceFromCar * cosf(horizontalAngle) * sinf(verticalAngle);
 	float depthOffset = distanceFromCar * cosf(horizontalAngle) * cosf(verticalAngle);
 	
-	Vec3 cameraOffset(horizontalOffset, cameraHeight + verticalOffset, depthOffset);
+	Vec3 cameraOffset(horizontalOffset, depthOffset, cameraHeight + verticalOffset);
 	
 	// Calculate the new camera position
 	Vec3 newPosition = carPosition + cameraOffset;
 	
 	// Set the camera's new position and look-at point
 	_defaultCamera->setPosition3D(newPosition);
-	_defaultCamera->lookAt(carPosition);
+	_defaultCamera->lookAt(carPosition, Vec3(0, 0, 1));
 	
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
