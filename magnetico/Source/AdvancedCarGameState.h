@@ -130,4 +130,5 @@ public:
 	
 	float stallTorque = 300;
 
+	ax::MeshRenderer* carMesh_;
 };

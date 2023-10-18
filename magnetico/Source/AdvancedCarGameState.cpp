@@ -296,16 +296,33 @@ bool AdvancedCarGameState::init() {
 	vis_axmol->Initialize(this);
 	
 	vis = vis_axmol;
+	
+	carMesh_ = ax::MeshRenderer::create("polestar/Polestar1_Final01.obj");
 		
+	this->addChild(carMesh_);
+	
+	auto vehiclePosition = vehicle->GetChassis()->GetPos();
+	auto rotation = vehicle->GetChassis()->GetRot();
+	
+	ax::Quaternion quaternion = ax::Quaternion(rotation.e1(),
+					   rotation.e2(),
+					   rotation.e3(),
+					   rotation.e0());
+	
+	carMesh_->setPosition3D(Vec3(vehiclePosition.x(), vehiclePosition.y(), vehiclePosition.z()));
+
+	carMesh_->setRotationQuat(quaternion);
+
 	return true;
 }
 
 void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	
 	// Create a directional light
-	auto directionalLight = DirectionLight::create(Vec3(0, -1, -0.25f), Color3B::WHITE);
+	auto directionalLight = DirectionLight::create(Vec3(0, 0, -1), Color3B::WHITE);
 	this->addChild(directionalLight);
-	auto directionalLight2 = DirectionLight::create(Vec3(0, 1, 0.25f), Color3B::WHITE);
+	auto directionalLight2 = DirectionLight::create(Vec3(0, 0, 1), Color3B::WHITE);
+	
 	this->addChild(directionalLight2);
 
 	// Create a point light
@@ -313,10 +330,10 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	this->addChild(pointLight);
 	
 	// Create a spot light
-	auto spotLight = SpotLight::create(Vec3(0, 5, 0), Vec3(0, 1, 0), Color3B::WHITE, 30, 45, 1000.0f);
-	this->addChild(spotLight);
+	auto spotLight = SpotLight::create(Vec3(0, 0, 0), Vec3(0, 0, 1), Color3B::WHITE, 30, 45, 1000.0f);
 
-	
+	carMesh_->addChild(spotLight);
+
 	auto skybox = ax::Skybox::create("white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg");
 	
 	this->addChild(skybox);
@@ -448,6 +465,30 @@ void AdvancedCarGameState::update(float delta) {
 //
 	// Get the car's position
 	auto vehiclePosition = vehicle->GetPos();
+	auto chassisPosition = vehicle->GetChassis()->GetPos();
+	auto rotation = vehicle->GetChassis()->GetRot();
+	
+	carMesh_->setScale(1.215f);
+	carMesh_->setScaleZ(1.200f);
+	carMesh_->setPosition3D(Vec3(vehiclePosition.x(), vehiclePosition.y(), vehiclePosition.z()));
+	
+	// Original quaternion from rotation.e1(), e2(), e3(), e0()
+	ax::Quaternion originalQuaternion = ax::Quaternion(rotation.e1(), rotation.e2(), rotation.e3(), rotation.e0());
+	
+	// Z-Up rotation quaternion (90 degrees around the X-axis)
+	float zUpAngle = M_PI_2; // 90 degrees in radians
+	ax::Quaternion zUpRotation = ax::Quaternion(sin(zUpAngle / 2), 0, 0, cos(zUpAngle / 2));
+	
+	// Yaw rotation quaternion (45 degrees around the Z-axis)
+	float yawAngle = M_PI / 2; // 45 degrees in radians
+	ax::Quaternion yawRotation = ax::Quaternion(0, 0, sin(yawAngle / 2), cos(yawAngle / 2));
+	
+	// Multiply the original quaternion by the Z-Up and Yaw rotations
+	ax::Quaternion finalQuaternion = yawRotation * zUpRotation * originalQuaternion;
+	
+	// Set the final quaternion for the carMesh_
+	carMesh_->setRotationQuat(finalQuaternion);
+
 	Vec3 carPosition = Vec3(vehiclePosition.x(), vehiclePosition.y(), vehiclePosition.z());
 
 	// Calculate new camera rotation angles based on normalized cursor deltas
