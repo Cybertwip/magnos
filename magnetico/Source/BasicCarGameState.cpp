@@ -165,9 +165,13 @@ void BasicCarGameState::update(float) {
 		
 	if(accelerate || anyDataCollectionMode){
 		
+		car->getEngine()->setEngineConsumption(400);
+		
 		car->accelerate(0.5f); // @TODO throttle
 
 	} else {
+		car->getEngine()->setEngineConsumption(0);
+
 		car->liftPedal();
 	}
 	
@@ -240,7 +244,7 @@ void BasicCarGameState::renderUI() {
 	ImGui::Text("Lasear Voltage Draw=%.4f", 5.0f);
 	ImGui::Text("Peak Voltage=%.4f", car->getEngine()->getMagnosFeedback().peakEMF);
 	
-	static int desired_voltage = Settings::engine_voltage;
+	static int desired_voltage = EVEngine::max_voltage;
 	//static int last_voltage_increase = desired_voltage;
 
 	ImGui::Text("Target Voltage:%d", desired_voltage);

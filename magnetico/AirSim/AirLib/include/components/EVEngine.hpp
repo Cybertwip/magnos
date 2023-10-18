@@ -17,7 +17,7 @@ struct EVFeedback {
 
 class EVEngine : public Node {
 public:
-	EVEngine();
+	EVEngine(float max_engine_voltage = EVEngine::max_voltage);
 	
 	void init();
 	void update(float dt) override;
@@ -28,7 +28,10 @@ public:
 	float accelerate(float throttle);
 	void decelerate();
 	
+	bool isCalibrating();
 	
+	void setEngineConsumption(float voltage);
+	float getEngineConsumption() const;
 	//@TODO REMOVE
 	std::vector<std::shared_ptr<Magnos>> getGimbals() const {
 		return this->gimbals_;
@@ -42,11 +45,18 @@ public:
 		return this->battery_;
 	}
 
+public:
+	static float max_voltage;
+	
 private:
 	std::vector<std::shared_ptr<Magnos>> gimbals_;
 	std::vector<std::shared_ptr<Laser>> lasers_;
 	std::shared_ptr<RechargeableBattery> battery_;
 	bool accelerating_;
 	EVFeedback feedback_;
+	
+	float max_engine_voltage_;
+	
+	float engine_consumption_;
 };
 

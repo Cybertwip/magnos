@@ -3,6 +3,8 @@
 #include "components/Battery.hpp"
 #include "components/Laser.hpp"
 
+float EVEngine::max_voltage = 400;
+
 namespace {
 std::shared_ptr<Magnos> createGimbal(int id, std::shared_ptr<Node> parent, msr::airlib::Vector3r position){
 	auto gimbal = std::make_shared<Magnos>();
@@ -35,8 +37,12 @@ float currentToVolts(float current, float resistance) {
 }
 
 
-EVEngine::EVEngine(){
+EVEngine::EVEngine(float max_engine_voltage) : max_engine_voltage_(max_engine_voltage){
+	
+	EVEngine::max_voltage = max_engine_voltage_;
+	
 	accelerating_ = false;
+	engine_consumption_ = 0.0f;
 }
 
 void EVEngine::init(){
@@ -51,7 +57,7 @@ void EVEngine::init(){
 													 0.95f);
 	
 	for(auto magnos : gimbals_){
-		magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::engine_voltage / Settings::number_of_gimbals);
+		magnos->getCoilSystem().setDesignedEMFPerSecond(max_engine_voltage_ / Settings::number_of_gimbals);
 	}
 
 	std::function<void(int, float)> onVoltagePeak = [this](int index, float charge){	battery_->charge(voltsToCurrent(charge, Settings::circuit_resistance) / Settings::fixed_delta, Settings::fixed_delta);
@@ -67,6 +73,29 @@ void EVEngine::init(){
 	for(int i = 0; i<Settings::number_of_lasers; ++i){
 		lasers_.push_back(std::make_shared<Laser>(0.02f, true, 0.1f, 0.0f, 5000));
 	}
+}
+
+bool EVEngine::isCalibrating(){
+	bool calibrating = false;
+	
+	for(auto magnos : gimbals_){
+		
+		calibrating = magnos->getCoilSystem().calibrating();
+		
+		if(calibrating){
+			break;
+		}
+	}
+	
+	return calibrating;
+}
+
+void EVEngine::setEngineConsumption(float voltage){
+	engine_consumption_ = voltage;
+}
+
+float EVEngine::getEngineConsumption() const {
+	return engine_consumption_;
 }
 
 void EVEngine::update(float){
@@ -116,7 +145,7 @@ void EVEngine::update(float){
 	if(accelerating_ || anyDataCollectionMode){
 		float powerDraw = 0;
 		
-		powerDraw += Settings::engine_voltage;
+		powerDraw += engine_consumption_;
 		
 		powerDraw /= Settings::number_of_gimbals;
 		
@@ -221,7 +250,7 @@ float EVEngine::accelerate(float throttle){
 
 	float powerDraw = 0;
 	
-	powerDraw += Settings::engine_voltage;
+	powerDraw += engine_consumption_;
 	
 	powerDraw /= Settings::number_of_gimbals;
 	

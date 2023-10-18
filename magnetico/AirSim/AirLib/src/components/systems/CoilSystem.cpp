@@ -1,4 +1,5 @@
 #include "components/systems/CoilSystem.hpp"
+#include "components/EVEngine.hpp"
 
 #include <mlpack.hpp>
 
@@ -104,7 +105,7 @@ void CoilSystem::resetAccumulators(){
 	
 	filterBase = VoltageController(240, Settings::desired_base_voltage, Settings::desired_base_voltage, false);
 	
-	filterIncrease = VoltageController(240, Settings::engine_voltage / Settings::number_of_gimbals, Settings::desired_capacitor_voltage, true);
+	filterIncrease = VoltageController(240, EVEngine::max_voltage, Settings::desired_capacitor_voltage, true);
 	
 	this->current = 0;
 

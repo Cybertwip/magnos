@@ -36,7 +36,7 @@ using namespace chrono::vsg3d;
 using namespace chrono;
 using namespace chrono::curiosity;
 
-class Car;
+class CuriosityMagnosDriver;
 
 class RoverGameState : public GameState {
 private:
@@ -45,8 +45,6 @@ private:
 	
 	std::string emf;
 	std::string current;
-	
-	Car* car;
 	
 	float sensitivity = 0.01f;
 	float cursorDeltaX = 0;
@@ -98,7 +96,7 @@ public:
 	ChSystemNSC sys;
 	std::unique_ptr<Curiosity> rover;
 	std::unique_ptr<vehicle::SCMTerrain> terrain;
-	std::shared_ptr<CuriositySpeedDriver> driver;
+	std::shared_ptr<CuriosityMagnosDriver> driver;
 	std::shared_ptr<ChVisualSystem> vis;
 	
 	float stallTorque = 300;

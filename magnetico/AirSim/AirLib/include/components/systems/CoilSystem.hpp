@@ -28,9 +28,9 @@ namespace Settings {
 
 	const int data_collection_mode_cycles = (72 * 2) / number_of_gimbals;
 
-	const float engine_voltage = 400;
-
 	const float desired_capacitor_voltage = 1.5f;
+
+	const float coil_capacitor_voltage = 25.0f;
 
 	const float circuit_resistance = 120.0f;
 
@@ -45,7 +45,7 @@ public:
 	float emf;
 	
 	float current = 0;
-	Capacitor accumulator = Capacitor(Settings::engine_voltage / (float)Settings::number_of_gimbals);
+	Capacitor accumulator = Capacitor(Settings::coil_capacitor_voltage);
 
 	float turns;
 	

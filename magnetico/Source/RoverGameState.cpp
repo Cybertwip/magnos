@@ -15,6 +15,13 @@
 #include "ImGui/ImGuiPresenter.h"
 #include "imgui/imgui_internal.h"
 
+#include "components/EVEngine.hpp"
+#include "components/Magnos.hpp"
+#include "components/Battery.hpp"
+#include "components/Laser.hpp"
+
+#include <memory>
+
 namespace{
 
 // Current to Voltage conversion
@@ -57,6 +64,105 @@ void CreateTerrain(ChSystem& sys) {
 	sys.Add(mbox_3);
 
 }
+}
+
+class WheelMotor {
+public:
+	WheelMotor(float maxVoltage, float efficiency)
+	: maxVoltage_(maxVoltage), efficiency_(efficiency), voltage_(0.0f), currentConsumption_(0.0f) {}
+	
+	void SetVoltage(float voltage) {
+		if (voltage < 0.0f || voltage > maxVoltage_) {
+			// Handle invalid voltage input
+			// You can throw an exception, log an error, or take appropriate action here.
+			return;
+		}
+		voltage_ = voltage;
+		currentConsumption_ = voltage / efficiency_;
+	}
+	
+	float GetCurrentConsumption() const {
+		return currentConsumption_;
+	}
+	
+	float GetMaxVoltage() const {
+		return maxVoltage_;
+	}
+	
+private:
+	float maxVoltage_;
+	float efficiency_;
+	float voltage_;
+	float currentConsumption_;
+};
+
+class CuriosityMagnosDriver : public CuriosityDriver {
+public:
+	CuriosityMagnosDriver(Curiosity& vehicle, msr::airlib::Vector3r position);
+	
+	~CuriosityMagnosDriver() {}
+	
+	void accelerate(float voltage);
+	
+	std::shared_ptr<EVEngine> getEngine() const {
+		return engine_;
+	}
+	
+private:
+	virtual DriveMotorType GetDriveMotorType() const override { return DriveMotorType::TORQUE; }
+	virtual void Update(double time) override;
+	
+	double m_ramp;
+	double m_speed;
+	
+	std::shared_ptr<EVEngine> engine_;
+	Curiosity& rover;
+	
+	std::vector<WheelMotor> wheelMotors_;
+};
+
+CuriosityMagnosDriver::CuriosityMagnosDriver(Curiosity& vehicle, msr::airlib::Vector3r position) : rover(vehicle) {
+	engine_ = std::make_shared<EVEngine>(120);
+	engine_->setPosition3D(position);
+	engine_->init();
+	
+	for(int i = 0; i<6; ++i){
+		wheelMotors_.push_back(WheelMotor(10, 0.5f));
+	}
+}
+
+void CuriosityMagnosDriver::accelerate(float throttle){
+	for(auto& motor : wheelMotors_){
+		motor.SetVoltage(motor.GetMaxVoltage() * throttle);
+	}
+}
+
+void CuriosityMagnosDriver::Update(double time) {
+	auto roverPosition = rover.GetChassisPos();
+	msr::airlib::Vector3r position = msr::airlib::Vector3r(roverPosition.x(), roverPosition.y(), roverPosition.z());
+	
+	engine_->setPosition3D(position);
+	
+
+	float consumption = 0.0f;
+	std::vector<float> angularSpeeds;
+	
+	for (auto& motor : wheelMotors_) {
+		consumption += motor.GetCurrentConsumption();
+		
+		// Assuming a linear relationship between current consumption and angular speed
+		// Replace this with the actual relationship from your rover's specifications.
+		float angularSpeed = motor.GetCurrentConsumption() * 16;
+		angularSpeeds.push_back(angularSpeed);
+	}
+	
+	engine_->setEngineConsumption(consumption);
+	
+	// Use angular speeds to set drive_speeds (assuming 6-wheel configuration).
+	for(int i = 0; i<angularSpeeds.size(); ++i){
+		curiosity->GetDriveshaft(static_cast<CuriosityWheelID>(i))->SetAppliedTorque(-angularSpeeds[i]);
+
+	}
 }
 
 USING_NS_AX;
@@ -194,7 +300,9 @@ bool RoverGameState::init() {
 //			terrain->AddMovingPatch(rock[i], VNULL, ChVector<>(2.0, 2.0, 2.0));
 //	}
 
-	driver = chrono_types::make_shared<CuriositySpeedDriver>(0.5, 12.0);
+	driver = chrono_types::make_shared<CuriosityMagnosDriver>(*rover, msr::airlib::Vector3r(-5, -0.5f, 0));
+	
+//	driver = chrono_types::make_shared<CuriositySpeedDriver>(0.5, 12.0);
 	
 	rover->SetDriver(driver);
 	rover->Initialize(ChFrame<>(ChVector<>(-5, -0.5, 0), QUNIT));
@@ -270,6 +378,10 @@ void RoverGameState::onMouseMove(Event* event)
 
 void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 {
+	if(driver->getEngine()->isCalibrating()){
+		return;
+	}
+
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = true;
 	}
@@ -295,6 +407,10 @@ void RoverGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 void RoverGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 {
 
+	if(driver->getEngine()->isCalibrating()){
+		return;
+	}
+
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = false;
 	}
@@ -312,18 +428,21 @@ void RoverGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 }
 
 void RoverGameState::update(float) {
-	
 	// Update Curiosity controls
-	rover->Update();
-
-	sys.DoStepDynamics(Settings::fixed_delta);
 	
+	driver->getEngine()->update(Settings::fixed_delta);
+
 	if(accelerate){
 		stallTorque += 1200 * Settings::fixed_delta;
-//		driver->SetMotorStallTorque(stallTorque, CuriosityWheelID::C_LM);
-//		driver->SetMotorStallTorque(stallTorque, CuriosityWheelID::C_RM);
+		driver->accelerate(0.5f);
+	} else {
+		driver->accelerate(0.0f);
 	}
 	
+	rover->Update();
+	
+	sys.DoStepDynamics(Settings::fixed_delta);
+
 	if(steer){
 		driver->SetSteering(steerAngle);
 	} else {
@@ -371,14 +490,64 @@ void RoverGameState::update(float) {
 void RoverGameState::renderUI() {
 	ImGui::SetNextWindowPos(ImVec2(120, 60), ImGuiCond_FirstUseEver);
 	
+
+	float laserOutput = 0;
+	float laserInput = 0;
+	for(auto laserNode : driver->getEngine()->getLasers()){
+		laserOutput += laserNode->getGuiMeasure();
+		laserInput += laserNode->getVoltageInput();
+	}
+	
+	float coilInput = 0;
+	for(auto magnos : driver->getEngine()->getGimbals()){
+		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::circuit_resistance);
+	}
+	
 	ImGui::Begin("Engine");
 	
+	auto status = driver->getEngine()->getMagnosFeedback().status;
+	
+	ImGui::Text("Status=%s", status.c_str());
+
+	ImGui::Text("Consumption (VDC)=%.2f",  driver->getEngine()->isCalibrating() ? 0 : inputAverageFilter.filter( driver->getEngine()->getEngineConsumption()));
+
 	ImGui::End();
 	
 	ImGui::SetNextWindowPos(ImVec2(960, 60), ImGuiCond_FirstUseEver);
 	
-	ImGui::Begin("Car");
+	ImGui::Begin("Rover");
 	
+	
+	static float battery = 0;
+	static float acceleration = 0;
+	static float speed = 0;
+	static float laser = 0;
+	
+	static float counter = 0;
+	
+	int cycles_per_collection = Settings::fixed_update / Settings::fps;
+	
+	counter += Settings::fixed_delta;
+	
+	if(counter >= 1.0f / (float)cycles_per_collection){
+		counter = 0;
+		battery = 0;
+		battery = driver->getEngine()->getBatteryVoltage();
+		float linearAvg = 0.0f;
+		linearAvg += rover->GetChassisVel().x();
+		linearAvg += rover->GetChassisVel().y();
+		linearAvg += rover->GetChassisVel().z();
+		
+		linearAvg /= 3.0f;
+		
+//		acceleration = car->getAcceleration();
+		speed = linearAvg;
+	}
+	
+	ImGui::Text("Battery Voltage=%.2f", battery);
+//	ImGui::Text("Accel m/s^2=%.2f", acceleration);
+	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
 	ImGui::End();
 	
+
 }
