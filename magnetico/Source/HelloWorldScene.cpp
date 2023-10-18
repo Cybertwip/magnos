@@ -26,6 +26,8 @@
 #include "HelloWorldScene.h"
 #include "RoverGameState.h"
 #include "BasicCarGameState.h"
+
+#include "AdvancedCarGameState.h"
 #include "RocketGameState.h"
 
 #include "components/systems/CoilSystem.hpp"
@@ -68,7 +70,7 @@ bool HelloWorld::init()
 	// Enable mouse input (optional, if not already enabled)
 	_director->getOpenGLView()->setCursorVisible(true);
 
-	this->currentGameState = BasicCarGameState::create();
+	this->currentGameState = AdvancedCarGameState::create();
 	
 	this->addChild(currentGameState);
 	
@@ -102,7 +104,7 @@ void HelloWorld::onImGuiDraw()
 	if (ImGui::Button("Car"))
 	{
 		this->removeAllChildren();
-		this->currentGameState = BasicCarGameState::create();
+		this->currentGameState = AdvancedCarGameState::create();
 		this->currentGameState->setup(_defaultCamera);
 		this->addChild(currentGameState);
 	}
@@ -153,7 +155,7 @@ void HelloWorld::update(float delta)
 	int updates = 0;
 	
 	do{
-		this->currentGameState->update(delta);
+		this->currentGameState->update(Settings::fixed_delta);
 		
 		updates++;
 	} while(updates < cycles_per_collection);

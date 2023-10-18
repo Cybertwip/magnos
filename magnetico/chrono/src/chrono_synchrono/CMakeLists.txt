@@ -4,7 +4,7 @@
 # Cannot be used stand-alone (it is loaded by parent CMake configuration file)
 #=============================================================================
 
-option(ENABLE_MODULE_SYNCHRONO "Enable the SynChrono module" OFF)
+option(ENABLE_MODULE_SYNCHRONO "Enable the SynChrono module" ON)
 
 IF(NOT ENABLE_MODULE_SYNCHRONO)
   return()
