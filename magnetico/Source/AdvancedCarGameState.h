@@ -13,6 +13,7 @@
 #include "chrono/assets/ChBoxShape.h"
 
 #include "chrono_vehicle/terrain/SCMTerrain.h"
+#include "chrono_vehicle/terrain/RigidTerrain.h"
 
 #ifdef CHRONO_POSTPROCESS
 #include "chrono_postprocess/ChGnuPlot.h"
@@ -56,6 +57,9 @@ using namespace chrono::vsg3d;
 // specify whether the demo should actually use Irrlicht
 #define USE_IRRLICHT
 #endif
+
+
+#include "chrono_models/vehicle/artcar/ARTcar.h"
 
 
 using namespace chrono;
@@ -119,8 +123,8 @@ public:
 	CuriosityWheelType wheel_type = CuriosityWheelType::RealWheel;
 	// Create a ChronoENGINE physical system
 	ChSystemNSC sys;
-	std::unique_ptr<vehicle::WheeledVehicle> vehicle;
-	std::unique_ptr<vehicle::RandomSurfaceTerrain> terrain;
+	std::unique_ptr<vehicle::ChWheeledVehicle> vehicle;
+	std::unique_ptr<vehicle::ChTerrain> terrain;
 	std::shared_ptr<vehicle::ChPathFollowerDriver> driver;
 	std::shared_ptr<ChVisualSystem> vis;
 	

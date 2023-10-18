@@ -10,8 +10,8 @@ namespace mlpack{
 }
 
 namespace Settings {
-	const float fps = 480;
-	const float fixed_update = 480;
+	const float fps = 180;
+	const float fixed_update = 180;
 	const long global_delta = 1.0f / fixed_update * 1000;
 	const float fixed_delta = 1.0f / fixed_update;
 

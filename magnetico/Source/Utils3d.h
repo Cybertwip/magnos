@@ -8,7 +8,10 @@
 
 ax::Mesh* createCube(float dimension);
 ax::Mesh* createCuboid(float width, float height, float depth);
+ax::Mesh* createCylinder(float radius, float height, int numSegments);
 ax::Mesh* createSphere(float radius, int segments, int rings);
+
+ax::Mesh* createCapsule(float radius, float cylinderHeight, int sphereSegments, int sphereRings, int cylinderSegments);
 
 ax::Mesh* createPlane(float width, float depth, int texRepeatX, int texRepeatY);
 ax::Mesh* createTorus(float majorRadius, float minorRadius, int majorSegments, int minorSegments);

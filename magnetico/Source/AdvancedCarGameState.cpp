@@ -33,37 +33,6 @@ float mpsToKmph(float speedMps) {
 	return speedMps * 3.6;
 }
 
-void CreateTerrain(ChSystem& sys) {
-	// Create the ground and obstacles
-	auto ground_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
-	auto ground = chrono_types::make_shared<ChBodyEasyBox>(30, 30, 1, 1000, true, true, ground_mat);
-	ground->SetPos(ChVector<>(0, 0, -0.5));
-	ground->SetBodyFixed(true);
-	ground->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"), 60, 45);
-	sys.Add(ground);
-	
-	// Create the first step of the stair-shaped obstacle
-	auto mbox_1 = chrono_types::make_shared<ChBodyEasyBox>(2.4, 1.4, 0.1, 1000, true, true, ground_mat);
-	mbox_1->SetPos(ChVector<>(3, 1, 0.05));
-	mbox_1->SetBodyFixed(true);
-	mbox_1->SetCollide(true);
-	sys.Add(mbox_1);
-	
-	// Create the second step of the stair-shaped obstacle
-	auto mbox_2 = chrono_types::make_shared<ChBodyEasyBox>(1.6, 1.2, 0.2, 1000, true, true, ground_mat);
-	mbox_2->SetPos(ChVector<>(3, 1, 0.1));
-	mbox_2->SetBodyFixed(true);
-	mbox_2->SetCollide(true);
-	sys.Add(mbox_2);
-	
-	// Create the third step of the stair-shaped obstacle
-	auto mbox_3 = chrono_types::make_shared<ChBodyEasyBox>(0.8, 1.0, 0.3, 1000, true, true, ground_mat);
-	mbox_3->SetPos(ChVector<>(3, 1, 0.15));
-	mbox_3->SetBodyFixed(true);
-	mbox_3->SetCollide(true);
-	sys.Add(mbox_3);
-
-}
 }
 
 class WheelMotor {
@@ -164,8 +133,10 @@ void StellaMagnosDriver::Update(double time) {
 
 	}
 }
+#include "chrono_models/vehicle/duro/Duro_Vehicle.h"
 
 USING_NS_AX;
+
 
 // =============================================================================
 
@@ -192,13 +163,9 @@ std::string steering_controller_file("hmmwv/SteeringController.json");
 std::string speed_controller_file("hmmwv/SpeedController.json");
 
 // Initial vehicle position
-ChVector<> initLoc(-100, 0, 0.6);
-
-// Simulation step size
-double step_size = 1e-3;
+ChVector<> initLoc(32, 0, 0.6);
 
 // Logging of seat acceleration data on flat road surface is useless and would lead to distorted results
-double xstart = 0.0;  // start logging when the vehicle crosses this x position
 double xend = 400.0;  // end logging here, this also the end of our world
 
 using namespace chrono;
@@ -225,15 +192,13 @@ bool AdvancedCarGameState::init() {
 	
 	vehicle::SetDataPath(vehicleDataPath.c_str());
 	int iTire = 2;
-	int iTerrain = 2;
 	
-	double rmsVal = 0.0;
-	double target_speed = 15.0;
+	double target_speed = 420.0;
 	
 	// JSON files for terrain
-	std::string rigidterrain_file("terrain/RigidRandom1.json");
+	std::string rigidterrain_file("terrain/RigidObstacle1.json");
 	
-	GetLog() << "Terrain No. = " << iTerrain << "\n"
+	GetLog() << "\n"
 	<< "Speed       = " << target_speed << " m/s\n"
 	<< "Tire Code (1=TMeasy, 2=Fiala, 3=Pacejka89, 4=Pacejka02, 5=Rigid) = " << iTire << "\n";
 
@@ -241,58 +206,41 @@ bool AdvancedCarGameState::init() {
 	// --------------------------
 	// Create the various modules
 	// --------------------------
-	
-	// Create the vehicle system
 	ChContactMethod contact_method = ChContactMethod::SMC;
+//	vehicle = std::make_unique<duro::Duro_Vehicle>(false,
+//		BrakeType::SHAFTS,
+//	 	SteeringTypeWV::PITMAN_ARM_SHAFTS,
+//		contact_method,
+//		CollisionType::PRIMITIVES);
+	
 	vehicle = std::make_unique<WheeledVehicle>(vehicle::GetDataFile(vehicle_file), contact_method);
+
+
 	vehicle->Initialize(ChCoordsys<>(initLoc, QUNIT));
-	////vehicle.GetChassis()->SetFixed(true);
+	vehicle->GetChassis()->SetFixed(false);
 	vehicle->SetChassisVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle->SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle->SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
-	vehicle->SetWheelVisualizationType(VisualizationType::NONE);
+	vehicle->SetWheelVisualizationType(VisualizationType::PRIMITIVES);
 	
-	// Create the ground
-	terrain = std::make_unique<RandomSurfaceTerrain>(vehicle->GetSystem(), xend);
+//	terrain = std::make_unique<RigidTerrain>(vehicle->GetSystem(), vehicle::GetDataFile(rigidterrain_file));
+
+//	if (iTire == 5) {
+//		ChContactMaterialData minfo;
+//		minfo.mu = 0.9f;
+//		minfo.cr = 0.01f;
+//		minfo.Y = 2e7f;
+//		auto terrain_mat = minfo.CreateMaterial(contact_method);
+//		terrain->EnableCollisionMesh(terrain_mat, std::abs(initLoc.x()) + 5);
+//	}
 	
-	if (iTire == 5) {
-		ChContactMaterialData minfo;
-		minfo.mu = 0.9f;
-		minfo.cr = 0.01f;
-		minfo.Y = 2e7f;
-		auto terrain_mat = minfo.CreateMaterial(contact_method);
-		terrain->EnableCollisionMesh(terrain_mat, std::abs(initLoc.x()) + 5);
-	}
+	auto terrainImpl = std::make_unique<RandomSurfaceTerrain>(vehicle->GetSystem(), xend);
 	
-	switch (iTerrain) {
-		default:
-		case 1:
-			terrain->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_A_CORR, vehicle->GetWheeltrack(0));
-			break;
-		case 2:
-			terrain->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_B_CORR, vehicle->GetWheeltrack(0));
-			break;
-		case 3:
-			terrain->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_C_CORR, vehicle->GetWheeltrack(0));
-			break;
-		case 4:
-			terrain->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_D_CORR, vehicle->GetWheeltrack(0));
-			break;
-		case 5:
-			terrain->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_E_CORR, vehicle->GetWheeltrack(0));
-			break;
-		case 6:
-			terrain->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_F_NOCORR, vehicle->GetWheeltrack(0));
-			break;
-		case 7:
-			terrain->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_G_NOCORR, vehicle->GetWheeltrack(0));
-			break;
-		case 8:
-			terrain->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_H_NOCORR, vehicle->GetWheeltrack(0));
-			break;
-	}
+	terrainImpl->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_A_CORR, vehicle->GetWheeltrack(0));
+
+	terrain = std::move(terrainImpl);
+
 	
-	rmsVal = terrain->GetRMS() * 1000.0;  // unit [mm]
 	
 	// Create and initialize the powertrain system
 	auto engine = ReadEngineJSON(vehicle::GetDataFile(engine_file));
@@ -335,9 +283,7 @@ bool AdvancedCarGameState::init() {
 			}
 		}
 	}
-	
-	ChISO2631_Vibration_SeatCushionLogger seat_logger(step_size);
-	
+
 	// Create the driver
 	auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
 	driver = std::make_shared<ChPathFollowerDriver>(*vehicle, vehicle::GetDataFile(steering_controller_file),
@@ -350,7 +296,7 @@ bool AdvancedCarGameState::init() {
 	vis_axmol->Initialize(this);
 	
 	vis = vis_axmol;
-	
+		
 	return true;
 }
 
@@ -461,9 +407,11 @@ void AdvancedCarGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 void AdvancedCarGameState::update(float delta) {
 	// Get driver inputs
 	DriverInputs driver_inputs = driver->GetInputs();
-	
 	// Update modules (process inputs from other modules)
-	double time = vehicle->GetSystem()->GetChTime();
+	
+	static long time = 0;
+	time += Settings::global_delta;
+	
 	driver->Synchronize(time);
 	vehicle->Synchronize(time, driver_inputs, *terrain);
 	terrain->Synchronize(time);
@@ -475,17 +423,6 @@ void AdvancedCarGameState::update(float delta) {
 	terrain->Advance(delta);
 //	vis->Advance(step_size);
 	
-	double xpos = vehicle->GetSpindlePos(0, LEFT).x();
-	if (xpos >= xend) {
-		return;
-	}
-	if (xpos >= xstart) {
-		double speed = vehicle->GetSpeed();
-		ChVector<> seat_acc =
-		vehicle->GetPointAcceleration(vehicle->GetChassis()->GetLocalDriverCoordsys().pos);
-//		seat_logger.AddData(speed, seat_acc);
-	}
-
 	
 	// Update Curiosity controls
 //

@@ -403,8 +403,6 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
             }
 
 		else if (auto trimesh = std::dynamic_pointer_cast<ChTriangleMeshShape>(shape)) {
-            // Create a number of Irrlicht mesh buffers equal to the number of materials.
-            // If no materials defined, create a single mesh buffer.
 
 			std::vector<float> positions;
 			std::vector<float> normals;
@@ -446,8 +444,6 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			
 			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
 			
-			//renderer->setMaterial(mesh->getMaterial());
-
 			renderer->setTexture("white.jpg");
 			
 			renderer->setColor(ax::Color3B::GRAY);
@@ -506,6 +502,7 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 //                SetVisualMaterial(mchildnode, sphere);
 //                mchildnode->setMaterialFlag(video::EMF_NORMALIZE_NORMALS, true);
         } else if (auto ellipsoid = std::dynamic_pointer_cast<ChEllipsoidShape>(shape)) {
+			bool ok  = false;
 //            if (sphereMesh) {
 //                ISceneNode* mproxynode = new ChIrrNodeShape(ellipsoid, node);
 //                ISceneNode* mchildnode = GetSceneManager()->addMeshSceneNode(sphereMesh, mproxynode);
@@ -519,40 +516,71 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 //                mchildnode->setMaterialFlag(video::EMF_NORMALIZE_NORMALS, true);
 //            }
         } else if (auto cylinder = std::dynamic_pointer_cast<ChCylinderShape>(shape)) {
+
+			double rad = cylinder->GetRadius();
+			double height = cylinder->GetHeight();
+
+			auto mesh = createCylinder(rad, height, 20);
 			
-//            if (cylinderMesh) {
-//                ISceneNode* mproxynode = new ChIrrNodeShape(cylinder, node);
-//                ISceneNode* mchildnode = GetSceneManager()->addMeshSceneNode(cylinderMesh, mproxynode);
-//                mproxynode->drop();
-//
-//                double rad = cylinder->GetRadius();
-//                double height = cylinder->GetHeight();
-//
-//                core::vector3df irrsize((f32)rad, (f32)rad, (f32)(height / 2));
-//                mchildnode->setScale(irrsize);
-//                mchildnode->setPosition(shape_m4.getTranslation());
-//                mchildnode->setRotation(shape_m4.getRotationDegrees());
-//
-//                SetVisualMaterial(mchildnode, cylinder);
-//                mchildnode->setMaterialFlag(video::EMF_NORMALIZE_NORMALS, true);
-//            }
+			auto renderer = ax::MeshRenderer::create();
+			
+			renderer->addMesh(mesh);
+			
+			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
+			
+			mesh->setTexture("gold.jpg");
+			renderer->setTexture("gold.jpg");
+			renderer->setColor(ax::Color3B::WHITE);
+			
+			node->addChild(renderer);
+			
+			
+			ax::Vec3 position = ax::Vec3(shape_frame.GetPos().x(),
+										 shape_frame.GetPos().y(),
+										 shape_frame.GetPos().z());
+			
+			
+			
+			ax::Quaternion rotation = ax::Quaternion(shape_frame.GetRot().e1(),
+													 shape_frame.GetRot().e2(),
+													 shape_frame.GetRot().e3(),
+													 shape_frame.GetRot().e0());
+			renderer->setPosition3D(position);
+			renderer->setRotationQuat(rotation);
+			
         } else if (auto capsule = std::dynamic_pointer_cast<ChCapsuleShape>(shape)) {
-//            if (capsuleMesh) {
-//                ISceneNode* mproxynode = new ChIrrNodeShape(capsule, node);
-//                ISceneNode* mchildnode = GetSceneManager()->addMeshSceneNode(capsuleMesh, mproxynode);
-//                mproxynode->drop();
-//
-//                double rad = capsule->GetRadius();
-//                double height = capsule->GetHeight();
-//
-//                core::vector3df irrsize((f32)rad, (f32)rad, (f32)(rad / 2 + height / 4));
-//                mchildnode->setScale(irrsize);
-//                mchildnode->setPosition(shape_m4.getTranslation());
-//                mchildnode->setRotation(shape_m4.getRotationDegrees());
-//
-//                SetVisualMaterial(mchildnode, capsule);
-//                mchildnode->setMaterialFlag(video::EMF_NORMALIZE_NORMALS, true);
-//            }
+			
+			double rad = capsule->GetRadius();
+			double height = capsule->GetHeight();
+
+			auto mesh = createCapsule(rad, height, 20, 20, 20);
+			
+			auto renderer = ax::MeshRenderer::create();
+			
+			renderer->addMesh(mesh);
+			
+			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
+			
+			mesh->setTexture("gray.jpg");
+			renderer->setTexture("gray.jpg");
+			renderer->setColor(ax::Color3B::WHITE);
+			
+			node->addChild(renderer);
+			
+			
+			ax::Vec3 position = ax::Vec3(shape_frame.GetPos().x(),
+										 shape_frame.GetPos().y(),
+										 shape_frame.GetPos().z());
+			
+			
+			
+			ax::Quaternion rotation = ax::Quaternion(shape_frame.GetRot().e1(),
+													 shape_frame.GetRot().e2(),
+													 shape_frame.GetRot().e3(),
+													 shape_frame.GetRot().e0());
+			renderer->setPosition3D(position);
+			renderer->setRotationQuat(rotation);
+			
         } else if (auto box = std::dynamic_pointer_cast<ChBoxShape>(shape)) {
 			
 			auto mesh = createCuboid(box->GetHalflengths().x(), box->GetHalflengths().y(), box->GetHalflengths().z());
@@ -562,10 +590,9 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			renderer->addMesh(mesh);
 
 			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
-			//renderer->setMaterial(mesh->getMaterial());
 
-			mesh->setTexture("doge.jpg");
-			renderer->setTexture("doge.jpg");
+			mesh->setTexture("pink.jpg");
+			renderer->setTexture("pink.jpg");
 			renderer->setColor(ax::Color3B::WHITE);
 
 			node->addChild(renderer);
@@ -583,33 +610,7 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 													 shape_frame.GetRot().e0());
 			renderer->setPosition3D(position);
 			renderer->setRotationQuat(rotation);
-
 			
-			//            if (cubeMesh) {
-//                ISceneNode* mproxynode = new ChIrrNodeShape(box, node);
-//                ISceneNode* mchildnode = GetSceneManager()->addMeshSceneNode(cubeMesh, mproxynode);
-//                mproxynode->drop();
-//
-//                mchildnode->setScale(core::vector3dfCH(box->GetHalflengths()));
-//                mchildnode->setPosition(shape_m4.getTranslation());
-//                mchildnode->setRotation(shape_m4.getRotationDegrees());
-//
-//                SetVisualMaterial(mchildnode, box);
-//                mchildnode->setMaterialFlag(video::EMF_NORMALIZE_NORMALS, true);
-//            }
-//        } else if (auto barrel = std::dynamic_pointer_cast<ChBarrelShape>(shape)) {
-//            auto mbarrelmesh = createEllipticalMesh((irr::f32)(barrel->GetRhor()), (irr::f32)(barrel->GetRvert()),
-//                                                    (irr::f32)(barrel->GetHlow()), (irr::f32)(barrel->GetHsup()),
-//                                                    (irr::f32)(barrel->GetRoffset()), 15, 8);
-//            ISceneNode* mproxynode = new ChIrrNodeShape(barrel, node);
-//            ISceneNode* mchildnode = GetSceneManager()->addMeshSceneNode(mbarrelmesh, mproxynode);
-//            mproxynode->drop();
-//
-//            mchildnode->setPosition(shape_m4.getTranslation());
-//            mchildnode->setRotation(shape_m4.getRotationDegrees());
-//
-//            SetVisualMaterial(mchildnode, barrel);
-//            mchildnode->setMaterialFlag(video::EMF_NORMALIZE_NORMALS, true);
         } else if (auto glyphs = std::dynamic_pointer_cast<ChGlyphs>(shape)) {
 //            CDynamicMeshBuffer* buffer = new CDynamicMeshBuffer(video::EVT_STANDARD, video::EIT_32BIT);
 //            SMesh* newmesh = new SMesh;

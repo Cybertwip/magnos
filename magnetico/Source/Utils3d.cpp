@@ -59,6 +59,113 @@ ax::Mesh* createCube(float dimension){
 	return ax::Mesh::create(positions, normals, texs, indexArray);
 }
 
+ax::Mesh* createCylinder(float radius, float height, int numSegments) {
+	// Initialize vectors to store vertices, normals, texture coordinates, and indices
+	std::vector<float> positions;
+	std::vector<float> normals;
+	std::vector<float> texs;
+	std::vector<unsigned short> indices;
+	
+	// Create vertices for the top and bottom faces
+	for (int i = 0; i < numSegments; ++i) {
+		float angle = 2.0 * M_PI * static_cast<float>(i) / static_cast<float>(numSegments);
+		float x = radius * std::cos(angle);
+		float y = radius * std::sin(angle);
+		
+		// Top face
+		positions.push_back(x);
+		positions.push_back(y);
+		positions.push_back(0.5 * height);
+		
+		normals.push_back(0.0f);
+		normals.push_back(0.0f);
+		normals.push_back(1.0f);
+		
+		texs.push_back(0.5f + 0.5f * x / radius);
+		texs.push_back(0.5f + 0.5f * y / radius);
+		
+		// Bottom face
+		positions.push_back(x);
+		positions.push_back(y);
+		positions.push_back(-0.5 * height);
+		
+		normals.push_back(0.0f);
+		normals.push_back(0.0f);
+		normals.push_back(-1.0f);
+		
+		texs.push_back(0.5f + 0.5f * x / radius);
+		texs.push_back(0.5f + 0.5f * y / radius);
+	}
+	
+	// Create vertices for the side surface
+	for (int i = 0; i < numSegments; ++i) {
+		float angle = 2.0 * M_PI * static_cast<float>(i) / static_cast<float>(numSegments);
+		float x = radius * std::cos(angle);
+		float y = radius * std::sin(angle);
+		
+		// Side vertices
+		positions.push_back(x);
+		positions.push_back(y);
+		positions.push_back(0.5 * height);
+		
+		normals.push_back(x / radius);
+		normals.push_back(y / radius);
+		normals.push_back(0.0f);
+		
+		texs.push_back(static_cast<float>(i) / static_cast<float>(numSegments));
+		texs.push_back(0.0f);
+		
+		positions.push_back(x);
+		positions.push_back(y);
+		positions.push_back(-0.5 * height);
+		
+		normals.push_back(x / radius);
+		normals.push_back(y / radius);
+		normals.push_back(0.0f);
+		
+		texs.push_back(static_cast<float>(i) / static_cast<float>(numSegments));
+		texs.push_back(1.0f);
+	}
+	
+	// Create indices for the top, bottom, and side faces
+	for (int i = 0; i < numSegments; ++i) {
+		int next = (i + 1) % numSegments;
+		
+		// Top face indices
+		indices.push_back(i);
+		indices.push_back(i + numSegments);
+		indices.push_back(next);
+		
+		// Bottom face indices
+		indices.push_back(i + numSegments * 2);
+		indices.push_back(i + numSegments * 3);
+		indices.push_back(next + numSegments * 2);
+		
+		// Side face indices
+		indices.push_back(i + numSegments * 2);
+		indices.push_back(i + numSegments * 3);
+		indices.push_back(next + numSegments * 2);
+		
+		indices.push_back(i);
+		indices.push_back(i + numSegments);
+		indices.push_back(next + numSegments);
+		
+		indices.push_back(i + numSegments);
+		indices.push_back(next + numSegments);
+		indices.push_back(next);
+		
+	}
+	
+	ax::IndexArray indexArray;
+	
+	for (auto index : indices) {
+		indexArray.emplace_back(index);
+	}
+	
+	// Create the mesh and attach to Sprite3D
+	return ax::Mesh::create(positions, normals, texs, indexArray);
+}
+
 ax::Mesh* createCuboid(float width, float height, float depth) {
 	// Calculate half-dimensions for convenience
 	float halfWidth = width;
@@ -185,6 +292,137 @@ ax::Mesh* createSphere(float radius, int segments, int rings) {
 	// Create the mesh and return it
 	return ax::Mesh::create(positions, normals, texs, indexArray);
 }
+
+ax::Mesh* createCapsule(float radius, float cylinderHeight, int sphereSegments, int sphereRings, int cylinderSegments) {
+	std::vector<float> positions;
+	std::vector<float> normals;
+	std::vector<float> texs;
+	std::vector<unsigned short> indices;
+	ax::IndexArray indexArray;
+	
+	// Create the top sphere
+	for (int i = 0; i <= sphereRings; ++i) {
+		float v = static_cast<float>(i) / sphereRings;
+		float theta = v * M_PI;
+		float sinTheta = sin(theta);
+		float cosTheta = cos(theta);
+		
+		for (int j = 0; j <= sphereSegments; ++j) {
+			float u = static_cast<float>(j) / sphereSegments;
+			float phi = u * M_PI * 2;
+			float sinPhi = sin(phi);
+			float cosPhi = cos(phi);
+			
+			float x = cosPhi * sinTheta;
+			float y = cosTheta;
+			float z = sinPhi * sinTheta;
+			
+			positions.push_back(radius * x);
+			positions.push_back(radius * y);
+			positions.push_back(radius * z);
+			
+			normals.push_back(x);
+			normals.push_back(y);
+			normals.push_back(z);
+			
+			texs.push_back(u);
+			texs.push_back(1.0f - v);
+		}
+	}
+	
+	// Create the bottom sphere
+	for (int i = 0; i <= sphereRings; ++i) {
+		float v = static_cast<float>(i) / sphereRings;
+		float theta = v * M_PI;
+		float sinTheta = sin(theta);
+		float cosTheta = cos(theta);
+		
+		for (int j = 0; j <= sphereSegments; ++j) {
+			float u = static_cast<float>(j) / sphereSegments;
+			float phi = u * M_PI * 2;
+			float sinPhi = sin(phi);
+			float cosPhi = cos(phi);
+			
+			float x = cosPhi * sinTheta;
+			float y = cosTheta;
+			float z = sinPhi * sinTheta;
+			
+			positions.push_back(radius * x);
+			positions.push_back(radius * y);
+			positions.push_back(radius * z);
+			
+			normals.push_back(x);
+			normals.push_back(y);
+			normals.push_back(z);
+			
+			texs.push_back(u);
+			texs.push_back(1.0f - v);
+		}
+	}
+	
+	// Create the cylindrical part
+	for (int i = 0; i <= cylinderSegments; ++i) {
+		float u = static_cast<float>(i) / cylinderSegments;
+		float phi = u * M_PI * 2;
+		float sinPhi = sin(phi);
+		float cosPhi = cos(phi);
+		
+		for (int j = 0; j <= cylinderHeight; ++j) {
+			float v = static_cast<float>(j) / cylinderHeight;
+			
+			float x = radius * cosPhi;
+			float y = radius * sinPhi;
+			float z = (v - 0.5) * 2 * radius;
+			
+			positions.push_back(x);
+			positions.push_back(y);
+			positions.push_back(z);
+			
+			normals.push_back(cosPhi);
+			normals.push_back(sinPhi);
+			normals.push_back(0.0f);
+			
+			texs.push_back(u);
+			texs.push_back(v);
+		}
+	}
+	
+	// Create indices for the spheres
+	int numSphereVertices = (sphereRings + 1) * (sphereSegments + 1);
+	for (int i = 0; i < numSphereVertices - sphereSegments - 1; ++i) {
+		if ((i + 1) % (sphereSegments + 1) != 0) {
+			indices.push_back(i);
+			indices.push_back(i + 1);
+			indices.push_back(i + sphereSegments + 1);
+			
+			indices.push_back(i + sphereSegments + 1);
+			indices.push_back(i + 1);
+			indices.push_back(i + sphereSegments + 2);
+		}
+	}
+	
+	// Create indices for the cylindrical part
+	int numCylinderVertices = (cylinderSegments + 1) * (cylinderHeight + 1);
+	for (int i = numSphereVertices; i < numSphereVertices + numCylinderVertices - cylinderSegments - 1; ++i) {
+		if ((i + 1) % (cylinderSegments + 1) != 0) {
+			indices.push_back(i);
+			indices.push_back(i + 1);
+			indices.push_back(i + cylinderSegments + 1);
+			
+			indices.push_back(i + cylinderSegments + 1);
+			indices.push_back(i + 1);
+			indices.push_back(i + cylinderSegments + 2);
+		}
+	}
+	
+	for (auto index : indices) {
+		indexArray.emplace_back(index);
+	}
+	
+	// Create the mesh for the capsule and return it
+	return ax::Mesh::create(positions, normals, texs, indexArray);
+}
+
 
 ax::Mesh* createPlane(float width, float depth, int texRepeatX, int texRepeatY) {
 	// Calculate half-dimensions for convenience
@@ -429,74 +667,6 @@ ax::Mesh* createFlatDisk(float radius, float thickness, int majorSegments, int m
 	torus->setTexture("pink.jpg");
 	
 	return torus;
-}
-
-ax::Mesh* createCylinder(float radius, float height, int segments) {
-	std::vector<float> positions;
-	std::vector<float> normals;
-	std::vector<float> texs;
-	std::vector<unsigned short> indices;
-	
-	float segmentAngle = 2.0f * M_PI / static_cast<float>(segments);
-	
-	// Create vertices
-	for (int i = 0; i <= segments; ++i) {
-		float angle = static_cast<float>(i) * segmentAngle;
-		float x = radius * cos(angle);
-		float y = -height / 2.0f;
-		float z = radius * sin(angle);
-		
-		// Add bottom vertices
-		positions.push_back(x);
-		positions.push_back(y);
-		positions.push_back(z);
-		normals.push_back(0.0f);
-		normals.push_back(-1.0f);
-		normals.push_back(0.0f);
-		texs.push_back(static_cast<float>(i) / static_cast<float>(segments));
-		texs.push_back(0.0f);
-		
-		// Add top vertices
-		positions.push_back(x);
-		positions.push_back(y + height);
-		positions.push_back(z);
-		normals.push_back(0.0f);
-		normals.push_back(1.0f);
-		normals.push_back(0.0f);
-		texs.push_back(static_cast<float>(i) / static_cast<float>(segments));
-		texs.push_back(1.0f);
-	}
-	
-	// Create indices
-	for (int i = 0; i < segments; ++i) {
-		int next = (i + 1) % (segments + 1);
-		
-		// Bottom face
-		indices.push_back(i * 2);
-		indices.push_back(next * 2);
-		indices.push_back(i * 2 + 1);
-		
-		indices.push_back(i * 2 + 1);
-		indices.push_back(next * 2);
-		indices.push_back(next * 2 + 1);
-		
-		// Side faces
-		indices.push_back(i * 2);
-		indices.push_back(i * 2 + 2);
-		indices.push_back(i * 2 + 1);
-		
-		indices.push_back(i * 2 + 1);
-		indices.push_back(i * 2 + 2);
-		indices.push_back(i * 2 + 3);
-	}
-	
-	ax::IndexArray indexArray;
-	for (auto index : indices) {
-		indexArray.emplace_back(index);
-	}
-	
-	// Create mesh and return it
-	return ax::Mesh::create(positions, normals, texs, indexArray);
 }
 
 ax::Node* createRearSuspension(float width, float height, float depth) {
