@@ -23,7 +23,17 @@
 #include <memory>
 
 namespace{
+double xend = 400.0;  // end logging here, this also the end of our world
 
+void CreateGround(ChSystem& sys) {
+	// Create the ground and obstacles
+	auto ground_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+	auto ground = chrono_types::make_shared<ChBodyEasyBox>(xend, xend, 1, 1000, true, true, ground_mat);
+	ground->SetPos(ChVector<>(0, 0, -1));
+	ground->SetBodyFixed(true);
+	ground->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"), 60, 45);
+	sys.Add(ground);
+}
 // Current to Voltage conversion
 float currentToVoltage(float current, float resistance = 4.0f) {
 	return current * resistance;
@@ -73,7 +83,8 @@ public:
 	
 	void accelerate(float voltage);
 	void steer(float angle);
-
+	void brake(float amount);
+	
 	std::shared_ptr<EVEngine> getEngine() const {
 		return engine_;
 	}
@@ -107,8 +118,14 @@ void StellaMagnosDriver::accelerate(float throttle){
 }
 
 void StellaMagnosDriver::steer(float angle){
-	m_steering = angle / 360.0f;
+//	m_steering = angle / 360.0f;
+	SetSteering(angle);
 }
+
+void StellaMagnosDriver::brake(float amount){
+	m_braking = amount / 1.0f;
+}
+
 
 void StellaMagnosDriver::Update(double time) {
 	auto roverPosition = m_vehicle.GetPos();
@@ -133,6 +150,8 @@ void StellaMagnosDriver::Update(double time) {
 //		curiosity->GetDriveshaft(static_cast<CuriosityWheelID>(i))->SetAppliedTorque(-angularSpeeds[i]);
 //
 //	}
+	
+	
 }
 #include "chrono_models/vehicle/duro/Duro_Vehicle.h"
 
@@ -167,7 +186,6 @@ std::string speed_controller_file("hmmwv/SpeedController.json");
 ChVector<> initLoc(32, 0, 0.6);
 
 // Logging of seat acceleration data on flat road surface is useless and would lead to distorted results
-double xend = 400.0;  // end logging here, this also the end of our world
 
 using namespace chrono;
 using namespace chrono::utils;
@@ -238,11 +256,11 @@ bool AdvancedCarGameState::init() {
 	
 	auto terrainImpl = std::make_unique<RandomSurfaceTerrain>(vehicle->GetSystem(), xend);
 	
-	terrainImpl->Initialize(RandomSurfaceTerrain::SurfaceType::ISO8608_A_CORR, vehicle->GetWheeltrack(0));
+	terrainImpl->Initialize(RandomSurfaceTerrain::SurfaceType::MAJOR_ROAD_ASPHALTIC_CONCRETE, vehicle->GetWheeltrack(0));
 
 	terrain = std::move(terrainImpl);
 
-	
+	CreateGround(*vehicle->GetSystem());
 	
 	// Create and initialize the powertrain system
 	auto engine = ReadEngineJSON(vehicle::GetDataFile(engine_file));
@@ -385,13 +403,12 @@ void AdvancedCarGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 	
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
 		steer = true;
-		steerAngle = 6;
+		steerAngle = -6;
 	}
-	
 	
 	if(code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
 		steer = true;
-		steerAngle = -6;
+		steerAngle = 6;
 	}
 	
 	
@@ -435,10 +452,20 @@ void AdvancedCarGameState::update(float delta) {
 	}
 
 	if(steer){
-		driver->SetSteering(steerAngle);
+		driver->steer(steerAngle);
 	} else {
-		driver->SetSteering(0);
+		driver->steer(0);
 	}
+	
+	
+	if(brake){
+		float brakePedalInput = 1.0f; // Adjust as needed
+		driver->brake(brakePedalInput);
+	} else {
+		float brakePedalInput = 0; // Adjust as needed
+		driver->brake(brakePedalInput);
+	}
+
 
 	driver->Update(delta);
 

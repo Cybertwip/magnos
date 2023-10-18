@@ -664,7 +664,7 @@ ax::Mesh* createFlatDisk(float radius, float thickness, int majorSegments, int m
 	auto torus = createTorus(radius + thickness / 2, thickness / 2, majorSegments, minorSegments);
 	
 	torus->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-	torus->setTexture("pink.jpg");
+	torus->setTexture("gray.jpg");
 	
 	return torus;
 }
