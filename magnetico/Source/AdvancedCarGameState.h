@@ -61,11 +61,11 @@ using namespace chrono::vsg3d;
 
 #include "chrono_models/vehicle/artcar/ARTcar.h"
 
+class StellaMagnosDriver;
 
 using namespace chrono;
 using namespace chrono::curiosity;
 
-class CuriosityMagnosDriver;
 
 class AdvancedCarGameState : public GameState {
 private:
@@ -125,7 +125,7 @@ public:
 	ChSystemNSC sys;
 	std::unique_ptr<vehicle::ChWheeledVehicle> vehicle;
 	std::unique_ptr<vehicle::ChTerrain> terrain;
-	std::shared_ptr<vehicle::ChPathFollowerDriver> driver;
+	std::shared_ptr<StellaMagnosDriver> driver;
 	std::shared_ptr<ChVisualSystem> vis;
 	
 	float stallTorque = 300;

@@ -65,38 +65,38 @@ private:
 	float currentConsumption_;
 };
 
-class StellaMagnosDriver : public CuriosityDriver {
+class StellaMagnosDriver : public ChDriver {
 public:
-	StellaMagnosDriver(Curiosity& vehicle, msr::airlib::Vector3r position);
+	StellaMagnosDriver(ChWheeledVehicle& vehicle, msr::airlib::Vector3r position);
 	
 	~StellaMagnosDriver() {}
 	
 	void accelerate(float voltage);
-	
+	void steer(float angle);
+
 	std::shared_ptr<EVEngine> getEngine() const {
 		return engine_;
 	}
 	
+	void Update(double delta);
 private:
-	virtual DriveMotorType GetDriveMotorType() const override { return DriveMotorType::TORQUE; }
-	virtual void Update(double time) override;
 	
 	double m_ramp;
 	double m_speed;
 	
 	std::shared_ptr<EVEngine> engine_;
-	Curiosity& rover;
+//	Curiosity& rover;
 	
 	std::vector<WheelMotor> wheelMotors_;
 };
 
-StellaMagnosDriver::StellaMagnosDriver(Curiosity& vehicle, msr::airlib::Vector3r position) : rover(vehicle) {
+StellaMagnosDriver::StellaMagnosDriver(ChWheeledVehicle& vehicle, msr::airlib::Vector3r position) : ChDriver(vehicle) {
 	engine_ = std::make_shared<EVEngine>(120);
 	engine_->setPosition3D(position);
 	engine_->init();
 	
 	for(int i = 0; i<6; ++i){
-		wheelMotors_.push_back(WheelMotor(10, 0.5f));
+		wheelMotors_.push_back(WheelMotor(80, 0.5f));
 	}
 }
 
@@ -106,8 +106,12 @@ void StellaMagnosDriver::accelerate(float throttle){
 	}
 }
 
+void StellaMagnosDriver::steer(float angle){
+	m_steering = angle / 360.0f;
+}
+
 void StellaMagnosDriver::Update(double time) {
-	auto roverPosition = rover.GetChassisPos();
+	auto roverPosition = m_vehicle.GetPos();
 	msr::airlib::Vector3r position = msr::airlib::Vector3r(roverPosition.x(), roverPosition.y(), roverPosition.z());
 	
 	engine_->setPosition3D(position);
@@ -118,20 +122,17 @@ void StellaMagnosDriver::Update(double time) {
 	
 	for (auto& motor : wheelMotors_) {
 		consumption += motor.GetCurrentConsumption();
-		
-		// Assuming a linear relationship between current consumption and angular speed
-		// Replace this with the actual relationship from your rover's specifications.
-		float angularSpeed = motor.GetCurrentConsumption() * 16;
-		angularSpeeds.push_back(angularSpeed);
 	}
 	
 	engine_->setEngineConsumption(consumption);
 	
+	m_throttle = consumption / EVEngine::max_voltage;
+	
 	// Use angular speeds to set drive_speeds (assuming 6-wheel configuration).
-	for(int i = 0; i<angularSpeeds.size(); ++i){
-		curiosity->GetDriveshaft(static_cast<CuriosityWheelID>(i))->SetAppliedTorque(-angularSpeeds[i]);
-
-	}
+//	for(int i = 0; i<angularSpeeds.size(); ++i){
+//		curiosity->GetDriveshaft(static_cast<CuriosityWheelID>(i))->SetAppliedTorque(-angularSpeeds[i]);
+//
+//	}
 }
 #include "chrono_models/vehicle/duro/Duro_Vehicle.h"
 
@@ -213,7 +214,8 @@ bool AdvancedCarGameState::init() {
 //		contact_method,
 //		CollisionType::PRIMITIVES);
 	
-	vehicle = std::make_unique<WheeledVehicle>(vehicle::GetDataFile(vehicle_file), contact_method);
+	vehicle = std::make_unique<
+	WheeledVehicle>(vehicle::GetDataFile(vehicle_file), contact_method);
 
 
 	vehicle->Initialize(ChCoordsys<>(initLoc, QUNIT));
@@ -285,9 +287,11 @@ bool AdvancedCarGameState::init() {
 	}
 
 	// Create the driver
-	auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
-	driver = std::make_shared<ChPathFollowerDriver>(*vehicle, vehicle::GetDataFile(steering_controller_file),
-								vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
+	
+	auto vehiclePosition = vehicle->GetPos();
+	msr::airlib::Vector3r position = msr::airlib::Vector3r(vehiclePosition.x(), vehiclePosition.y(), vehiclePosition.z());
+
+	driver = std::make_shared<StellaMagnosDriver>(*vehicle, position);
 	driver->Initialize();
 	
 	auto vis_axmol = chrono_types::make_shared<chrono::axmol::ChVisualSystemAxmol>();
@@ -297,11 +301,10 @@ bool AdvancedCarGameState::init() {
 	
 	vis = vis_axmol;
 	
-	carMesh_ = ax::MeshRenderer::create("polestar/Polestar1_Final01.obj");
+	carMesh_ = ax::MeshRenderer::create("polestar/polestar.obj");
 		
 	this->addChild(carMesh_);
 	
-	auto vehiclePosition = vehicle->GetChassis()->GetPos();
 	auto rotation = vehicle->GetChassis()->GetRot();
 	
 	ax::Quaternion quaternion = ax::Quaternion(rotation.e1(),
@@ -334,9 +337,9 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 
 	carMesh_->addChild(spotLight);
 
-	auto skybox = ax::Skybox::create("white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg");
+//	auto skybox = ax::Skybox::create("white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg");
 	
-	this->addChild(skybox);
+	//this->addChild(skybox);
 	
 	_defaultCamera = defaultCamera;
 	
@@ -372,9 +375,9 @@ void AdvancedCarGameState::onMouseMove(Event* event)
 
 void AdvancedCarGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 {
-//	if(driver->getEngine()->isCalibrating()){
-//		return;
-//	}
+	if(driver->getEngine()->isCalibrating()){
+		return;
+	}
 
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = true;
@@ -401,10 +404,10 @@ void AdvancedCarGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 void AdvancedCarGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 {
 
-//	if(driver->getEngine()->isCalibrating()){
-//		return;
-//	}
-//
+	if(driver->getEngine()->isCalibrating()){
+		return;
+	}
+
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = false;
 	}
@@ -422,8 +425,26 @@ void AdvancedCarGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 }
 
 void AdvancedCarGameState::update(float delta) {
+	driver->getEngine()->update(delta);
+
+	if(accelerate){
+		stallTorque += 1200 * Settings::fixed_delta;
+		driver->accelerate(0.5f);
+	} else {
+		driver->accelerate(0.0f);
+	}
+
+	if(steer){
+		driver->SetSteering(steerAngle);
+	} else {
+		driver->SetSteering(0);
+	}
+
+	driver->Update(delta);
+
 	// Get driver inputs
 	DriverInputs driver_inputs = driver->GetInputs();
+
 	// Update modules (process inputs from other modules)
 	
 	static long time = 0;
@@ -440,29 +461,6 @@ void AdvancedCarGameState::update(float delta) {
 	terrain->Advance(delta);
 //	vis->Advance(step_size);
 	
-	
-	// Update Curiosity controls
-//
-//	driver->getEngine()->update(Settings::fixed_delta);
-//
-//	if(accelerate){
-//		stallTorque += 1200 * Settings::fixed_delta;
-//		driver->accelerate(0.5f);
-//	} else {
-//		driver->accelerate(0.0f);
-//	}
-//
-//	rover->Update();
-//
-//	sys.DoStepDynamics(Settings::fixed_delta);
-//
-//	if(steer){
-//		driver->SetSteering(steerAngle);
-//	} else {
-//		driver->SetSteering(0);
-//	}
-//
-//
 	// Get the car's position
 	auto vehiclePosition = vehicle->GetPos();
 	auto chassisPosition = vehicle->GetChassis()->GetPos();
@@ -476,15 +474,15 @@ void AdvancedCarGameState::update(float delta) {
 	ax::Quaternion originalQuaternion = ax::Quaternion(rotation.e1(), rotation.e2(), rotation.e3(), rotation.e0());
 	
 	// Z-Up rotation quaternion (90 degrees around the X-axis)
-	float zUpAngle = M_PI_2; // 90 degrees in radians
-	ax::Quaternion zUpRotation = ax::Quaternion(sin(zUpAngle / 2), 0, 0, cos(zUpAngle / 2));
-	
+//	float zUpAngle = M_PI_2; // 90 degrees in radians
+//	ax::Quaternion zUpRotation = ax::Quaternion(sin(zUpAngle / 2), 0, 0, cos(zUpAngle / 2));
+//
 	// Yaw rotation quaternion (45 degrees around the Z-axis)
-	float yawAngle = M_PI / 2; // 45 degrees in radians
+	float yawAngle = M_PI; // 45 degrees in radians
 	ax::Quaternion yawRotation = ax::Quaternion(0, 0, sin(yawAngle / 2), cos(yawAngle / 2));
 	
 	// Multiply the original quaternion by the Z-Up and Yaw rotations
-	ax::Quaternion finalQuaternion = yawRotation * zUpRotation * originalQuaternion;
+	ax::Quaternion finalQuaternion = yawRotation * originalQuaternion;
 	
 	// Set the final quaternion for the carMesh_
 	carMesh_->setRotationQuat(finalQuaternion);
@@ -525,66 +523,44 @@ void AdvancedCarGameState::update(float delta) {
 }
 
 void AdvancedCarGameState::renderUI() {
-//	ImGui::SetNextWindowPos(ImVec2(120, 60), ImGuiCond_FirstUseEver);
-//
-//
-//	float laserOutput = 0;
-//	float laserInput = 0;
-//	for(auto laserNode : driver->getEngine()->getLasers()){
-//		laserOutput += laserNode->getGuiMeasure();
-//		laserInput += laserNode->getVoltageInput();
-//	}
-//
-//	float coilInput = 0;
-//	for(auto magnos : driver->getEngine()->getGimbals()){
-//		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::circuit_resistance);
-//	}
-//
-//	ImGui::Begin("Engine");
-//
-//	auto status = driver->getEngine()->getMagnosFeedback().status;
-//
-//	ImGui::Text("Status=%s", status.c_str());
-//
-//	ImGui::Text("Consumption (VDC)=%.2f",  driver->getEngine()->isCalibrating() ? 0 : inputAverageFilter.filter( driver->getEngine()->getEngineConsumption()));
-//
-//	ImGui::End();
-//
-//	ImGui::SetNextWindowPos(ImVec2(960, 60), ImGuiCond_FirstUseEver);
-//
-//	ImGui::Begin("Rover");
-//
-//
-//	static float battery = 0;
-//	static float acceleration = 0;
-//	static float speed = 0;
-//	static float laser = 0;
-//
-//	static float counter = 0;
-//
-//	int cycles_per_collection = Settings::fixed_update / Settings::fps;
-//
-//	counter += Settings::fixed_delta;
-//
-//	if(counter >= 1.0f / (float)cycles_per_collection){
-//		counter = 0;
-//		battery = 0;
-//		battery = driver->getEngine()->getBatteryVoltage();
-//		float linearAvg = 0.0f;
-//		linearAvg += rover->GetChassisVel().x();
-//		linearAvg += rover->GetChassisVel().y();
-//		linearAvg += rover->GetChassisVel().z();
-//
-//		linearAvg /= 3.0f;
-//
-////		acceleration = car->getAcceleration();
-//		speed = linearAvg;
-//	}
-//
-//	ImGui::Text("Battery Voltage=%.2f", battery);
-////	ImGui::Text("Accel m/s^2=%.2f", acceleration);
-//	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
-//	ImGui::End();
-//
-
+	ImGui::Begin("Engine");
+	
+	auto status = driver->getEngine()->getMagnosFeedback().status;
+	
+	ImGui::Text("Status=%s", status.c_str());
+	
+	ImGui::Text("Consumption (VDC)=%.2f",  driver->getEngine()->isCalibrating() ? 0 : inputAverageFilter.filter( driver->getEngine()->getEngineConsumption()));
+	
+	ImGui::End();
+	
+	ImGui::SetNextWindowPos(ImVec2(960, 60), ImGuiCond_FirstUseEver);
+	
+	ImGui::Begin("Car");
+	
+	static float battery = 0;
+	static float acceleration = 0;
+	static float speed = 0;
+	static float laser = 0;
+	
+	static float counter = 0;
+	
+	int cycles_per_collection = Settings::fixed_update / Settings::fps;
+	
+	counter += Settings::fixed_delta;
+	
+	if(counter >= 1.0f / (float)cycles_per_collection){
+		counter = 0;
+		battery = 0;
+		battery = driver->getEngine()->getBatteryVoltage();
+		float linearAvg = 0.0f;
+		linearAvg += vehicle->GetPointVelocity(vehicle->GetPos()).x();
+		
+		//		acceleration = car->getAcceleration();
+		speed = linearAvg;
+	}
+	
+	ImGui::Text("Battery Voltage=%.2f", battery);
+	//	ImGui::Text("Accel m/s^2=%.2f", acceleration);
+	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
+	ImGui::End();
 }

@@ -119,6 +119,7 @@ bool AppDelegate::applicationDidFinishLaunching()
     // create a scene. it's an autorelease object
     auto scene = utils::createInstance<HelloWorld>();
 	
+	Director::getInstance()->setClearColor(Color4F::BLUE);
     // run
     director->runWithScene(scene);
 

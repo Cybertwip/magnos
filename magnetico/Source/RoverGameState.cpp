@@ -340,9 +340,9 @@ void RoverGameState::setup(ax::Camera* defaultCamera){
 	this->addChild(spotLight);
 
 	
-	auto skybox = ax::Skybox::create("white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg");
+//	auto skybox = ax::Skybox::create("white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg");
 	
-	this->addChild(skybox);
+//	this->addChild(skybox);
 	
 	_defaultCamera = defaultCamera;
 	
