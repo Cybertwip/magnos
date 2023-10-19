@@ -42,8 +42,48 @@
 
 #include "ChVisualSystemAxmol.h"
 #include "Utils3d.h"
+
 namespace chrono {
 namespace axmol {
+
+
+void PopulateWithAxmolMaterial(ax::MeshRenderer* renderer, std::shared_ptr<ChVisualMaterial> mat) {
+	ax::Material* material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false);
+	
+	renderer->setOpacity(mat->GetOpacity() * 255.0f);
+	
+	renderer->setColor(ax::Color3B(mat->GetDiffuseColor().R * 255.0f,  mat->GetDiffuseColor().G * 255.0f,
+	    mat->GetDiffuseColor().B * 255.0f));
+	
+//	float ns_val = mat->GetSpecularExponent();  // in [0, 1000]
+//	irr_mat.Shininess = ns_val * 0.128f;
+	
+//	auto scale = mat->GetTextureScale();
+	
+	auto kd_texture_name = mat->GetKdTexture();
+	if (!kd_texture_name.empty()) {
+		renderer->setTexture(kd_texture_name);
+		renderer->setColor(ax::Color3B::WHITE);
+	}
+}
+
+static void SetVisualMaterial(
+							  ax::MeshRenderer* renderer,
+							  ax::Mesh* mesh,
+							  std::shared_ptr<ChVisualShape> shape) {
+	if (shape->GetMaterials().empty()) {
+		// Use default material
+
+		mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
+		
+		renderer->setTexture("gray.jpg");
+		renderer->setColor(ax::Color3B::WHITE);
+	} else {
+
+		PopulateWithAxmolMaterial(renderer, shape->GetMaterial(0));
+		
+	}
+}
 
 using namespace axmol;
 
@@ -441,13 +481,9 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			auto renderer = ax::MeshRenderer::create();
 			
 			renderer->addMesh(mesh);
-			
-			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
-			
-			renderer->setTexture("white.jpg");
-			
-			renderer->setColor(ax::Color3B::GRAY);
 
+			SetVisualMaterial(renderer, mesh, shape);
+			
 			node->addChild(renderer);
 			
 
@@ -525,12 +561,8 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			auto renderer = ax::MeshRenderer::create();
 			
 			renderer->addMesh(mesh);
-			
-			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
-			
-			mesh->setTexture("gold.jpg");
-			renderer->setTexture("gold.jpg");
-			renderer->setColor(ax::Color3B::WHITE);
+
+			SetVisualMaterial(renderer, mesh, shape);
 			
 			node->addChild(renderer);
 			
@@ -559,11 +591,7 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			
 			renderer->addMesh(mesh);
 			
-			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
-			
-			mesh->setTexture("gray.jpg");
-			renderer->setTexture("gray.jpg");
-			renderer->setColor(ax::Color3B::WHITE);
+			SetVisualMaterial(renderer, mesh, shape);
 			
 			node->addChild(renderer);
 			
@@ -589,12 +617,8 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			
 			renderer->addMesh(mesh);
 
-			mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
-
-			mesh->setTexture("gray.jpg");
-			renderer->setTexture("gray.jpg");
-			renderer->setColor(ax::Color3B::WHITE);
-
+			SetVisualMaterial(renderer, mesh, shape);
+			
 			node->addChild(renderer);
 			
 			
