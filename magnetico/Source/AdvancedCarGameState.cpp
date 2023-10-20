@@ -258,8 +258,6 @@ bool AdvancedCarGameState::init() {
 	
 	terrainImpl->Initialize(RandomSurfaceTerrain::SurfaceType::MAJOR_ROAD_ASPHALTIC_CONCRETE, vehicle->GetWheeltrack(0));
 
-	
-
 	terrain = std::move(terrainImpl);
 
 	CreateGround(*vehicle->GetSystem());
