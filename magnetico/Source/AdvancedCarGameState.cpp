@@ -552,10 +552,29 @@ void AdvancedCarGameState::update(float delta) {
 void AdvancedCarGameState::renderUI() {
 	ImGui::Begin("Engine");
 	
+	
+	float laserOutput = 0;
+	float laserInput = 0;
+	
+	for(auto laserNode : driver->getEngine()->getLasers()){
+		laserOutput += laserNode->getGuiMeasure();
+		laserInput += laserNode->getVoltageInput();
+	}
+	
+	float coilInput = 0;
+	for(auto magnos : driver->getEngine()->getGimbals()){
+		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::circuit_resistance);
+	}
+	
+
 	auto status = driver->getEngine()->getMagnosFeedback().status;
 	
 	ImGui::Text("Status=%s", status.c_str());
 	
+	ImGui::Text("Input Voltage=%.2f",  driver->getEngine()->isCalibrating() ? 0 : inputAverageFilter.filter(laserInput + coilInput));
+
+	ImGui::Text("Base + Gain Voltage=%.4f", driver->getEngine()->getMagnosFeedback().EMF + laserOutput);
+
 	ImGui::Text("Consumption (VDC)=%.2f",  driver->getEngine()->isCalibrating() ? 0 : inputAverageFilter.filter( driver->getEngine()->getEngineConsumption()));
 	
 	ImGui::End();
@@ -578,16 +597,23 @@ void AdvancedCarGameState::renderUI() {
 	if(counter >= 1.0f / (float)cycles_per_collection){
 		counter = 0;
 		battery = 0;
+		laser = 0;
 		battery = driver->getEngine()->getBatteryVoltage();
 		float linearAvg = 0.0f;
 		linearAvg += vehicle->GetSpeed();
 		
 		//		acceleration = car->getAcceleration();
 		speed = linearAvg;
+		
+		
+		for(auto laserNode : driver->getEngine()->getLasers()){
+			laser += laserNode->getGuiMeasure();
+		}
+
 	}
 	
 	ImGui::Text("Battery Voltage=%.2f", battery);
-	//	ImGui::Text("Accel m/s^2=%.2f", acceleration);
 	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
+	ImGui::Text("Laser v/s=%.2f", laser);
 	ImGui::End();
 }

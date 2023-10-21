@@ -71,7 +71,7 @@ bool HelloWorld::init()
 	// Enable mouse input (optional, if not already enabled)
 	_director->getOpenGLView()->setCursorVisible(true);
 
-	this->currentGameState = RoverGameState::create();
+	this->currentGameState = AdvancedCarGameState::create();
 	
 	this->addChild(currentGameState);
 	
