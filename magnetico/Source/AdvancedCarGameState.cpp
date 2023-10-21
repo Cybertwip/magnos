@@ -563,9 +563,8 @@ void AdvancedCarGameState::renderUI() {
 	
 	float coilInput = 0;
 	for(auto magnos : driver->getEngine()->getGimbals()){
-		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::circuit_resistance);
+		coilInput += currentToVoltage(magnos->getCoilSystem().current * Settings::fixed_delta, Settings::circuit_resistance);
 	}
-	
 
 	auto status = driver->getEngine()->getMagnosFeedback().status;
 	
@@ -573,9 +572,10 @@ void AdvancedCarGameState::renderUI() {
 	
 	ImGui::Text("Input Voltage=%.2f",  driver->getEngine()->isCalibrating() ? 0 : inputAverageFilter.filter(laserInput + coilInput));
 
-	ImGui::Text("Base + Gain Voltage=%.4f", driver->getEngine()->getMagnosFeedback().EMF + laserOutput);
+	ImGui::Text("Base + Gain Voltage=%.4f",
+				outputAverageFilter.filter(driver->getEngine()->getMagnosFeedback().baseEMF + driver->getEngine()->getMagnosFeedback().EMF + laserOutput));
 
-	ImGui::Text("Consumption (VDC)=%.2f",  driver->getEngine()->isCalibrating() ? 0 : inputAverageFilter.filter( driver->getEngine()->getEngineConsumption()));
+	ImGui::Text("Consumption (VDC)=%.2f",  driver->getEngine()->isCalibrating() ? 0 : engineAverageFilter.filter( driver->getEngine()->getEngineConsumption()));
 	
 	ImGui::End();
 	

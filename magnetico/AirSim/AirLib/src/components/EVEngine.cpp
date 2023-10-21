@@ -109,8 +109,8 @@ void EVEngine::update(float){
 	}
 			
 	if(Settings::enable_lasers){
-		float laserVoltage = Settings::desired_laser_voltage;
-		float powerDraw = (laserVoltage / Settings::number_of_gimbals) * Settings::fixed_delta;
+		float laserVoltage = Settings::desired_laser_voltage * Settings::number_of_lasers;
+		float powerDraw = (laserVoltage / (float)(Settings::number_of_gimbals)) * Settings::fixed_delta;
 		
 		float totalPowerDrawn = 0;
 		for(auto magnos : gimbals_){
@@ -123,7 +123,7 @@ void EVEngine::update(float){
 			laser->setVoltageInput(laserInput);
 		}
 		
-		battery_->discharge(voltsToCurrent(laserInput, 6), Settings::fixed_delta);
+		battery_->discharge(voltsToCurrent(laserInput, Settings::circuit_resistance), Settings::fixed_delta);
 	}
 	
 	bool anyDataCollectionMode = false;

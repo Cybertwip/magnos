@@ -114,7 +114,10 @@ public:
 	CREATE_FUNC(AdvancedCarGameState);
 
 	MovingAverageFilter inputAverageFilter = MovingAverageFilter(240);
+	MovingAverageFilter outputAverageFilter = MovingAverageFilter(240);
 	
+	MovingAverageFilter engineAverageFilter = MovingAverageFilter(240);
+
 	// The options are Scarecrow and FullRover
 	CuriosityChassisType chassis_type = CuriosityChassisType::FullRover;
 	
