@@ -14,12 +14,12 @@ illum 1
 newmtl Polestar_1_Car_Paint
 Ns 343.822266
 Ka 1.000000 1.000000 1.000000
+Kd 0.829291 0.829291 0.829291
 Ks 0.500000 0.500000 0.500000
 Ni 1.450000
 d 1.000000
 illum 3
-map_Kd marco.png
-map_Ke marco.png
+map_Ke LampsEmission.png
 
 newmtl Polestar_1_Chrome
 Ns 632.747864

@@ -98,9 +98,21 @@ void HelloWorld::onExit()
 
 void HelloWorld::onImGuiDraw()
 {
+	ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+	
 	ImGui::SetNextWindowPos(ImVec2(10, 550), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Sim Mode");
 		
+	
+	// Button to switch to another state (replace with your other state's name)
+	if (ImGui::Button("Basic"))
+	{
+		this->removeAllChildren();
+		this->currentGameState = BasicCarGameState::create();
+		this->currentGameState->setup(_defaultCamera);
+		this->addChild(currentGameState);
+	}
+	
 	// Button to switch to RoverGameState
 	if (ImGui::Button("Car"))
 	{
@@ -120,14 +132,6 @@ void HelloWorld::onImGuiDraw()
 	
 	
 	
-	// Button to switch to another state (replace with your other state's name)
-	if (ImGui::Button("Rocket"))
-	{
-		this->removeAllChildren();
-		this->currentGameState = RocketGameState::create();
-		this->currentGameState->setup(_defaultCamera);
-		this->addChild(currentGameState);
-	}
 	
 	ImGui::End();
 

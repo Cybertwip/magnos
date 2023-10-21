@@ -120,7 +120,10 @@ bool AppDelegate::applicationDidFinishLaunching()
     auto scene = utils::createInstance<HelloWorld>();
 	
 	Director::getInstance()->setClearColor(Color4F::BLUE);
-    // run
+	
+	Director::getInstance()->getOpenGLView()->setCursorVisible(false);
+	
+	// run
     director->runWithScene(scene);
 
     return true;

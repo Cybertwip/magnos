@@ -337,7 +337,7 @@ void Car::updateMotion(float deltaTime) {
 	newPosition.z += lateralMovementX;
 
 	// Update the car's position
-	//this->setPosition3D(newPosition);
+	this->setPosition3D(newPosition);
 	
 	// Calculate the change in orientation (yaw) based on the steering angle
 	float yawChange = newSpeed * std::tan(steeringAngle) * deltaTime;
