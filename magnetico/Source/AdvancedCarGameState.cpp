@@ -30,7 +30,7 @@ void CreateGround(ChSystem& sys) {
 	auto ground_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
 	auto ground = chrono_types::make_shared<ChBodyEasyBox>(xend, xend, 1, 1000, true, true, ground_mat);
 	ground->SetPos(ChVector<>(0, 0, -1));
-	ground->SetBodyFixed(true);
+	//ground->SetBodyFixed(true);
 	ground->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"), 60, 45);
 	sys.Add(ground);
 }
@@ -106,7 +106,7 @@ StellaMagnosDriver::StellaMagnosDriver(ChWheeledVehicle& vehicle, msr::airlib::V
 	engine_->setPosition3D(position);
 	engine_->init();
 	
-	for(int i = 0; i<6; ++i){
+	for(int i = 0; i<4; ++i){
 		wheelMotors_.push_back(WheelMotor(80, 0.5f));
 	}
 }
@@ -123,7 +123,9 @@ void StellaMagnosDriver::steer(float angle){
 }
 
 void StellaMagnosDriver::brake(float amount){
-	m_braking = amount / 1.0f;
+	float braking = amount / 1.0f;
+	
+	SetBraking(braking);
 }
 
 
@@ -143,7 +145,9 @@ void StellaMagnosDriver::Update(double time) {
 	
 	engine_->setEngineConsumption(consumption);
 	
-	m_throttle = consumption / EVEngine::max_voltage;
+	float throttle = consumption / EVEngine::max_voltage;
+	
+	SetThrottle(throttle);
 	
 	// Use angular speeds to set drive_speeds (assuming 6-wheel configuration).
 //	for(int i = 0; i<angularSpeeds.size(); ++i){
@@ -183,7 +187,7 @@ std::string steering_controller_file("hmmwv/SteeringController.json");
 std::string speed_controller_file("hmmwv/SpeedController.json");
 
 // Initial vehicle position
-ChVector<> initLoc(32, 0, 0.6);
+ChVector<> initLoc(32, 0, 0.725);
 
 // Logging of seat acceleration data on flat road surface is useless and would lead to distorted results
 
@@ -206,11 +210,14 @@ bool AdvancedCarGameState::init() {
 	// Path to Chrono data files (textures, etc.)
 	SetChronoDataPath(CHRONO_DATA_DIR);
 
+	collision::ChCollisionModel::SetDefaultSuggestedEnvelope(0.0025);
+	collision::ChCollisionModel::SetDefaultSuggestedMargin(0.0025);
+
 	std::string vehicleDataPath =
 	std::string{ CHRONO_DATA_DIR } + "vehicle/";
 	
 	vehicle::SetDataPath(vehicleDataPath.c_str());
-	int iTire = 2;
+	int iTire = 3;
 	
 	double target_speed = 420.0;
 	
@@ -221,11 +228,11 @@ bool AdvancedCarGameState::init() {
 	<< "Speed       = " << target_speed << " m/s\n"
 	<< "Tire Code (1=TMeasy, 2=Fiala, 3=Pacejka89, 4=Pacejka02, 5=Rigid) = " << iTire << "\n";
 
-	
 	// --------------------------
 	// Create the various modules
 	// --------------------------
-	ChContactMethod contact_method = ChContactMethod::SMC;
+	ChContactMethod contact_method = ChContactMethod::NSC;
+	
 //	vehicle = std::make_unique<duro::Duro_Vehicle>(false,
 //		BrakeType::SHAFTS,
 //	 	SteeringTypeWV::PITMAN_ARM_SHAFTS,
@@ -234,8 +241,7 @@ bool AdvancedCarGameState::init() {
 	
 	vehicle = std::make_unique<
 	WheeledVehicle>(vehicle::GetDataFile(vehicle_file), contact_method);
-
-
+	
 	vehicle->Initialize(ChCoordsys<>(initLoc, QUNIT));
 	vehicle->GetChassis()->SetFixed(false);
 	vehicle->SetChassisVisualizationType(VisualizationType::PRIMITIVES);
@@ -245,29 +251,27 @@ bool AdvancedCarGameState::init() {
 	
 //	terrain = std::make_unique<RigidTerrain>(vehicle->GetSystem(), vehicle::GetDataFile(rigidterrain_file));
 
-//	if (iTire == 5) {
-//		ChContactMaterialData minfo;
-//		minfo.mu = 0.9f;
-//		minfo.cr = 0.01f;
-//		minfo.Y = 2e7f;
-//		auto terrain_mat = minfo.CreateMaterial(contact_method);
-//		terrain->EnableCollisionMesh(terrain_mat, std::abs(initLoc.x()) + 5);
-//	}
-	
 	auto terrainImpl = std::make_unique<RandomSurfaceTerrain>(vehicle->GetSystem(), xend);
 	
-	terrainImpl->Initialize(RandomSurfaceTerrain::SurfaceType::MAJOR_ROAD_ASPHALTIC_CONCRETE, vehicle->GetWheeltrack(0));
+	terrainImpl->Initialize(RandomSurfaceTerrain::SurfaceType::FLAT, vehicle->GetWheeltrack(0));
+	
+//	auto ground_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+
+//	terrainImpl->EnableCollisionMesh(ground_mat, std::abs(initLoc.x()) + 5);
 
 	terrain = std::move(terrainImpl);
 
-	CreateGround(*vehicle->GetSystem());
+	//CreateGround(*vehicle->GetSystem());
 	
 	// Create and initialize the powertrain system
 	auto engine = ReadEngineJSON(vehicle::GetDataFile(engine_file));
+	
 	auto transmission = ReadTransmissionJSON(vehicle::GetDataFile(transmission_file));
 	auto powertrain = chrono_types::make_shared<ChPowertrainAssembly>(engine, transmission);
 	vehicle->InitializePowertrain(powertrain);
 	
+	//vehicle->EnableBrakeLocking(true);
+
 	// Create and initialize the tires
 	for (auto& axle : vehicle->GetAxles()) {
 		switch (iTire) {
@@ -305,16 +309,13 @@ bool AdvancedCarGameState::init() {
 	}
 
 	// Create the driver
-	
 	auto vehiclePosition = vehicle->GetPos();
 	msr::airlib::Vector3r position = msr::airlib::Vector3r(vehiclePosition.x(), vehiclePosition.y(), vehiclePosition.z());
-
 	driver = std::make_shared<StellaMagnosDriver>(*vehicle, position);
 	driver->Initialize();
 	
 	auto vis_axmol = chrono_types::make_shared<chrono::axmol::ChVisualSystemAxmol>();
 	vis_axmol->AttachSystem(vehicle->GetSystem());
-	
 	vis_axmol->Initialize(this);
 	
 	vis = vis_axmol;
@@ -333,7 +334,7 @@ bool AdvancedCarGameState::init() {
 	carMesh_->setPosition3D(Vec3(vehiclePosition.x(), vehiclePosition.y(), vehiclePosition.z()));
 
 	carMesh_->setRotationQuat(quaternion);
-
+	
 	return true;
 }
 
@@ -445,7 +446,6 @@ void AdvancedCarGameState::update(float delta) {
 	driver->getEngine()->update(delta);
 
 	if(accelerate){
-		stallTorque += 1200 * Settings::fixed_delta;
 		driver->accelerate(0.5f);
 	} else {
 		driver->accelerate(0.0f);
@@ -466,12 +466,11 @@ void AdvancedCarGameState::update(float delta) {
 		driver->brake(brakePedalInput);
 	}
 
-
 	driver->Update(delta);
 
 	// Get driver inputs
 	DriverInputs driver_inputs = driver->GetInputs();
-
+	
 	// Update modules (process inputs from other modules)
 	
 	static long time = 0;
@@ -480,6 +479,7 @@ void AdvancedCarGameState::update(float delta) {
 	driver->Synchronize(time);
 	vehicle->Synchronize(time, driver_inputs, *terrain);
 	terrain->Synchronize(time);
+	
 //	vis->Synchronize(time, driver_inputs);
 	
 	// Advance simulation for one timestep for all modules
@@ -580,7 +580,7 @@ void AdvancedCarGameState::renderUI() {
 		battery = 0;
 		battery = driver->getEngine()->getBatteryVoltage();
 		float linearAvg = 0.0f;
-		linearAvg += vehicle->GetPointVelocity(vehicle->GetPos()).x();
+		linearAvg += vehicle->GetSpeed();
 		
 		//		acceleration = car->getAcceleration();
 		speed = linearAvg;

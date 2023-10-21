@@ -15,7 +15,7 @@ msr::airlib::Vector3r AlternatorSystem::combineFieldsOrForces(const msr::airlib:
     return {};
 }
 
-std::shared_ptr<Node> AlternatorSystem::attach(float radius, MagnetDirection direction, MagnetPolarity polarity) {
+std::shared_ptr<msr::airlib::Node> AlternatorSystem::attach(float radius, MagnetDirection direction, MagnetPolarity polarity) {
 	
 	msr::airlib::Vector3r position(0, 0, 0);
 	

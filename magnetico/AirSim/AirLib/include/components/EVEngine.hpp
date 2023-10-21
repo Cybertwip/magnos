@@ -15,7 +15,7 @@ struct EVFeedback {
 	float EMF;
 };
 
-class EVEngine : public Node {
+class EVEngine : public msr::airlib::Node {
 public:
 	EVEngine(float max_engine_voltage = EVEngine::max_voltage);
 	

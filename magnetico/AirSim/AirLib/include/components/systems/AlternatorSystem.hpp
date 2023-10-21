@@ -20,7 +20,7 @@ public:
 	
 	msr::airlib::Vector3r combineFieldsOrForces(const msr::airlib::Vector3r& origin) override;
 	
-	std::shared_ptr<Node> attach(float radius, MagnetDirection direction, MagnetPolarity polarity);
+	std::shared_ptr<msr::airlib::Node> attach(float radius, MagnetDirection direction, MagnetPolarity polarity);
 	void update();
 
 };

@@ -6,7 +6,7 @@
 #include "components/systems/AlternatorSystem.hpp"
 #include "components/systems/CoilSystem.hpp"
 
-class Magnos : public Node {
+class Magnos : public msr::airlib::Node {
 private:
 	
 	static constexpr float MU_0 = 4.0f * M_PI * 1e-7f;  // Vacuum permeability

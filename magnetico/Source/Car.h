@@ -17,9 +17,6 @@ private:
 	ax::Node* engineBox;
 	ax::Node* frontLeftWheel;
 	ax::Node* frontRightWheel;
-	ax::Node* rearLeftWheel;
-	ax::Node* rearRightWheel;
-	ax::Node* rearSuspension;
 	
 	// Member variables for acceleration and friction
 	float acceleration;
@@ -61,6 +58,11 @@ public:
 	void update(float dt) override;
 
 	CREATE_FUNC(Car);
+	
+	ax::Node* rearLeftWheel;
+	ax::Node* rearRightWheel;
+	ax::Node* rearSuspension;
+
 	
 };
 

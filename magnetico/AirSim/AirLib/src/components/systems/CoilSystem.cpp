@@ -209,14 +209,13 @@ msr::airlib::Vector3r CoilSystem::computeMagneticField(CoilEntity::AttachedEntit
 	}
 	
 	// Magnetic permeability of free space (μ₀)
-	const float mu0 = 4 * M_PI * 1e-7;  // T·m/A
+//	const float mu0 = 4 * M_PI * 1e-7;  // T·m/A
 	
 	// Permeability of iron (typical value for ferromagnetic materials)
 	const float mu_iron = 4 * M_PI * 1e-3;  // T·m/A (typical value for ferromagnetic materials)
 	
 	float magnitude = (this->current * coil.turns * mu_iron) / (2 * M_PI * distance);
 	
-	// Reverse the direction if the polarity is SOUTH
 	if (polarity == MagnetPolarity::SOUTH) {
 		magnitude = -magnitude;
 	}
@@ -231,11 +230,11 @@ msr::airlib::Vector3r CoilSystem::combineFieldsOrForces(const msr::airlib::Vecto
 		msr::airlib::Vector3r field = computeMagneticField(coil, origin, coil.position, coil.polarity);
         totalField += field;
     }
-    
+	
     return totalField;
 }
 
-std::shared_ptr<Node> CoilSystem::attach(float radius, MagnetDirection direction, MagnetPolarity polarity) {
+std::shared_ptr<msr::airlib::Node> CoilSystem::attach(float radius, MagnetDirection direction, MagnetPolarity polarity) {
     
 	msr::airlib::Vector3r position(0, 0, 0);
     

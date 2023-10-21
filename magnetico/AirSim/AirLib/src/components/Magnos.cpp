@@ -1,7 +1,6 @@
 #include "components/Magnos.hpp"
 
 namespace {
-// Function to create a quaternion from an axis-angle representation
 msr::airlib::Quaternionr createQuaternionFromAxisAngle(const msr::airlib::Vector3r& axis, float rotationAngle) {
 	// Calculate the sine and cosine of half the angle
 	float halfAngle = rotationAngle / 2.0f;
@@ -206,6 +205,7 @@ void Magnos::applyTorqueAndRotate(std::shared_ptr<Node> node, const msr::airlib:
 	msr::airlib::Quaternionr newRotation = currentRotation * rotation;
 	node->setRotationQuat(newRotation);
 }
+
 void Magnos::applyMagneticImpulse(float delta) {
 	// Combine magnetic forces
 	auto forces = outerCoilSystem->combineFieldsOrForces(getWorldPosition3D());
@@ -222,8 +222,7 @@ void Magnos::applyMagneticImpulse(float delta) {
 		for (const auto& outerRingMagnet : outerRingMagnets) {
 			// Calculate force between ironBallMagnet and outerRingMagnet
 			msr::airlib::Vector3r forceOnIronBall = innerMagnetSystem->calculateForceDueToMagnet(
-																								 msr::airlib::Vector3r(0, 0, 0), outerRingMagnet.position, ironBallMagnet.position, outerRingMagnet.polarity
-																					);
+																				msr::airlib::Vector3r(0, 0, 0), outerRingMagnet.position, ironBallMagnet.position, outerRingMagnet.polarity);
 			
 			// Accumulate the force on the iron ball
 			ironBallTotalForce += forceOnIronBall;
@@ -260,6 +259,7 @@ void Magnos::applyMagneticImpulse(float delta) {
 	// Assuming that forces are acting on some lever arm distance r from the rotation axis
 	float r = 1; // This value should be set based on your system
 	
+	
 	msr::airlib::Vector3r torqueInner = r * ironBallForces;
 	applyTorqueAndRotate(innerNode, torqueInner, Settings::fixed_delta, msr::airlib::Vector3r(1, 0, 0));
 	
@@ -267,8 +267,17 @@ void Magnos::applyMagneticImpulse(float delta) {
 	applyTorqueAndRotate(middleNode, torqueMiddle, Settings::fixed_delta, msr::airlib::Vector3r(0, 1, 0));
 }
 
-AlternatorSystem& Magnos::getAlternatorSystem() { return alternator; }
-CoilSystem& Magnos::getCoilSystem() { return *outerCoilSystem; }
+AlternatorSystem& Magnos::getAlternatorSystem() {
+	
+	return alternator;
+	
+}
+
+CoilSystem& Magnos::getCoilSystem() {
+	
+	return *outerCoilSystem;
+	
+}
 
 void Magnos::init() {
 	

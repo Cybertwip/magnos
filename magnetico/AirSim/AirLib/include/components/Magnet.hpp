@@ -4,7 +4,7 @@
 
 #include "components/entities/Node.hpp"
 
-class Magnet : public Node {
+class Magnet : public msr::airlib::Node {
 public:
 	Magnet(std::vector<MagnetEntity::AttachedEntity>& entities, size_t index);
 	

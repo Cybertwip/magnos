@@ -26,6 +26,7 @@
 #include "HelloWorldScene.h"
 #include "RoverGameState.h"
 #include "BasicCarGameState.h"
+#include "WheelGameState.h"
 
 #include "AdvancedCarGameState.h"
 #include "RocketGameState.h"
@@ -70,7 +71,7 @@ bool HelloWorld::init()
 	// Enable mouse input (optional, if not already enabled)
 	_director->getOpenGLView()->setCursorVisible(true);
 
-	this->currentGameState = AdvancedCarGameState::create();
+	this->currentGameState = RoverGameState::create();
 	
 	this->addChild(currentGameState);
 	

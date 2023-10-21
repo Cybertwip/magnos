@@ -23,10 +23,10 @@ wheel_angular_velocity = 0
 
 # Time and RPM calculations
 time_elapsed = 0
-max_rpm = 5000  # Max RPM for 12 volts (for illustration purposes)
+max_rpm = 12000  # Max RPM for 12 volts (for illustration purposes)
 
-coil_inductance = 10.0  # Example coil inductance (you can adjust this)
-current = 120  # Example current input (you can adjust this)
+coil_inductance = 100.0  # Example coil inductance (you can adjust this)
+current = 43  # Example current input (you can adjust this)
 
 clock = pygame.time.Clock()
 

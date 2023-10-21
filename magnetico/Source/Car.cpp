@@ -300,12 +300,7 @@ void Car::applyFriction() {
 
 void Car::updateMotion(float deltaTime) {
 	applyFriction();
-	
-	// Calculate the car's new position based on acceleration and time
-	// You can use a physics engine or simple equations to update the position and speed.
-	// For simplicity, let's assume constant velocity for this example.
-	// Calculate the car's new speed based on acceleration and time
-	
+		
 	// Calculate the car's new speed based on acceleration and time
 	float newSpeed = speed + acceleration * deltaTime;
 	
@@ -342,7 +337,7 @@ void Car::updateMotion(float deltaTime) {
 	newPosition.z += lateralMovementX;
 
 	// Update the car's position
-	this->setPosition3D(newPosition);
+	//this->setPosition3D(newPosition);
 	
 	// Calculate the change in orientation (yaw) based on the steering angle
 	float yawChange = newSpeed * std::tan(steeringAngle) * deltaTime;

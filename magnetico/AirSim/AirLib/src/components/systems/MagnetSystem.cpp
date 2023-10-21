@@ -36,7 +36,7 @@ msr::airlib::Vector3r MagnetSystem::combineFieldsOrForces(const msr::airlib::Vec
 }
 
 
-std::shared_ptr<Node> MagnetSystem::attach(float radius, MagnetDirection direction, MagnetPolarity polarity) {
+std::shared_ptr<msr::airlib::Node> MagnetSystem::attach(float radius, MagnetDirection direction, MagnetPolarity polarity) {
 	msr::airlib::Vector3r position(0, 0, 0);
     
     switch (direction) {

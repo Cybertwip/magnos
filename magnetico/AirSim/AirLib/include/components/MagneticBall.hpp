@@ -2,7 +2,7 @@
 
 #include "components/entities/Node.hpp"
 
-class MagneticBall : public Node {
+class MagneticBall : public msr::airlib::Node {
 protected:
 	float radius;
 	virtual float get_density() const = 0;

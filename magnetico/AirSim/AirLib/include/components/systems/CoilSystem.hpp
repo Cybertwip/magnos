@@ -77,7 +77,7 @@ public:
 	void setOnVoltagePeakCallback(std::function<void(int, float)> onVoltagePeak);
 
 	void adjustCurrentBasedOn(float dt);
-	std::shared_ptr<Node> attach(float radius, MagnetDirection direction, MagnetPolarity polarity);
+	std::shared_ptr<msr::airlib::Node> attach(float radius, MagnetDirection direction, MagnetPolarity polarity);
 
 private:
 		

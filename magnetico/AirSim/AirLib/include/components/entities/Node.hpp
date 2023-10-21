@@ -2,6 +2,7 @@
 
 #include "common/Common.hpp"
 
+namespace msr::airlib {
 class Node : public std::enable_shared_from_this<Node> {
 private:
 	msr::airlib::Quaternionr quaternion;
@@ -24,11 +25,11 @@ public:
 	msr::airlib::Vector3r getPosition3D(){
 		return this->position3D;
 	}
-
+	
 	void setPosition3D(const msr::airlib::Vector3r& position){
 		this->position3D = position;
 	}
-
+	
 	msr::airlib::Vector3r getWorldPosition3D(){
 		msr::airlib::Vector3r accumulatedPosition3D = getPosition3D();
 		
@@ -39,7 +40,7 @@ public:
 			accumulatedPosition3D += nodeParent->getPosition3D();
 			nodeParent = nodeParent->getParent();
 		}
-
+		
 		return accumulatedPosition3D;
 	}
 	
@@ -65,7 +66,7 @@ public:
 		child->parent = shared_from_this();
 		children.push_back(child);
 	}
-		
+	
 	virtual void update(float){
 		updateChildPositions();
 	}
@@ -90,8 +91,10 @@ private:
 		}
 	}
 	
-
+	
 	std::shared_ptr<Node> parent;
 	
 	std::vector<std::shared_ptr<Node>> children;
 };
+
+}

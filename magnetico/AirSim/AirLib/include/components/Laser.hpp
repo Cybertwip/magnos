@@ -2,7 +2,7 @@
 
 #include "components/entities/Node.hpp"
 
-class Laser : public Node {
+class Laser : public msr::airlib::Node {
 private:
 	double apertureRadius;   // Aperture radius in meters
 	bool isConvexLens;       // Whether the lens is convex (true) or concave (false)

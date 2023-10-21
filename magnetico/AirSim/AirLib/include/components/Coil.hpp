@@ -4,7 +4,7 @@
 
 #include "components/entities/Node.hpp"
 
-class Coil : public Node {
+class Coil : public msr::airlib::Node {
 public:
 	Coil(std::vector<CoilEntity::AttachedEntity>& entities, size_t index);	
 	void updatePositions();

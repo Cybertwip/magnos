@@ -6,7 +6,7 @@
 float EVEngine::max_voltage = 400;
 
 namespace {
-std::shared_ptr<Magnos> createGimbal(int id, std::shared_ptr<Node> parent, msr::airlib::Vector3r position){
+std::shared_ptr<Magnos> createGimbal(int id, std::shared_ptr<msr::airlib::Node> parent, msr::airlib::Vector3r position){
 	auto gimbal = std::make_shared<Magnos>();
 	gimbal->loadData(id);
 	gimbal->init();
@@ -100,7 +100,7 @@ float EVEngine::getEngineConsumption() const {
 
 void EVEngine::update(float){
 	
-	Node::update(Settings::fixed_delta);
+	msr::airlib::Node::update(Settings::fixed_delta);
 	
 	if(Settings::enable_lasers){
 		for(auto laser : lasers_){

@@ -122,7 +122,6 @@ public:
 	// The options are RealWheel, SimpleWheel, and CylWheel
 	CuriosityWheelType wheel_type = CuriosityWheelType::RealWheel;
 	// Create a ChronoENGINE physical system
-	ChSystemNSC sys;
 	std::unique_ptr<vehicle::ChWheeledVehicle> vehicle;
 	std::unique_ptr<vehicle::ChTerrain> terrain;
 	std::shared_ptr<StellaMagnosDriver> driver;
