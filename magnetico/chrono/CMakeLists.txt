@@ -67,6 +67,10 @@ if(APPLE)
     set(CMAKE_INSTALL_PREFIX /opt/homebrew)
 endif()
 
+if(EMSCRIPTEN)
+    set(CMAKE_INSTALL_PREFIX /opt/emscripten)
+endif()
+
 #-----------------------------------------------------------------------------
 # Location of additional CMake scripts
 #-----------------------------------------------------------------------------

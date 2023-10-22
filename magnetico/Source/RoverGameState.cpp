@@ -42,6 +42,8 @@ void CreateTerrain(ChSystem& sys) {
 	ground->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"), 60, 45);
 	sys.Add(ground);
 	
+	return;
+	
 	// Create the first step of the stair-shaped obstacle
 	auto mbox_1 = chrono_types::make_shared<ChBodyEasyBox>(2.4, 1.4, 0.1, 1000, true, true, ground_mat);
 	mbox_1->SetPos(ChVector<>(3, 1, 0.05));
@@ -193,59 +195,59 @@ bool RoverGameState::init() {
 	// Global parameter for moving patch size:
 	double wheel_range = 0.5;
 
-	// Create obstacles
-	std::vector<std::shared_ptr<ChBodyAuxRef>> rock;
-	std::vector<std::string> rock_meshfile = {
-		"robot/curiosity/rocks/rock1.obj", "robot/curiosity/rocks/rock1.obj",  //
-		"robot/curiosity/rocks/rock1.obj", "robot/curiosity/rocks/rock1.obj",  //
-		"robot/curiosity/rocks/rock3.obj", "robot/curiosity/rocks/rock3.obj"   //
-	};
-	std::vector<ChVector<>> rock_pos = {
-		ChVector<>(-2.5, -0.3, -1.0), ChVector<>(-2.5, -0.3, +1.0), //
-		ChVector<>(-1.0, -0.3, -1.0), ChVector<>(-1.0, -0.3, +1.0), //
-		ChVector<>(+0.5, -0.3, -1.0), ChVector<>(+0.5, -0.3, +1.0) //
-	};
-	std::vector<double> rock_scale = {
-		0.8,  0.8,   //
-		0.45, 0.45,  //
-		0.45, 0.45   //
-	};
-	double rock_density = 8000;
-	std::shared_ptr<ChMaterialSurface> rock_mat = ChMaterialSurface::DefaultMaterial(sys.GetContactMethod());
-
-	for (int i = 0; i < 6; i++) {
-		auto mesh = chrono::geometry::ChTriangleMeshConnected::CreateFromWavefrontFile(GetChronoDataFile(rock_meshfile[i]), false, true);
-		mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(rock_scale[i]));
-
-		double mass;
-		ChVector<> cog;
-		ChMatrix33<> inertia;
-		mesh->ComputeMassProperties(true, mass, cog, inertia);
-		ChMatrix33<> principal_inertia_rot;
-		ChVector<> principal_I;
-		ChInertiaUtils::PrincipalInertia(inertia, principal_I, principal_inertia_rot);
-
-		auto body = chrono_types::make_shared<ChBodyAuxRef>();
-		sys.Add(body);
-		body->SetBodyFixed(false);
-		body->SetFrame_REF_to_abs(ChFrame<>(ChVector<>(rock_pos[i]), QUNIT));
-		body->SetFrame_COG_to_REF(ChFrame<>(cog, principal_inertia_rot));
-		body->SetMass(mass * rock_density);
-		body->SetInertiaXX(rock_density * principal_I);
-
-		body->GetCollisionModel()->ClearModel();
-		body->GetCollisionModel()->AddTriangleMesh(rock_mat, mesh, false, false, VNULL, ChMatrix33<>(1),
-												   0.005);
-		body->GetCollisionModel()->BuildModel();
-		body->SetCollide(true);
-
-		auto mesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-		mesh_shape->SetMesh(mesh);
-		mesh_shape->SetBackfaceCull(true);
-		body->AddVisualShape(mesh_shape);
-
-		rock.push_back(body);
-	}
+//	// Create obstacles
+//	std::vector<std::shared_ptr<ChBodyAuxRef>> rock;
+//	std::vector<std::string> rock_meshfile = {
+//		"robot/curiosity/rocks/rock1.obj", "robot/curiosity/rocks/rock1.obj",  //
+//		"robot/curiosity/rocks/rock1.obj", "robot/curiosity/rocks/rock1.obj",  //
+//		"robot/curiosity/rocks/rock3.obj", "robot/curiosity/rocks/rock3.obj"   //
+//	};
+//	std::vector<ChVector<>> rock_pos = {
+//		ChVector<>(-2.5, -0.3, -1.0), ChVector<>(-2.5, -0.3, +1.0), //
+//		ChVector<>(-1.0, -0.3, -1.0), ChVector<>(-1.0, -0.3, +1.0), //
+//		ChVector<>(+0.5, -0.3, -1.0), ChVector<>(+0.5, -0.3, +1.0) //
+//	};
+//	std::vector<double> rock_scale = {
+//		0.8,  0.8,   //
+//		0.45, 0.45,  //
+//		0.45, 0.45   //
+//	};
+//	double rock_density = 8000;
+//	std::shared_ptr<ChMaterialSurface> rock_mat = ChMaterialSurface::DefaultMaterial(sys.GetContactMethod());
+//
+//	for (int i = 0; i < 6; i++) {
+//		auto mesh = chrono::geometry::ChTriangleMeshConnected::CreateFromWavefrontFile(GetChronoDataFile(rock_meshfile[i]), false, true);
+//		mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(rock_scale[i]));
+//
+//		double mass;
+//		ChVector<> cog;
+//		ChMatrix33<> inertia;
+//		mesh->ComputeMassProperties(true, mass, cog, inertia);
+//		ChMatrix33<> principal_inertia_rot;
+//		ChVector<> principal_I;
+//		ChInertiaUtils::PrincipalInertia(inertia, principal_I, principal_inertia_rot);
+//
+//		auto body = chrono_types::make_shared<ChBodyAuxRef>();
+//		sys.Add(body);
+//		body->SetBodyFixed(false);
+//		body->SetFrame_REF_to_abs(ChFrame<>(ChVector<>(rock_pos[i]), QUNIT));
+//		body->SetFrame_COG_to_REF(ChFrame<>(cog, principal_inertia_rot));
+//		body->SetMass(mass * rock_density);
+//		body->SetInertiaXX(rock_density * principal_I);
+//
+//		body->GetCollisionModel()->ClearModel();
+//		body->GetCollisionModel()->AddTriangleMesh(rock_mat, mesh, false, false, VNULL, ChMatrix33<>(1),
+//												   0.005);
+//		body->GetCollisionModel()->BuildModel();
+//		body->SetCollide(true);
+//
+//		auto mesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+//		mesh_shape->SetMesh(mesh);
+//		mesh_shape->SetBackfaceCull(true);
+//		body->AddVisualShape(mesh_shape);
+//
+//		rock.push_back(body);
+//	}
 
 	// Create the SCM deformable terrain
 //	terrain = std::make_unique<vehicle::SCMTerrain>(&sys);

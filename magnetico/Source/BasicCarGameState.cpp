@@ -237,81 +237,33 @@ void BasicCarGameState::renderUI() {
 	
 	ImGui::Begin("Engine");
 	
-	auto status = car->getEngine()->getMagnosFeedback().status;
-
-	ImGui::Text("Status=%s", status.c_str());
-	ImGui::Text("Coil Voltage Draw=%.4f", 1.5f);
-	ImGui::Text("Laser Voltage Draw=%.4f", 5.0f);
-	ImGui::Text("Peak Voltage=%.4f", car->getEngine()->getMagnosFeedback().peakEMF);
 	
-	static int desired_voltage = EVEngine::max_voltage;
-	//static int last_voltage_increase = desired_voltage;
-
-	ImGui::Text("Target Voltage:%d", desired_voltage);
-	
-//
-//	if(any_calibration || any_collection){
-//		ImGui::BeginDisabled();
-//		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
-//		ImGui::EndDisabled();
-//	} else {
-//		ImGui::SliderInt("Volts", &desired_voltage, min_voltage, max_voltage);
-//	}
-	
-//	if(last_voltage_increase != Settings::desired_target_voltage){
-//		Settings::desired_target_voltage = last_voltage_increase;
-//		for(auto gimbal : gimbals){
-//			auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-//			magnos->getCoilSystem().setDesignedEMFPerSecond(Settings::desired_target_voltage / number_of_gimbals);
-//			magnos->getCoilSystem().recalibrate();
-//		}
-//
-//	}
-	
-	//last_voltage_increase = desired_voltage;
 	
 	float laserOutput = 0;
 	float laserInput = 0;
+	
 	for(auto laserNode : car->getEngine()->getLasers()){
 		laserOutput += laserNode->getGuiMeasure();
 		laserInput += laserNode->getVoltageInput();
 	}
-
+	
 	float coilInput = 0;
 	for(auto magnos : car->getEngine()->getGimbals()){
-		coilInput += currentToVoltage(magnos->getCoilSystem().current, Settings::circuit_resistance);
+		coilInput += currentToVoltage(magnos->getCoilSystem().current * Settings::fixed_delta, Settings::circuit_resistance);
 	}
 	
-	ImGui::Text("Input Voltage=%.2f",  car->isCalibrating() ? 0 : inputAverageFilter.filter(laserInput + coilInput));
-	ImGui::Text("Base Voltage=%.4f", car->getEngine()->getMagnosFeedback().baseEMF);
-	ImGui::Text("Base + Gain Voltage=%.4f", car->getEngine()->getMagnosFeedback().EMF + laserOutput);
-	//ImGui::Text("Recycled Filtered Voltage=%.4f", guiRecycledEMF); // @TODO maximize voltage
-//
-//	if(any_collection || any_calibration){
-//		ImGui::BeginDisabled();
-//		ImGui::Button("Collect Data");
-//		ImGui::EndDisabled();
-//	} else {
-//		bool collectDataButtonPressed = false;
-//
-//		if (ImGui::Button("Collect Data")) {
-//			collectDataButtonPressed = true;
-//		}
-//
-//		if (collectDataButtonPressed) {
-//			collectDataButtonPressed = false;
-////
-////			for(auto gimbal : gimbals){
-////				auto magnos = dynamic_cast<MaritimeGimbal3D*>(gimbal);
-////
-////				magnos->getCoilSystem().scheduleCollection();
-////			}
-//
-//		}
-//	}
+	auto status = car->getEngine()->getMagnosFeedback().status;
+	
+	ImGui::Text("Status=%s", status.c_str());
+	
+	ImGui::Text("Input Voltage=%.2f",  car->getEngine()->isCalibrating() ? 0 : inputAverageFilter.filter(laserInput + coilInput));
+	
+	ImGui::Text("Base + Gain Voltage=%.4f",
+				outputAverageFilter.filter(car->getEngine()->getMagnosFeedback().baseEMF + car->getEngine()->getMagnosFeedback().EMF + laserOutput));
+	
+	ImGui::Text("Consumption (VDC)=%.2f",  car->getEngine()->isCalibrating() ? 0 : engineAverageFilter.filter( car->getEngine()->getEngineConsumption()));
 	
 	
-	//ImGui::Text("Induced Current=%.4f", inducedCurrent);
 	ImGui::End();
 	
 	ImGui::SetNextWindowPos(ImVec2(960, 60), ImGuiCond_FirstUseEver);

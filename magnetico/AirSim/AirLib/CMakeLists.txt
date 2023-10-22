@@ -7,16 +7,13 @@ CommonSetup()
 
 IncludeEigen()
 
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(MLPACK REQUIRED mlpack)
-pkg_check_modules(ARMADILLO REQUIRED armadillo)
-
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../AirLib/thirdparty/mlpack mlpack)
 
 include_directories(
   ${AIRSIM_ROOT}/AirLib/
   ${AIRSIM_ROOT}/AirLib/include
   ${AIRSIM_ROOT}/MavLinkCom/include
+  ${AIRSIM_ROOT}/AirLib/thirdparty/mlpack/src
   ${RPC_LIB_INCLUDES}
 )
 
@@ -35,11 +32,7 @@ add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_sources})
 CommonTargetLink()
 target_link_libraries(${PROJECT_NAME} PUBLIC ${RPC_LIB})
 target_link_libraries(${PROJECT_NAME} PUBLIC MavLinkCom)
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${ARMADILLO_INCLUDE_DIRS} ${MLPACK_INCLUDE_DIRS})
-target_link_directories(${PROJECT_NAME} PUBLIC ${ARMADILLO_LIBRARY_DIRS} ${MLPACK_LIBRARY_DIRS})
-
-target_link_libraries(${PROJECT_NAME} PUBLIC ${MLPACK_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC mlpack)
 
 
 #string(SUBSTRING ${CMAKE_STATIC_LINKER_FLAGS} 9 -1 "BUILD_PLATFORM")

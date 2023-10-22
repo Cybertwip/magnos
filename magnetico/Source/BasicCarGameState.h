@@ -52,6 +52,11 @@ public:
 
 	CREATE_FUNC(BasicCarGameState);
 
+
 	MovingAverageFilter inputAverageFilter = MovingAverageFilter(240);
+	MovingAverageFilter outputAverageFilter = MovingAverageFilter(240);
+	
+	MovingAverageFilter engineAverageFilter = MovingAverageFilter(240);
+
 
 };

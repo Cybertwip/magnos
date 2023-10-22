@@ -2,7 +2,7 @@
 
 
 namespace {
-const int calibration_steps = 4;
+const int calibration_steps = 2;
 }
 
 // Constructor
