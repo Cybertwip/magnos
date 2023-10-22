@@ -15,8 +15,10 @@ option(ARMA_EXTRA_DEBUG "Compile with extra Armadillo debugging symbols." OFF)
 option(TEST_VERBOSE "Run test cases with verbose output." OFF)
 option(BUILD_TESTS "Build tests. (Note: time consuming!)" OFF)
 option(BUILD_CLI_EXECUTABLES "Build command-line executables." ON)
+
 set(DOWNLOAD_DEPENDENCIES  ON)
 set(CMAKE_HAS_WORKING_STATIC_STB TRUE)
+
 option(BUILD_GO_SHLIB "Build Go shared library." OFF)
 
 # Set minimum library versions required by mlpack.
@@ -578,3 +580,7 @@ if (PKG_CONFIG_FOUND)
       DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/")
 
 endif ()
+
+
+set(MLPACK_INCLUDE_DIRS ${MLPACK_INCLUDE_DIRS} ${ARMADILLO_INCLUDE_DIRS} CACHE STRING "MLPACK_INCLUDE_DIRS")
+set(MLPACK_LIBRARIES ${MLPACK_LIBRARIES} ${ARMADILLO_LIBRARIES} CACHE STRING "MLPACK_LIBRARIES")
