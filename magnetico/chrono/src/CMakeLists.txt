@@ -313,17 +313,6 @@ endif()
 # Eigen library
 #-----------------------------------------------------------------------------
 
-message(STATUS "Searching for Eigen3...")
-find_package(Eigen3 3.3.0)
-if(EIGEN3_FOUND)
-  message(STATUS "  Eigen3 version: ${EIGEN3_VERSION}")
-  message(STATUS "  Eigen3 include directory: ${EIGEN3_INCLUDE_DIR}")
-else()
-  mark_as_advanced(CLEAR EIGEN3_INCLUDE_DIR)
-  mark_as_advanced(FORCE Eigen3_DIR)
-  message(FATAL_ERROR "  Eigen3 not found. Specify EIGEN3_INCLUDE_DIR")
-endif()
-
 # Fix for VS 2017 15.8 and newer to handle alignment specification with Eigen.
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	if(MSVC AND ${MSVC_VERSION} GREATER_EQUAL 1915)
@@ -634,7 +623,6 @@ add_definitions( "-DBP_USE_FIXEDPOINT_INT_32" )
 #if (USE_BULLET_DOUBLE)
 #   add_definitions("-DBT_USE_DOUBLE_PRECISION")
 #endif()
-
 
 #-----------------------------------------------------------------------------
 # Set the base include directories

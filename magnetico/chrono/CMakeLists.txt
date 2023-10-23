@@ -251,6 +251,8 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/template_project_vehicle_cosim/ DEST
 # Defer configuration of all Chrono libraries and programs
 #------------------------------------------------------------
 
+set(EIGEN3_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/../AirSim/AirLib/thirdparty/eigen3 CACHE PATH "Eigen3 include directory")
+
 add_subdirectory(src)
 
 #------------------------------------------------------------
