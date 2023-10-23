@@ -218,7 +218,7 @@ target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})
 target_link_libraries(${APP_NAME} ${MLPACK_LIBRARIES})  
 
 if(EMSCRIPTEN)
-    target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data\"") 
+    target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
 else()
     target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
 endif()
