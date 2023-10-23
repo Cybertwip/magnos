@@ -5,7 +5,6 @@ AlternatorSystem::AlternatorSystem(float coilArea, float coilTurns)
     
 }
 
-
 msr::airlib::Vector3r AlternatorSystem::computeMagneticField(AttachedEntity& coil, const msr::airlib::Vector3r& point, MagnetPolarity polarity) const {
     return {};
 }

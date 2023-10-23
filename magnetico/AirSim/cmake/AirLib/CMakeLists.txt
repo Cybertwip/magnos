@@ -31,12 +31,11 @@ add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_sources})
 
 CommonTargetLink()
 
-target_link_libraries(${PROJECT_NAME} ${RPC_LIB})
-target_link_libraries(${PROJECT_NAME} MavLinkCom)
 
 target_include_directories(${PROJECT_NAME} PUBLIC 
 ${AIRSIM_ROOT}/AirLib/
 ${AIRSIM_ROOT}/AirLib/include
+${AIRSIM_ROOT}/AirLib/thirdparty/eigen3
 ${AIRSIM_ROOT}/AirLib/thirdparty/mlpack/src
 ${AIRSIM_ROOT}/MavLinkCom/include
 ${AIRSIM_ROOT}/MavLinkCom/include
@@ -46,5 +45,8 @@ ${RPC_LIB_INCLUDES}
 # Find Armadillo and link it.
 target_link_libraries(ensmallen INTERFACE armadillo)
 target_link_libraries(ensmallen INTERFACE openblas_static)
-target_link_libraries(${PROJECT_NAME} ensmallen)
-target_link_libraries(${PROJECT_NAME} cereal)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC ${RPC_LIB})
+target_link_libraries(${PROJECT_NAME} PUBLIC MavLinkCom)
+target_link_libraries(${PROJECT_NAME} PUBLIC ensmallen)
+target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
