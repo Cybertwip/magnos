@@ -1,7 +1,12 @@
-# Recurse into the bindings to do any necessary configuration there.
-add_subdirectory(bindings)
-# Recurse into methods/ to get the definitions of any bindings.
-add_subdirectory(methods)
+
+if (WITH_BINDINGS)
+  
+  # Recurse into the bindings to do any necessary configuration there.
+  add_subdirectory(bindings)
+  # Recurse into methods/ to get the definitions of any bindings.
+  add_subdirectory(methods)
+
+endif()
 
 # If necessary, configure the tests.
 if (BUILD_TESTS)
@@ -47,14 +52,17 @@ string(REGEX REPLACE ".*#define MLPACK_VERSION_PATCH [\"]?([0-9x]+)[\"]?.*"
 set(PACKAGE_VERSION
   "${MLPACK_VERSION_MAJOR}.${MLPACK_VERSION_MINOR}.${MLPACK_VERSION_PATCH}")
 
-post_python_bindings()
-post_julia_setup()
-post_go_setup()
+if(WITH_BINDINGS)
+  post_python_bindings()
+  post_julia_setup()
+  post_go_setup()
 
-# If we are building R-bindings, we have to run some setup after we
-# recurse into methods/.  If not, this macro is empty.
-post_r_setup()
+  # If we are building R-bindings, we have to run some setup after we
+  # recurse into methods/.  If not, this macro is empty.
+  post_r_setup()
 
-# If we are building Markdown documentation, we have to run some setup after we
-# recurse into methods/.  If not, this function is empty.
-post_markdown_setup()
+  # If we are building Markdown documentation, we have to run some setup after we
+  # recurse into methods/.  If not, this function is empty.
+  post_markdown_setup()
+
+endif()

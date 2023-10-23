@@ -1,4 +1,8 @@
 ﻿cmake_minimum_required(VERSION 3.5.0)
+
+cmake_policy(SET CMP0079 NEW)
+
+
 project(AirLib)
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake-modules") 
@@ -8,6 +12,10 @@ CommonSetup()
 IncludeEigen()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../AirLib/thirdparty/mlpack mlpack)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../AirLib/thirdparty/OpenBLAS OpenBLAS)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../AirLib/thirdparty/armadillo armadillo)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../AirLib/thirdparty/ensmallen ensmallen)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../AirLib/thirdparty/cereal cereal)
 
 file(GLOB_RECURSE ${PROJECT_NAME}_sources 
   ${AIRSIM_ROOT}/${PROJECT_NAME}/src/api/*.cpp
@@ -18,6 +26,7 @@ file(GLOB_RECURSE ${PROJECT_NAME}_sources
   ${AIRSIM_ROOT}/${PROJECT_NAME}/src/vehicles/multirotor/*.cpp
   ${AIRSIM_ROOT}/${PROJECT_NAME}/src/vehicles/multirotor/api/*.cpp
 )
+
 
 add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_sources})
 
@@ -35,9 +44,9 @@ ${ARMADILLO_INCLUDE_DIRS}
 ${MLPACK_INCLUDE_DIRS}
 )
 
-target_link_directories(${PROJECT_NAME} PUBLIC ${MLPACK_LIBRARY_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${MLPACK_LIBRARIES})
-
+target_link_libraries(armadillo PUBLIC openblas_static)
+target_link_libraries(${PROJECT_NAME} PUBLIC ensmallen)
+target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
 
 #string(SUBSTRING ${CMAKE_STATIC_LINKER_FLAGS} 9 -1 "BUILD_PLATFORM")
 #find_package(Threads REQUIRED)

@@ -33,8 +33,14 @@ if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES arm64)
 endif()
 
+if(EMSCRIPTEN)
+    set(USE_OPENMP NO CACHE INTERNAL "USE_OPENMP")
+endif()
+
 set(AIRLIB_CXX_STD ${CMAKE_CXX_STANDARD} CACHE STRING "AIRLIB_CXX_STD")
 set(AIRSIM_ROOT ${CMAKE_CURRENT_LIST_DIR}/AirSim CACHE STRING "AIRSIM_ROOT")
+set(MAGNOS_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/build CACHE INTERNAL "MAGNOS_RUNTIME_OUTPUT_DIRECTORY")
+set(AX_ENABLE_EXT_LUA NO CACHE INTERNAL "AX_ENABLE_EXT_LUA")
 
 set(APP_NAME magnetico)
 
@@ -44,12 +50,19 @@ LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modu
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modules/CommonSetup.cmake")
 CommonSetup()
 
+set(TARGET RISCV64_GENERIC CACHE INTERNAL "OPENBLAS_TARGET")
+set(ONLY_CBLAS NO CACHE INTERNAL "ONLY_CBLAS")
+set(NOFORTRAN True CACHE INTERNAL "NOFORTRAN")
+set(WITH_WERROR NO CACHE INTERNAL "WITH_WERROR")
+set(BUILD_STATIC_LIBS True CACHE INTERNAL "BUILD_STATIC_LIBS")
+
 add_subdirectory(AirSim/cmake/AirLib)
 add_subdirectory(AirSim/cmake/MavLinkCom)
 add_subdirectory(AirSim/cmake/rpclib_wrapper)
 
-find_package(Chrono COMPONENTS Vehicle)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
+find_package(Chrono COMPONENTS Vehicle)
 
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project
     if(XCODE)
@@ -200,7 +213,8 @@ CommonTargetLink()
 target_link_libraries(${APP_NAME} AirLib)
 target_link_libraries(${APP_NAME} MavLinkCom)
 target_link_libraries(${APP_NAME} ${RPC_LIB})
-target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})
+target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
+target_link_libraries(${APP_NAME} ${MLPACK_LIBRARIES})  
 
 target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
 
@@ -234,6 +248,7 @@ target_include_directories(${APP_NAME} PRIVATE
     ${AIRSIM_ROOT}/MavLinkCom/include
     ${AIRSIM_ROOT}/AirLib/deps/eigen3
     ${RPC_LIB_INCLUDES}
+    ${MLPACK_INCLUDE_DIRS}
 )
 
 # mark app resources, resource will be copy auto after mark
@@ -288,6 +303,8 @@ if (NOT DEFINED BUILD_ENGINE_DONE)
     ax_uwp_set_all_targets_deploy_min_version()
 endif()
 
-if (WASM)
-    ax_setup_wasm_app_config(${APP_NAME})
-endif()
+
+
+# if (WASM)
+#     ax_setup_wasm_app_config(${APP_NAME})
+# endif()

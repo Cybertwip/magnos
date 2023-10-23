@@ -9,13 +9,15 @@ IncludeEigen()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../AirLib/thirdparty/mlpack mlpack)
 
-include_directories(
-  ${AIRSIM_ROOT}/AirLib/
-  ${AIRSIM_ROOT}/AirLib/include
-  ${AIRSIM_ROOT}/MavLinkCom/include
-  ${AIRSIM_ROOT}/AirLib/thirdparty/mlpack/src
-  ${RPC_LIB_INCLUDES}
+target_include_directories(${PROJECT_NAME} PUBLIC 
+${AIRSIM_ROOT}/AirLib/
+${AIRSIM_ROOT}/AirLib/include
+${AIRSIM_ROOT}/MavLinkCom/include
+${RPC_LIB_INCLUDES}
+${ARMADILLO_INCLUDE_DIRS} 
+${MLPACK_INCLUDE_DIRS}
 )
+
 
 file(GLOB_RECURSE ${PROJECT_NAME}_sources 
   ${AIRSIM_ROOT}/${PROJECT_NAME}/src/api/*.cpp

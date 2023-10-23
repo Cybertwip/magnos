@@ -30,7 +30,7 @@
 #include "chrono/core/ChApiCE.h"
 #include "chrono/core/ChLog.h"
 
-#ifdef UNIX
+#if defined(UNIX) || defined(__EMSCRIPTEN__)
     #include <sys/socket.h>
     #include <unistd.h>
     #include <fcntl.h>
@@ -44,7 +44,7 @@
     #include <sys/ioctl.h>
     #include <cstdio>
     #include <cstring>
-    #ifndef UNIX
+    #if !defined(UNIX) && !defined(__EMSCRIPTEN__)
         #include <sys/filio.h>
     #endif
     #ifdef __APPLE__

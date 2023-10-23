@@ -121,7 +121,7 @@ bool AppDelegate::applicationDidFinishLaunching()
 	
 	Director::getInstance()->setClearColor(Color4F::BLUE);
 	
-	Director::getInstance()->getOpenGLView()->setCursorVisible(false);
+	//Director::getInstance()->getOpenGLView()->setCursorVisible(false);
 	
 	// run
     director->runWithScene(scene);

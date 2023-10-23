@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(MavLinkCom)
 
-add_subdirectory("MavLinkTest")
+if(NOT EMSCRIPTEN)
+  add_subdirectory("MavLinkTest")
+endif()
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake-modules") 
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../cmake-modules/CommonSetup.cmake")
@@ -12,7 +14,6 @@ include_directories(
   ${AIRSIM_ROOT}/MavLinkCom/common_utils
   ${AIRSIM_ROOT}/MavLinkCom/include
 )
-
 
 LIST(APPEND MAVLINK_SOURCES "${AIRSIM_ROOT}/MavLinkCom/common_utils/FileSystem.cpp")
 LIST(APPEND MAVLINK_SOURCES "${AIRSIM_ROOT}/MavLinkCom/common_utils/ThreadUtils.cpp")

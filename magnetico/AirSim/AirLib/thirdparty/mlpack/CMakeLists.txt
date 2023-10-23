@@ -14,9 +14,9 @@ option(PROFILE "Compile with profiling information." OFF)
 option(ARMA_EXTRA_DEBUG "Compile with extra Armadillo debugging symbols." OFF)
 option(TEST_VERBOSE "Run test cases with verbose output." OFF)
 option(BUILD_TESTS "Build tests. (Note: time consuming!)" OFF)
-option(BUILD_CLI_EXECUTABLES "Build command-line executables." ON)
+option(BUILD_CLI_EXECUTABLES "Build command-line executables." OFF)
 
-set(DOWNLOAD_DEPENDENCIES  ON)
+set(DOWNLOAD_DEPENDENCIES  OFF)
 set(CMAKE_HAS_WORKING_STATIC_STB TRUE)
 
 option(BUILD_GO_SHLIB "Build Go shared library." OFF)
@@ -26,9 +26,10 @@ option(BUILD_GO_SHLIB "Build Go shared library." OFF)
 # For Armadillo, try to keep the minimum required version less than or equal to
 # what's available on the current Ubuntu LTS or most recent stable RHEL release.
 # See https://github.com/mlpack/mlpack/issues/3033 for some more discussion.
-set(ARMADILLO_VERSION "9.800")
-set(ENSMALLEN_VERSION "2.10.0")
-set(CEREAL_VERSION "1.1.2")
+set(ARMADILLO_VERSION "10.3.0")
+set(ENSMALLEN_VERSION "2.20.0")
+set(CEREAL_VERSION "1.3.0")
+set(OPENBLAS_VERSION "0.3.24")
 
 # If BUILD_SHARED_LIBS is OFF then the mlpack library will be built statically.
 # In addition, all mlpack CLI bindings will be linked statically as well.
@@ -44,11 +45,6 @@ elseif(CMAKE_CROSSCOMPILING)
 else()
   option(BUILD_SHARED_LIBS
       "Compile shared objects for tests and bindings (if OFF, static libraries and binaries are compiled)." ON)
-endif()
-
-# Enable auto-download if we are cross compiling.
-if (CMAKE_CROSSCOMPILING)
-  set(DOWNLOAD_DEPENDENCIES ON)
 endif()
 
 # Support preference of static libs by adjusting CMAKE_FIND_LIBRARY_SUFFIXES.
@@ -286,12 +282,10 @@ endif()
 # Download and compile OpenBLAS if we are cross compiling mlpack for a specific
 # architecture. The function takes the version of OpenBLAS as variable.
 if (CMAKE_CROSSCOMPILING)
-  search_openblas(0.3.13)
+  search_openblas(${OPENBLAS_VERSION})
 endif()
 
-if (NOT DOWNLOAD_DEPENDENCIES)
-  find_package(Armadillo "${ARMADILLO_VERSION}" REQUIRED)
-else()
+if(DOWNLOAD_DEPENDENCIES)
   find_package(Armadillo "${ARMADILLO_VERSION}")
   if (NOT ARMADILLO_FOUND)
     if (NOT CMAKE_CROSSCOMPILING)
@@ -306,14 +300,11 @@ else()
     find_package(Armadillo REQUIRED)
   endif()
 endif()
-# Include directories for the previous dependencies.
-set(MLPACK_INCLUDE_DIRS ${MLPACK_INCLUDE_DIRS} ${ARMADILLO_INCLUDE_DIRS})
-set(MLPACK_LIBRARIES ${MLPACK_LIBRARIES} ${ARMADILLO_LIBRARIES})
+
+set(MLPACK_INCLUDE_DIRS ${MLPACK_INCLUDE_DIRS} ${CMAKE_CURRENT_LIST_DIR}/src/ CACHE INTERNAL "MLPACK_INCLUDE_DIRS")
 
 # Find stb_image.h and stb_image_write.h.
-if (NOT DOWNLOAD_DEPENDENCIES)
-  find_package(StbImage)
-else()
+if (DOWNLOAD_DEPENDENCIES)
   find_package(StbImage)
   if (NOT STB_IMAGE_FOUND)
     get_deps(http://mlpack.org/files/stb.tar.gz stb stb.tar.gz)
@@ -337,30 +328,27 @@ if (STB_IMAGE_FOUND)
 endif()
 
 # Find ensmallen.
-if (NOT DOWNLOAD_DEPENDENCIES)
-  find_package(Ensmallen "${ENSMALLEN_VERSION}" REQUIRED)
-else()
+if (DOWNLOAD_DEPENDENCIES)
   find_package(Ensmallen "${ENSMALLEN_VERSION}")
   if (NOT ENSMALLEN_FOUND)
     get_deps(http://www.ensmallen.org/files/ensmallen-latest.tar.gz ensmallen ensmallen-latest.tar.gz)
     set(ENSMALLEN_INCLUDE_DIR ${GENERIC_INCLUDE_DIR})
     find_package(Ensmallen REQUIRED)
   endif()
+  set(MLPACK_INCLUDE_DIRS ${MLPACK_INCLUDE_DIRS} "${ENSMALLEN_INCLUDE_DIR}")
 endif()
-set(MLPACK_INCLUDE_DIRS ${MLPACK_INCLUDE_DIRS} "${ENSMALLEN_INCLUDE_DIR}")
 
 # Find cereal.
-if (NOT DOWNLOAD_DEPENDENCIES)
-  find_package(cereal "${CEREAL_VERSION}" REQUIRED)
-else()
+if (DOWNLOAD_DEPENDENCIES)
   find_package(cereal "${CEREAL_VERSION}")
   if (NOT CEREAL_FOUND)
     get_deps(https://github.com/USCiLab/cereal/archive/refs/tags/v1.3.0.tar.gz cereal cereal-1.3.0.tar.gz)
     set(CEREAL_INCLUDE_DIR ${GENERIC_INCLUDE_DIR})
     find_package(cereal REQUIRED)
   endif()
+  set(MLPACK_INCLUDE_DIRS ${MLPACK_INCLUDE_DIRS} ${CEREAL_INCLUDE_DIR})
 endif()
-set(MLPACK_INCLUDE_DIRS ${MLPACK_INCLUDE_DIRS} ${CEREAL_INCLUDE_DIR})
+
 
 # Detect OpenMP support in a compiler. If the compiler supports OpenMP, flags
 # to compile with OpenMP are returned and added.  Note that MSVC does not
@@ -573,14 +561,11 @@ if (PKG_CONFIG_FOUND)
   add_custom_target(pkgconfig ALL
       ${CMAKE_COMMAND}
           -D MLPACK_SOURCE_DIR="${CMAKE_CURRENT_LIST_DIR}"
+          -D MAGNOS_RUNTIME_OUTPUT_DIRECTORY=${MAGNOS_RUNTIME_OUTPUT_DIRECTORY}
           -P "${CMAKE_CURRENT_LIST_DIR}/CMake/GeneratePkgConfig.cmake"
       COMMENT "Generating mlpack.pc (pkg-config) file.")
 
   install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lib/pkgconfig/mlpack.pc"
       DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/")
-
 endif ()
 
-
-set(MLPACK_INCLUDE_DIRS ${MLPACK_INCLUDE_DIRS} ${ARMADILLO_INCLUDE_DIRS} CACHE STRING "MLPACK_INCLUDE_DIRS")
-set(MLPACK_LIBRARIES ${MLPACK_LIBRARIES} ${ARMADILLO_LIBRARIES} CACHE STRING "MLPACK_LIBRARIES")
