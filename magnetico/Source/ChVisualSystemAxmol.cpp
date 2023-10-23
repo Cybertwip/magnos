@@ -55,6 +55,8 @@ void PopulateWithAxmolMaterial(ax::MeshRenderer* renderer, std::shared_ptr<ChVis
 	renderer->setColor(ax::Color3B(mat->GetDiffuseColor().R * 255.0f,  mat->GetDiffuseColor().G * 255.0f,
 	    mat->GetDiffuseColor().B * 255.0f));
 	
+	renderer->setMaterial(material);
+
 //	float ns_val = mat->GetSpecularExponent();  // in [0, 1000]
 //	irr_mat.Shininess = ns_val * 0.128f;
 	
@@ -70,18 +72,23 @@ void PopulateWithAxmolMaterial(ax::MeshRenderer* renderer, std::shared_ptr<ChVis
 static void SetVisualMaterial(
 							  ax::MeshRenderer* renderer,
 							  ax::Mesh* mesh,
-							  std::shared_ptr<ChVisualShape> shape) {
-	if (shape->GetMaterials().empty()) {
+							  std::shared_ptr<ChVisualMaterial> material) {
+	if (material == nullptr) {
 		// Use default material
-
 		mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
-		
+		renderer->setMaterial(mesh->getMaterial());
 		renderer->setTexture("gray.jpg");
 		renderer->setColor(ax::Color3B::WHITE);
 	} else {
-
-		PopulateWithAxmolMaterial(renderer, shape->GetMaterial(0));
-		
+#if defined(__EMSCRIPTEN__)
+		mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
+		renderer->setMaterial(mesh->getMaterial());
+		renderer->setTexture("gray.jpg");
+		renderer->setColor(ax::Color3B::WHITE);
+#else
+		PopulateWithAxmolMaterial(renderer, material);
+		mesh->setMaterial(renderer->getMaterial());
+#endif
 	}
 }
 
@@ -436,13 +443,11 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			renderer->setPosition3D(position);
 			renderer->setRotationQuat(rotation);
 			
-//			node->setRotation(shape_m4.getRotationDegrees());
+			for(int i = 0; i<renderer->getMeshCount(); ++i){
+				SetVisualMaterial(renderer, renderer->getMeshes().at(i), shape->GetMaterials().empty() ? nullptr : shape->GetMaterial(i));
+			}
 
-//                SetVisualMaterial(mchildnode, shape);
-//                mchildnode->setMaterialFlag(video::EMF_BACK_FACE_CULLING, true);
-            }
-
-		else if (auto trimesh = std::dynamic_pointer_cast<ChTriangleMeshShape>(shape)) {
+		} else if (auto trimesh = std::dynamic_pointer_cast<ChTriangleMeshShape>(shape)) {
 
 			std::vector<float> positions;
 			std::vector<float> normals;
@@ -482,7 +487,7 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			
 			renderer->addMesh(mesh);
 
-			SetVisualMaterial(renderer, mesh, shape);
+			SetVisualMaterial(renderer, mesh, shape->GetMaterials().empty() ? nullptr : shape->GetMaterial(0));
 			
 			node->addChild(renderer);
 			
@@ -499,6 +504,7 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 
 			renderer->setPosition3D(position);
 			renderer->setRotationQuat(rotation);
+			//renderer->setCullFace(trimesh->IsBackfaceCull() ? ax::CullFaceSide::BACK : ax::CullFaceSide::FRONT);
 
 //            SetVisualMaterial(mchildnode, shape);
 //            mchildnode->setMaterialFlag(video::EMF_WIREFRAME, trimesh->IsWireframe());
@@ -562,7 +568,7 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			
 			renderer->addMesh(mesh);
 
-			SetVisualMaterial(renderer, mesh, shape);
+			SetVisualMaterial(renderer, mesh, shape->GetMaterials().empty() ? nullptr : shape->GetMaterial(0));
 			
 			node->addChild(renderer);
 			
@@ -591,7 +597,7 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			
 			renderer->addMesh(mesh);
 			
-			SetVisualMaterial(renderer, mesh, shape);
+			SetVisualMaterial(renderer, mesh, shape->GetMaterials().empty() ? nullptr : shape->GetMaterial(0));
 			
 			node->addChild(renderer);
 			
@@ -617,7 +623,7 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 			
 			renderer->addMesh(mesh);
 
-			SetVisualMaterial(renderer, mesh, shape);
+			SetVisualMaterial(renderer, mesh, shape->GetMaterials().empty() ? nullptr : shape->GetMaterial(0));
 			
 			node->addChild(renderer);
 			
