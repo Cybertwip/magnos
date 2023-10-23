@@ -66,7 +66,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
 find_package(Chrono COMPONENTS Vehicle)
 
-set(_AX_ROOT "$ENV{AX_ROOT}")
+set(_AX_ROOT "$ENV{AX_ROOT}" CACHE INTERNAL "_AX_ROOT")
+set(AX_ROOT "$ENV{AX_ROOT}" CACHE INTERNAL "AX_ROOT")
+
 
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project
     if(XCODE)
@@ -218,11 +220,7 @@ target_link_libraries(${APP_NAME} MavLinkCom)
 target_link_libraries(${APP_NAME} ${RPC_LIB})
 target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
 
-if(EMSCRIPTEN)
-    target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
-else()
-    target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
-endif()
+target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
 
 #set(_geant4_lib_use_suffix -static)
 #set(Geant4_LIBRARIES
@@ -245,6 +243,7 @@ endif()
 
 
 target_include_directories(${APP_NAME} PRIVATE ${GAME_INC_DIRS})
+target_include_directories(${APP_NAME} PRIVATE ${CHRONO_INCLUDE_DIRS})
 
 # mark app resources, resource will be copy auto after mark
 ax_setup_app_config(${APP_NAME})
