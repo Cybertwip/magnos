@@ -22,7 +22,7 @@ option(BUILD_WITHOUT_LAPACK "Do not build LAPACK and LAPACKE (Only BLAS or CBLAS
 
 option(BUILD_LAPACK_DEPRECATED "When building LAPACK, include also some older, deprecated routines" ON)
 
-option(BUILD_TESTING "Build LAPACK testsuite when building LAPACK" ON)
+option(BUILD_TESTING "Build LAPACK testsuite when building LAPACK" OFF)
 
 option(C_LAPACK "Build LAPACK from C sources instead of the original Fortran" OFF)
 
@@ -231,13 +231,6 @@ if(BUILD_SHARED_LIBS)
   target_include_directories(${OpenBLAS_LIBNAME}_shared INTERFACE $<INSTALL_INTERFACE:include/openblas${SUFFIX64}>)
   list(APPEND OpenBLAS_LIBS ${OpenBLAS_LIBNAME}_shared)
 endif()
-if(BUILD_STATIC_LIBS)
-  add_library(${OpenBLAS_LIBNAME} ALIAS ${OpenBLAS_LIBNAME}_static)
-else()
-  add_library(${OpenBLAS_LIBNAME} ALIAS ${OpenBLAS_LIBNAME}_shared)
-endif()
-
-set_target_properties(${OpenBLAS_LIBS} PROPERTIES OUTPUT_NAME ${OpenBLAS_LIBNAME})
 
 # Android needs to explicitly link against libm
 if (${CMAKE_SYSTEM_NAME} MATCHES "AIX|Android|Linux|FreeBSD|OpenBSD|NetBSD|DragonFly|Darwin")

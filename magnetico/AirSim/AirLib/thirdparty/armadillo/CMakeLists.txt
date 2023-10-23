@@ -195,13 +195,6 @@ if(INSTALL_BIN_DIR)
   set(CMAKE_INSTALL_BINDIR "${INSTALL_BIN_DIR}")
 endif()
 
-
-if(MSVC)
-  option(BUILD_SHARED_LIBS "build shared library" OFF)
-else()
-  option(BUILD_SHARED_LIBS "build shared library" ON)
-endif()
-
 option(DETECT_HDF5 "Detect HDF5 and include HDF5 support, if found" ON)
 # set(DETECT_HDF5 false)
 ## uncomment the above line to disable the detection of the HDF5 library;

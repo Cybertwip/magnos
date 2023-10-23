@@ -34,17 +34,8 @@ set(OPENBLAS_VERSION "0.3.24")
 # If BUILD_SHARED_LIBS is OFF then the mlpack library will be built statically.
 # In addition, all mlpack CLI bindings will be linked statically as well.
 if (WIN32)
-  option(BUILD_SHARED_LIBS
-      "Compile shared objects for tests and bindings (if OFF, static libraries and binaries are compiled)." OFF)
-
   set(DLL_COPY_DIRS "" CACHE STRING "List of directories (separated by ';') containing DLLs to copy for runtime.")
   set(DLL_COPY_LIBS "" CACHE STRING "List of DLLs (separated by ';') that should be copied for runtime.")
-elseif(CMAKE_CROSSCOMPILING)
-  option(BUILD_SHARED_LIBS
-      "Compile shared libraries (if OFF, static libraries and binaries are compiled)." OFF)
-else()
-  option(BUILD_SHARED_LIBS
-      "Compile shared objects for tests and bindings (if OFF, static libraries and binaries are compiled)." ON)
 endif()
 
 # Support preference of static libs by adjusting CMAKE_FIND_LIBRARY_SUFFIXES.
@@ -283,7 +274,7 @@ endif()
 
 # Download and compile OpenBLAS if we are cross compiling mlpack for a specific
 # architecture. The function takes the version of OpenBLAS as variable.
-if (CMAKE_CROSSCOMPILING)
+if (DOWNLOAD_DEPENDENCIES)
   search_openblas(${OPENBLAS_VERSION})
 endif()
 
