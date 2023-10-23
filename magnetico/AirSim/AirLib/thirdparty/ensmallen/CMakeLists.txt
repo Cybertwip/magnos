@@ -6,7 +6,11 @@ project(ensmallen
         LANGUAGES C CXX)
 
 # Configurable options for CMake.
-option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
+if(EMSCRIPTEN)
+    set(USE_OPENMP OFF CACHE STRING "USE_OPENMP") 
+else()
+    option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake")
 

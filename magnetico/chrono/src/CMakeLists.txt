@@ -551,6 +551,10 @@ else()
     add_compile_options(-Wno-unused-parameter)
 endif()
 
+if(EMSCRIPTEN)
+  add_compile_options(-pthread)
+endif()
+
 #-----------------------------------------------------------------------------
 # HDF5 support (optional)
 #-----------------------------------------------------------------------------

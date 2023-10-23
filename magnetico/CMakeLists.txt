@@ -34,7 +34,7 @@ if(APPLE)
 endif()
 
 if(EMSCRIPTEN)
-    set(USE_OPENMP NO CACHE INTERNAL "USE_OPENMP")
+    set(USE_OPENMP OFF CACHE STRING "USE_OPENMP")
 endif()
 
 set(AIRLIB_CXX_STD ${CMAKE_CXX_STANDARD} CACHE STRING "AIRLIB_CXX_STD")
@@ -64,6 +64,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
 find_package(Chrono COMPONENTS Vehicle)
 
+set(_AX_ROOT "$ENV{AX_ROOT}")
+
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project
     if(XCODE)
         set(CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY TRUE)
@@ -75,7 +77,6 @@ if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnetico into root project
         configure_file("${CMAKE_CURRENT_SOURCE_DIR}/run.bat.in" "${CMAKE_CURRENT_SOURCE_DIR}/run.bat" @ONLY)
     endif()
 
-    set(_AX_ROOT "$ENV{AX_ROOT}")
 
     if(NOT (_AX_ROOT STREQUAL ""))
         file(TO_CMAKE_PATH ${_AX_ROOT} _AX_ROOT)
@@ -216,7 +217,11 @@ target_link_libraries(${APP_NAME} ${RPC_LIB})
 target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
 target_link_libraries(${APP_NAME} ${MLPACK_LIBRARIES})  
 
-target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+if(EMSCRIPTEN)
+    target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data\"") 
+else()
+    target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+endif()
 
 #set(_geant4_lib_use_suffix -static)
 #set(Geant4_LIBRARIES
@@ -304,6 +309,7 @@ if (NOT DEFINED BUILD_ENGINE_DONE)
 endif()
 
 
+ax_setup_app_props(${APP_NAME})
 
 # if (WASM)
 #     ax_setup_wasm_app_config(${APP_NAME})

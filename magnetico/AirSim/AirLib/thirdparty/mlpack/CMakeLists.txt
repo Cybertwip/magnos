@@ -102,8 +102,16 @@ option(BUILD_MARKDOWN_BINDINGS "Build Markdown bindings for website documentatio
 
 option(MATHJAX
     "Use MathJax for HTML Doxygen output (disabled by default)." OFF)
-option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
-enable_testing()
+
+if(NOT EMSCRIPTEN)
+    enable_testing()
+endif()
+
+if(EMSCRIPTEN)
+    set(USE_OPENMP OFF CACHE STRING "USE_OPENMP") 
+else()
+    option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
+endif()
 
 # Set required standard to C++14.
 set(CMAKE_CXX_STANDARD 14)
