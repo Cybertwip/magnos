@@ -76,7 +76,7 @@ if(Boost_FOUND)
   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 endif(Boost_FOUND)
   
-if(NOT EMSCRIPTEN)
+if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(unittests)
 endif()

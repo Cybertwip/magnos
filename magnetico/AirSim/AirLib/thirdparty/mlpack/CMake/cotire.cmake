@@ -3063,10 +3063,7 @@ function (cotire_setup_unity_build_target _languages _configurations _target)
         endif()
     endif()
     # copy output location properties
-    set (_outputDirProperties
-            ARCHIVE_OUTPUT_DIRECTORY ARCHIVE_OUTPUT_DIRECTORY_<CONFIG>
-            LIBRARY_OUTPUT_DIRECTORY LIBRARY_OUTPUT_DIRECTORY_<CONFIG>
-            RUNTIME_OUTPUT_DIRECTORY RUNTIME_OUTPUT_DIRECTORY_<CONFIG>)
+    set (_outputDirProperties "")
     if (COTIRE_UNITY_OUTPUT_DIRECTORY)
         set (_setDefaultOutputDir TRUE)
         if (IS_ABSOLUTE "${COTIRE_UNITY_OUTPUT_DIRECTORY}")
@@ -3086,12 +3083,6 @@ function (cotire_setup_unity_build_target _languages _configurations _target)
             if (_setDefaultOutputDir)
                 get_filename_component(_outputDir "${CMAKE_CURRENT_BINARY_DIR}/${COTIRE_UNITY_OUTPUT_DIRECTORY}" ABSOLUTE)
             endif()
-        endif()
-        if (_setDefaultOutputDir)
-            set_target_properties(${_unityTargetName} PROPERTIES
-                    ARCHIVE_OUTPUT_DIRECTORY "${_outputDir}"
-                    LIBRARY_OUTPUT_DIRECTORY "${_outputDir}"
-                    RUNTIME_OUTPUT_DIRECTORY "${_outputDir}")
         endif()
     else()
         cotire_copy_set_properties("${_configurations}" TARGET ${_target} ${_unityTargetName}

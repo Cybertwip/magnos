@@ -94,7 +94,7 @@ option(BUILD_MARKDOWN_BINDINGS "Build Markdown bindings for website documentatio
 option(MATHJAX
     "Use MathJax for HTML Doxygen output (disabled by default)." OFF)
 
-if(NOT EMSCRIPTEN)
+if(BUILD_TESTS)
     enable_testing()
 endif()
 
@@ -278,6 +278,11 @@ if (DOWNLOAD_DEPENDENCIES)
   search_openblas(${OPENBLAS_VERSION})
 endif()
 
+if (EMSCRIPTEN)
+  set(GFORTRAN "" CACHE STRING "GFORTRAN")
+  set(PTHREAD "" CACHE STRING "PTHREAD")
+endif()
+
 if(DOWNLOAD_DEPENDENCIES)
   find_package(Armadillo "${ARMADILLO_VERSION}")
   if (NOT ARMADILLO_FOUND)
@@ -391,14 +396,6 @@ if (WIN32)
     file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/Release/)
     file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/Debug/)
   endforeach()
-else ()
-  # If not on Windows, put them under more standard UNIX-like places.  This is
-  # necessary, otherwise they would all end up in
-  # ${CMAKE_BINARY_DIR}/src/mlpack/methods/... or somewhere else random like
-  # that.
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/)
 endif ()
 
 # Determine whether or not this is a git repository, so that we can set the
@@ -482,83 +479,4 @@ set(MLPACK_LIBRARIES ${MLPACK_LIBRARIES} ${CROSS_COMPILE_SUPPORT_LIBRARIES})
 
 # Recurse into the rest of the project.
 add_subdirectory(src/mlpack)
-
-# Create the pkg-config file, if we have pkg-config.
-find_package(PkgConfig)
-if (PKG_CONFIG_FOUND)
-  # mlpack.pc must be generated as a separate target, otherwise it is possible
-  # that the given version could be out of date.  We don't need to worry about
-  # the library or include directories changing, because CMake will re-run this
-  # portion of the code whenever any of those changes.  But the version must be
-  # re-extracted every time the library is built.
-
-  # So, we have to parse our list of library directories, libraries, and include
-  # directories in order to get the correct line to give to pkg-config.
-  # Next, adapt the list of include directories.
-  list(REMOVE_DUPLICATES MLPACK_INCLUDE_DIRS)
-  foreach (incldir ${MLPACK_INCLUDE_DIRS})
-    # Filter out some obviously unnecessary directories.
-    if (NOT "${incldir}" STREQUAL "/usr/include")
-      set(MLPACK_INCLUDE_DIRS_STRING
-          "${MLPACK_INCLUDE_DIRS_STRING} -I${incldir}")
-    endif ()
-  endforeach ()
-  # Add the install directory too.
-  set(MLPACK_INCLUDE_DIRS_STRING
-      "${MLPACK_INCLUDE_DIRS_STRING} -I${CMAKE_INSTALL_PREFIX}/include/")
-
-  # Create the list of link directories.
-  set(MLPACK_LIBRARIES_LIST)
-  foreach (linkdir ${MLPACK_LIBRARY_DIRS})
-    list(APPEND MLPACK_LIBRARIES_LIST "-L${linkdir}")
-  endforeach ()
-
-  foreach(lib ${MLPACK_LIBRARIES})
-    string(SUBSTRING "${lib}" 0 1 first)
-    if ("${first}" STREQUAL "/")
-      # We need to split the directory and the library.
-      string(REGEX REPLACE "(.*/)[^/]*$" "\\1" library_dir "${lib}")
-      string(REGEX REPLACE ".*/lib([^/]*)[.][a-z]*[.]*$" "\\1" library_name "${lib}")
-
-      list(APPEND MLPACK_LIBRARIES_LIST "-L${library_dir}")
-      list(APPEND MLPACK_LIBRARIES_LIST "-l${library_name}")
-    elseif ("${first}" STREQUAL "-")
-      # This argument is already in the right format.  (This happens with, e.g.,
-      # `-lpthread`.)
-      list(APPEND MLPACK_LIBRARIES_LIST "${lib}")
-    else ()
-      list(APPEND MLPACK_LIBRARIES_LIST "-l${lib}")
-    endif ()
-  endforeach ()
-
-  # Filter duplicate dependencies and directories.
-  list(REMOVE_DUPLICATES MLPACK_LIBRARIES_LIST)
-
-  # Filter out known unnecessary directories.
-  list(REMOVE_ITEM MLPACK_LIBRARIES_LIST
-      "-L/usr/lib"
-      "-L/usr/lib/"
-      "-L/usr/lib/x86_64-linux-gnu"
-      "-L/usr/lib/x86_64-linux-gnu/"
-      "-L/usr/lib/i386-linux-gnu"
-      "-L/usr/lib/i386-linux-gnu/")
-
-  string(REPLACE ";" " " MLPACK_LIBRARIES_STRING "${MLPACK_LIBRARIES_LIST}")
-
-  # Do first stage of configuration.
-  set(MLPACK_VERSION_STRING "@MLPACK_VERSION_STRING@")
-  configure_file(
-    ${CMAKE_CURRENT_LIST_DIR}/CMake/mlpack.pc.in
-    ${CMAKE_BINARY_DIR}/CMake/mlpack.pc.in.partial @ONLY)
-
-  add_custom_target(pkgconfig ALL
-      ${CMAKE_COMMAND}
-          -D MLPACK_SOURCE_DIR="${CMAKE_CURRENT_LIST_DIR}"
-          -D MAGNOS_RUNTIME_OUTPUT_DIRECTORY=${MAGNOS_RUNTIME_OUTPUT_DIRECTORY}
-          -P "${CMAKE_CURRENT_LIST_DIR}/CMake/GeneratePkgConfig.cmake"
-      COMMENT "Generating mlpack.pc (pkg-config) file.")
-
-  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lib/pkgconfig/mlpack.pc"
-      DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/")
-endif ()
 

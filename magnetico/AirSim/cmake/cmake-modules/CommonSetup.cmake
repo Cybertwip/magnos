@@ -26,11 +26,6 @@ endmacro(SetupConsoleBuild)
 macro(CommonSetup)
     find_package(Threads REQUIRED)
 
-    #setup output paths
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib)
-    SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/output/bin)
-    SET(LIBRARY_OUTPUT_PATH ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-
     #setup include and lib for rpclib which will be referenced by other projects
     set(RPCLIB_VERSION_FOLDER rpclib-2.3.0)
     set(RPC_LIB_INCLUDES " ${AIRSIM_ROOT}/external/rpclib/${RPCLIB_VERSION_FOLDER}/include")

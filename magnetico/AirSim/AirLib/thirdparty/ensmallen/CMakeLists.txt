@@ -66,7 +66,7 @@ write_basic_package_version_file(${VERSION_CONFIG}
     COMPATIBILITY AnyNewerVersion)
 
 # Enable testing and build tests.
-if(NOT EMSCRIPTEN)
+if(BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()

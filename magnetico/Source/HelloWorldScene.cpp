@@ -98,7 +98,9 @@ void HelloWorld::onExit()
 
 void HelloWorld::onImGuiDraw()
 {
-	ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+#if !defined(__EMSCRIPTEN__)
+	//ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+#endif
 	
 	ImGui::SetNextWindowPos(ImVec2(10, 550), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Sim Mode");
