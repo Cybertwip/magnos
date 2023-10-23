@@ -2,7 +2,6 @@
 
 cmake_policy(SET CMP0079 NEW)
 
-
 project(AirLib)
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake-modules") 
@@ -32,25 +31,20 @@ add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_sources})
 
 CommonTargetLink()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${RPC_LIB})
-target_link_libraries(${PROJECT_NAME} PUBLIC MavLinkCom)
+target_link_libraries(${PROJECT_NAME} ${RPC_LIB})
+target_link_libraries(${PROJECT_NAME} MavLinkCom)
 
 target_include_directories(${PROJECT_NAME} PUBLIC 
 ${AIRSIM_ROOT}/AirLib/
 ${AIRSIM_ROOT}/AirLib/include
+${AIRSIM_ROOT}/AirLib/thirdparty/mlpack/src
+${AIRSIM_ROOT}/MavLinkCom/include
 ${AIRSIM_ROOT}/MavLinkCom/include
 ${RPC_LIB_INCLUDES}
-${ARMADILLO_INCLUDE_DIRS} 
-${MLPACK_INCLUDE_DIRS}
 )
 
-target_link_libraries(armadillo PUBLIC openblas_static)
-target_link_libraries(${PROJECT_NAME} PUBLIC ensmallen)
-target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
-
-#string(SUBSTRING ${CMAKE_STATIC_LINKER_FLAGS} 9 -1 "BUILD_PLATFORM")
-#find_package(Threads REQUIRED)
-#target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
-#target_link_libraries(${PROJECT_NAME} AirLib)
-#target_link_libraries(${PROJECT_NAME} MavLinkCom)
-#target_link_libraries(${PROJECT_NAME} ../AirLib/deps/rpclib/lib/${BUILD_PLATFORM}/$(Configuration)/rpc)
+# Find Armadillo and link it.
+target_link_libraries(ensmallen INTERFACE armadillo)
+target_link_libraries(ensmallen INTERFACE openblas_static)
+target_link_libraries(${PROJECT_NAME} ensmallen)
+target_link_libraries(${PROJECT_NAME} cereal)

@@ -5,13 +5,6 @@ cmake_minimum_required(VERSION 3.3.2)
 project(ensmallen
         LANGUAGES C CXX)
 
-# Configurable options for CMake.
-if(EMSCRIPTEN)
-    set(USE_OPENMP OFF CACHE STRING "USE_OPENMP") 
-else()
-    option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
-endif()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake")
 
 # Set required C++ standard to C++11.
@@ -59,9 +52,6 @@ if(USE_OPENMP)
   endif()
   target_link_libraries(ensmallen INTERFACE OpenMP::OpenMP_CXX)
 endif()
-
-# Find Armadillo and link it.
-target_link_libraries(ensmallen INTERFACE armadillo)
 
 # Set helper variables for creating the version, config and target files.
 include(CMakePackageConfigHelpers)

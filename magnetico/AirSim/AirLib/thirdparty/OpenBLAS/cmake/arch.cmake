@@ -31,16 +31,10 @@ if (${CMAKE_C_COMPILER_ID} STREQUAL "Intel")
   set(CCOMMON_OPT "${CCOMMON_OPT} -wd981")
 endif ()
 
-if(EMSCRIPTEN)
-    set(USE_OPENMP OFF CACHE STRING "USE_OPENMP") 
-else()
-    option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
-endif()
-
 if (USE_OPENMP)
   # USE_SIMPLE_THREADED_LEVEL3 = 1
   # NO_AFFINITY = 1
-  find_package(OpenMP REQUIRED)
+  find_package(OpenMP)
   if (OpenMP_FOUND)
     set(CCOMMON_OPT "${CCOMMON_OPT} ${OpenMP_C_FLAGS} -DUSE_OPENMP")
     set(FCOMMON_OPT "${FCOMMON_OPT} ${OpenMP_Fortran_FLAGS}")

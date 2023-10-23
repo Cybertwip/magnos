@@ -33,9 +33,7 @@ if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES arm64)
 endif()
 
-if(EMSCRIPTEN)
-    set(USE_OPENMP OFF CACHE STRING "USE_OPENMP")
-endif()
+set(USE_OPENMP OFF CACHE STRING "USE_OPENMP")
 
 set(AIRLIB_CXX_STD ${CMAKE_CXX_STANDARD} CACHE STRING "AIRLIB_CXX_STD")
 set(AIRSIM_ROOT ${CMAKE_CURRENT_LIST_DIR}/AirSim CACHE STRING "AIRSIM_ROOT")
@@ -50,11 +48,15 @@ LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modu
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/AirSim/cmake/cmake-modules/CommonSetup.cmake")
 CommonSetup()
 
-set(TARGET RISCV64_GENERIC CACHE INTERNAL "OPENBLAS_TARGET")
-set(ONLY_CBLAS NO CACHE INTERNAL "ONLY_CBLAS")
-set(NOFORTRAN True CACHE INTERNAL "NOFORTRAN")
-set(WITH_WERROR NO CACHE INTERNAL "WITH_WERROR")
+if(EMSCRIPTEN)
+    set(TARGET RISCV64_GENERIC CACHE INTERNAL "OPENBLAS_TARGET")
+    set(ONLY_CBLAS NO CACHE INTERNAL "ONLY_CBLAS")
+    set(NOFORTRAN True CACHE INTERNAL "NOFORTRAN")
+endif()
+
 set(BUILD_STATIC_LIBS True CACHE INTERNAL "BUILD_STATIC_LIBS")
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "BUILD_SHARED_LIBS")
+set(WITH_WERROR NO CACHE INTERNAL "WITH_WERROR")
 
 add_subdirectory(AirSim/cmake/AirLib)
 add_subdirectory(AirSim/cmake/MavLinkCom)
@@ -215,7 +217,6 @@ target_link_libraries(${APP_NAME} AirLib)
 target_link_libraries(${APP_NAME} MavLinkCom)
 target_link_libraries(${APP_NAME} ${RPC_LIB})
 target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
-target_link_libraries(${APP_NAME} ${MLPACK_LIBRARIES})  
 
 if(EMSCRIPTEN)
     target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
@@ -244,17 +245,6 @@ endif()
 
 
 target_include_directories(${APP_NAME} PRIVATE ${GAME_INC_DIRS})
-
-
-target_include_directories(${APP_NAME} PRIVATE
-    ${CHRONO_INCLUDE_DIRS}/src
-    ${AIRSIM_ROOT}/AirLib/
-    ${AIRSIM_ROOT}/AirLib/include
-    ${AIRSIM_ROOT}/MavLinkCom/include
-    ${AIRSIM_ROOT}/AirLib/deps/eigen3
-    ${RPC_LIB_INCLUDES}
-    ${MLPACK_INCLUDE_DIRS}
-)
 
 # mark app resources, resource will be copy auto after mark
 ax_setup_app_config(${APP_NAME})
