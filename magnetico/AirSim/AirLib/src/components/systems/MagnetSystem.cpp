@@ -12,7 +12,9 @@ msr::airlib::Vector3r MagnetSystem::calculateMagneticFieldAtOrigin(const msr::ai
     
     // Calculate the magnetic field strength based on the magnet's distance.
     // The field strength will be inversely proportional to the cube of the distance.
-	msr::airlib::Vector3r magneticField = _magneticFieldStrength * (1.0f / (distance * distance * distance)) * (origin - magnetPosition).normalized();
+	msr::airlib::Vector3r magneticField = _magneticFieldStrength * (1.0f / (distance * distance * distance)) * (origin - magnetPosition);
+	
+	magneticField.normalize();
     
     // Considering polarity to determine the direction of the magnetic moment
     if(polarity == MagnetPolarity::SOUTH) {

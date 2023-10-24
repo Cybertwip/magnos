@@ -40,7 +40,6 @@ float Magnos::calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::Atta
 
 	float distance = sqrt(pow(magnet.position.x() - coil.position.x(), 2) + pow(magnet.position.y() - coil.position.y(), 2) + pow(magnet.position.z() - coil.position.z(), 2));
 
-	r.normalize();
 	
 	// Determine the magnetic field polarity based on both coil.polarity and magnet.polarity
 	float coilPolarityFactor = (coil.polarity == MagnetPolarity::SOUTH) ? -1.0f : 1.0f;
@@ -50,7 +49,13 @@ float Magnos::calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::Atta
 	float polarityFactor = coilPolarityFactor * magnetPolarityFactor;
 
 	// Magnetic field at the coil's position due to the ball
-	msr::airlib::Vector3r B = (MU_0 / (4.0f * M_PI)) * (polarityFactor * ballMagneticMoment / std::pow(distance, 3)) * r;
+	float magneticFlux = (MU_0 / (4.0f * (float)M_PI)) * (polarityFactor * ballMagneticMoment / (distance * distance * distance));
+	
+	r.normalize();
+	
+	r = r * magneticFlux;
+	
+	auto B = r;
 
 	float length = sqrt(B.x() * B.x() + B.y() * B.y() + B.z() * B.z());
 
@@ -221,8 +226,9 @@ void Magnos::applyMagneticImpulse(float delta) {
 	for (const auto& ironBallMagnet : ironBallMagnets) {
 		for (const auto& outerRingMagnet : outerRingMagnets) {
 			// Calculate force between ironBallMagnet and outerRingMagnet
+			msr::airlib::Vector3r origin(0, 0, 0);
 			msr::airlib::Vector3r forceOnIronBall = innerMagnetSystem->calculateForceDueToMagnet(
-																				msr::airlib::Vector3r(0, 0, 0), outerRingMagnet.position, ironBallMagnet.position, outerRingMagnet.polarity);
+						origin, outerRingMagnet.position, ironBallMagnet.position, outerRingMagnet.polarity);
 			
 			// Accumulate the force on the iron ball
 			ironBallTotalForce += forceOnIronBall;
@@ -232,9 +238,10 @@ void Magnos::applyMagneticImpulse(float delta) {
 	for (const auto& middleRingMagnet : middleRingMagnets) {
 		for (const auto& outerRingMagnet : outerRingMagnets) {
 			// Calculate force between middleRingMagnet and outerRingMagnet
+			msr::airlib::Vector3r origin(0, 0, 0);
 			msr::airlib::Vector3r forceOnMiddleRing =
 			middleMagnetSystem->calculateForceDueToMagnet(
-		    msr::airlib::Vector3r(0, 0, 0),
+		    origin,
 			outerRingMagnet.position,
 			middleRingMagnet.position,
 			outerRingMagnet.polarity);
@@ -257,14 +264,15 @@ void Magnos::applyMagneticImpulse(float delta) {
 	
 	
 	// Assuming that forces are acting on some lever arm distance r from the rotation axis
-	float r = 1; // This value should be set based on your system
+
 	
+	msr::airlib::Vector3r innerAxis(1, 0, 0);
+	msr::airlib::Vector3r torqueInner = ironBallForces;
+	applyTorqueAndRotate(innerNode, torqueInner, Settings::fixed_delta, innerAxis);
 	
-	msr::airlib::Vector3r torqueInner = r * ironBallForces;
-	applyTorqueAndRotate(innerNode, torqueInner, Settings::fixed_delta, msr::airlib::Vector3r(1, 0, 0));
-	
-	msr::airlib::Vector3r torqueMiddle = r * middleForces;
-	applyTorqueAndRotate(middleNode, torqueMiddle, Settings::fixed_delta, msr::airlib::Vector3r(0, 1, 0));
+	msr::airlib::Vector3r middleAxis(0, 1, 0);
+	msr::airlib::Vector3r torqueMiddle = middleForces;
+	applyTorqueAndRotate(middleNode, torqueMiddle, Settings::fixed_delta, middleAxis);
 }
 
 AlternatorSystem& Magnos::getAlternatorSystem() {

@@ -306,6 +306,13 @@ endif()
 
 ax_setup_app_props(${APP_NAME})
 
-# if (WASM)
-#     ax_setup_wasm_app_config(${APP_NAME})
-# endif()
+if (WASM)
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        target_compile_options(${APP_NAME} PRIVATE "-fsanitize=undefined")
+        target_compile_options(${APP_NAME} PRIVATE "-Og")
+        target_compile_options(${APP_NAME} PRIVATE "-g3")
+
+        target_link_options(${APP_NAME} PRIVATE "-fsanitize=undefined")
+
+    endif()
+endif()

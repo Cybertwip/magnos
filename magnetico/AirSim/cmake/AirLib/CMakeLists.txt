@@ -56,3 +56,15 @@ target_link_libraries(${PROJECT_NAME} PUBLIC MavLinkCom)
 target_link_libraries(${PROJECT_NAME} PUBLIC ensmallen)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC openblas_static)
+
+if (WASM)
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+      target_compile_options(${PROJECT_NAME} PRIVATE "-fsanitize=undefined")
+      target_compile_options(${PROJECT_NAME} PRIVATE "-Og")
+      target_compile_options(${PROJECT_NAME} PRIVATE "-g3")
+
+      target_link_options(${PROJECT_NAME} PRIVATE "-fsanitize=undefined")
+
+    endif()
+endif()
+
