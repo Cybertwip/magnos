@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -72,11 +74,11 @@ wishrnd(Mat<typename T1::elem_type>& W, const Base<typename T1::elem_type, T1>& 
   
   if(status == false)
     {
-    arma_debug_warn("wishrnd(): given matrix is not symmetric positive definite");
-    return false;
+    W.soft_reset();
+    arma_debug_warn_level(3, "wishrnd(): given matrix is not symmetric positive definite");
     }
   
-  return true;
+  return status;
   }
 
 
@@ -94,7 +96,15 @@ wishrnd(Mat<typename T1::elem_type>& W, const Base<typename T1::elem_type, T1>& 
   arma_extra_debug_sigprint();
   arma_ignore(S);
   
-  return op_wishrnd::apply_direct(W, D.get_ref(), df, uword(2));
+  const bool status = op_wishrnd::apply_direct(W, D.get_ref(), df, uword(2));
+  
+  if(status == false)
+    {
+    W.soft_reset();
+    arma_debug_warn_level(3, "wishrnd(): problem with given 'D' matrix");
+    }
+  
+  return status;
   }
 
 
@@ -156,11 +166,11 @@ iwishrnd(Mat<typename T1::elem_type>& W, const Base<typename T1::elem_type, T1>&
   
   if(status == false)
     {
-    arma_debug_warn("iwishrnd(): given matrix is not symmetric positive definite and/or df is too low");
-    return false;
+    W.soft_reset();
+    arma_debug_warn_level(3, "iwishrnd(): given matrix is not symmetric positive definite and/or df is too low");
     }
   
-  return true;
+  return status;
   }
 
 
@@ -178,7 +188,15 @@ iwishrnd(Mat<typename T1::elem_type>& W, const Base<typename T1::elem_type, T1>&
   arma_extra_debug_sigprint();
   arma_ignore(T);
   
-  return op_iwishrnd::apply_direct(W, Dinv.get_ref(), df, uword(2));
+  const bool status = op_iwishrnd::apply_direct(W, Dinv.get_ref(), df, uword(2));
+  
+  if(status == false)
+    {
+    W.soft_reset();
+    arma_debug_warn_level(3, "wishrnd(): problem with given 'Dinv' matrix and/or df is too low");
+    }
+  
+  return status;
   }
 
 

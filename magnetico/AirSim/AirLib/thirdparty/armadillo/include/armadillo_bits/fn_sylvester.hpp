@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -49,7 +51,7 @@ syl
   if(status == false)
     {
     out.soft_reset();
-    arma_debug_warn("syl(): solution not found");
+    arma_debug_warn_level(3, "syl(): solution not found");
     }
   
   return status;
@@ -69,6 +71,7 @@ sylvester
   const typename arma_blas_type_only<typename T1::elem_type>::result* junk = nullptr
   )
   {
+  arma_ignore(junk);
   return syl(out, in_A, in_B, in_C);
   }
 
@@ -126,6 +129,7 @@ sylvester
   const typename arma_blas_type_only<typename T1::elem_type>::result* junk = nullptr
   )
   {
+  arma_ignore(junk);
   return syl(in_A, in_B, in_C);
   }
 

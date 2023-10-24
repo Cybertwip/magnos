@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -64,10 +66,8 @@
 
 
 template<typename eT>
-class SpProxy< SpMat<eT> >
+struct SpProxy< SpMat<eT> >
   {
-  public:
-
   typedef eT                                       elem_type;
   typedef typename get_pod_type<elem_type>::result pod_type;
   typedef SpMat<eT>                                stored_type;
@@ -118,10 +118,8 @@ class SpProxy< SpMat<eT> >
 
 
 template<typename eT>
-class SpProxy< SpCol<eT> >
+struct SpProxy< SpCol<eT> >
   {
-  public:
-  
   typedef eT                                       elem_type;
   typedef typename get_pod_type<elem_type>::result pod_type;
   typedef SpCol<eT>                                stored_type;
@@ -146,7 +144,7 @@ class SpProxy< SpCol<eT> >
     }
   
   arma_inline uword get_n_rows()    const { return Q.n_rows;    }
-  arma_inline uword get_n_cols()    const { return 1;           }
+  constexpr   uword get_n_cols()    const { return 1;           }
   arma_inline uword get_n_elem()    const { return Q.n_elem;    }
   arma_inline uword get_n_nonzero() const { return Q.n_nonzero; }
   
@@ -172,10 +170,8 @@ class SpProxy< SpCol<eT> >
 
 
 template<typename eT>
-class SpProxy< SpRow<eT> >
+struct SpProxy< SpRow<eT> >
   {
-  public:
-  
   typedef eT                                       elem_type;
   typedef typename get_pod_type<elem_type>::result pod_type;
   typedef SpRow<eT>                                stored_type;
@@ -199,7 +195,7 @@ class SpProxy< SpRow<eT> >
     Q.sync();
     }
   
-  arma_inline uword get_n_rows()    const { return 1;           }
+  constexpr   uword get_n_rows()    const { return 1;           }
   arma_inline uword get_n_cols()    const { return Q.n_cols;    }
   arma_inline uword get_n_elem()    const { return Q.n_elem;    }
   arma_inline uword get_n_nonzero() const { return Q.n_nonzero; }
@@ -226,10 +222,8 @@ class SpProxy< SpRow<eT> >
 
 
 template<typename eT>
-class SpProxy< SpSubview<eT> >
+struct SpProxy< SpSubview<eT> >
   {
-  public:
-
   typedef eT                                           elem_type;
   typedef typename get_pod_type<elem_type>::result     pod_type;
   typedef SpSubview<eT>                                stored_type;
@@ -280,10 +274,8 @@ class SpProxy< SpSubview<eT> >
 
 
 template<typename eT>
-class SpProxy< SpSubview_col<eT> >
+struct SpProxy< SpSubview_col<eT> >
   {
-  public:
-  
   typedef eT                                           elem_type;
   typedef typename get_pod_type<elem_type>::result     pod_type;
   typedef SpSubview_col<eT>                            stored_type;
@@ -308,7 +300,7 @@ class SpProxy< SpSubview_col<eT> >
     }
   
   arma_inline uword get_n_rows()    const { return Q.n_rows;    }
-  arma_inline uword get_n_cols()    const { return 1;           }
+  constexpr   uword get_n_cols()    const { return 1;           }
   arma_inline uword get_n_elem()    const { return Q.n_elem;    }
   arma_inline uword get_n_nonzero() const { return Q.n_nonzero; }
   
@@ -334,10 +326,8 @@ class SpProxy< SpSubview_col<eT> >
 
 
 template<typename eT, typename T1>
-class SpProxy< SpSubview_col_list<eT,T1> >
+struct SpProxy< SpSubview_col_list<eT,T1> >
   {
-  public:
-  
   typedef eT                                       elem_type;
   typedef typename get_pod_type<elem_type>::result pod_type;
   typedef SpMat<eT>                                stored_type;
@@ -387,10 +377,8 @@ class SpProxy< SpSubview_col_list<eT,T1> >
 
 
 template<typename eT>
-class SpProxy< SpSubview_row<eT> >
+struct SpProxy< SpSubview_row<eT> >
   {
-  public:
-  
   typedef eT                                           elem_type;
   typedef typename get_pod_type<elem_type>::result     pod_type;
   typedef SpSubview_row<eT>                            stored_type;
@@ -414,7 +402,7 @@ class SpProxy< SpSubview_row<eT> >
     Q.m.sync();
     }
   
-  arma_inline uword get_n_rows()    const { return 1;           }
+  constexpr   uword get_n_rows()    const { return 1;           }
   arma_inline uword get_n_cols()    const { return Q.n_cols;    }
   arma_inline uword get_n_elem()    const { return Q.n_elem;    }
   arma_inline uword get_n_nonzero() const { return Q.n_nonzero; }
@@ -441,10 +429,8 @@ class SpProxy< SpSubview_row<eT> >
 
 
 template<typename eT>
-class SpProxy< spdiagview<eT> >
+struct SpProxy< spdiagview<eT> >
   {
-  public:
-  
   typedef eT                                       elem_type;
   typedef typename get_pod_type<elem_type>::result pod_type;
   typedef SpMat<eT>                                stored_type;
@@ -468,7 +454,7 @@ class SpProxy< spdiagview<eT> >
     }
   
   arma_inline uword get_n_rows()    const { return Q.n_rows;    }
-  arma_inline uword get_n_cols()    const { return 1;           }
+  constexpr   uword get_n_cols()    const { return 1;           }
   arma_inline uword get_n_elem()    const { return Q.n_elem;    }
   arma_inline uword get_n_nonzero() const { return Q.n_nonzero; }
   
@@ -494,10 +480,8 @@ class SpProxy< spdiagview<eT> >
 
 
 template<typename T1, typename spop_type>
-class SpProxy< SpOp<T1, spop_type> >
+struct SpProxy< SpOp<T1, spop_type> >
   {
-  public:
-  
   typedef typename T1::elem_type                   elem_type;
   typedef typename T1::elem_type                   eT;
   typedef typename get_pod_type<elem_type>::result pod_type;
@@ -548,10 +532,8 @@ class SpProxy< SpOp<T1, spop_type> >
 
 
 template<typename T1, typename T2, typename spglue_type>
-class SpProxy< SpGlue<T1, T2, spglue_type> >
+struct SpProxy< SpGlue<T1, T2, spglue_type> >
   {
-  public:
-  
   typedef typename T1::elem_type                   elem_type;
   typedef typename T1::elem_type                   eT;
   typedef typename get_pod_type<elem_type>::result pod_type;
@@ -602,10 +584,8 @@ class SpProxy< SpGlue<T1, T2, spglue_type> >
 
 
 template<typename out_eT, typename T1, typename spop_type>
-class SpProxy< mtSpOp<out_eT, T1, spop_type> >
+struct SpProxy< mtSpOp<out_eT, T1, spop_type> >
   {
-  public:
-  
   typedef          out_eT                          elem_type;
   typedef typename get_pod_type<elem_type>::result pod_type;
   typedef SpMat<out_eT>                            stored_type;
@@ -655,10 +635,8 @@ class SpProxy< mtSpOp<out_eT, T1, spop_type> >
 
 
 template<typename out_eT, typename T1, typename T2, typename spglue_type>
-class SpProxy< mtSpGlue<out_eT, T1, T2, spglue_type> >
+struct SpProxy< mtSpGlue<out_eT, T1, T2, spglue_type> >
   {
-  public:
-  
   typedef          out_eT                          elem_type;
   typedef typename get_pod_type<elem_type>::result pod_type;
   typedef SpMat<out_eT>                            stored_type;

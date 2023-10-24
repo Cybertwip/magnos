@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2011-2017 Ryan Curtin (http://www.ratml.org/)
 // Copyright 2017 National ICT Australia (NICTA)
 //
@@ -29,7 +31,7 @@ TEST_CASE("fn_var_empty_sparse_test")
   REQUIRE( result.n_rows == 1 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) result[i] == Approx(0.0) );
+    REQUIRE( (double) result[i] == Approx(0.0).margin(0.001) );
     }
 
   result = var(m, 0, 0);
@@ -38,7 +40,7 @@ TEST_CASE("fn_var_empty_sparse_test")
   REQUIRE( result.n_rows == 1 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) result[i] == Approx(0.0) );
+    REQUIRE( (double) result[i] == Approx(0.0).margin(0.001) );
     }
 
   result = var(m, 1, 0);
@@ -47,7 +49,7 @@ TEST_CASE("fn_var_empty_sparse_test")
   REQUIRE( result.n_rows == 1 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) result[i] == Approx(0.0) );
+    REQUIRE( (double) result[i] == Approx(0.0).margin(0.001) );
     }
 
   result = var(m, 1);
@@ -56,7 +58,7 @@ TEST_CASE("fn_var_empty_sparse_test")
   REQUIRE( result.n_rows == 1 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) result[i] == Approx(0.0) );
+    REQUIRE( (double) result[i] == Approx(0.0).margin(0.001) );
     }
 
   SpCol<double> colres = var(m, 1, 1);
@@ -65,7 +67,7 @@ TEST_CASE("fn_var_empty_sparse_test")
   REQUIRE( colres.n_rows == 100 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) colres[i] == Approx(0.0) );
+    REQUIRE( (double) colres[i] == Approx(0.0).margin(0.001) );
     }
 
   colres = var(m, 0, 1);
@@ -74,7 +76,7 @@ TEST_CASE("fn_var_empty_sparse_test")
   REQUIRE( colres.n_rows == 100 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) colres[i] == Approx(0.0) );
+    REQUIRE( (double) colres[i] == Approx(0.0).margin(0.001) );
     }
   }
 
@@ -90,7 +92,7 @@ TEST_CASE("fn_var_empty_cx_sparse_test")
   REQUIRE( result.n_rows == 1 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) result[i] == Approx(0.0) );
+    REQUIRE( (double) result[i] == Approx(0.0).margin(0.001) );
     }
 
   result = var(m, 0, 0);
@@ -99,7 +101,7 @@ TEST_CASE("fn_var_empty_cx_sparse_test")
   REQUIRE( result.n_rows == 1 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) result[i] == Approx(0.0) );
+    REQUIRE( (double) result[i] == Approx(0.0).margin(0.001) );
     }
 
   result = var(m, 1, 0);
@@ -108,7 +110,7 @@ TEST_CASE("fn_var_empty_cx_sparse_test")
   REQUIRE( result.n_rows == 1 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) result[i] == Approx(0.0) );
+    REQUIRE( (double) result[i] == Approx(0.0).margin(0.001) );
     }
 
   result = var(m, 1);
@@ -117,7 +119,7 @@ TEST_CASE("fn_var_empty_cx_sparse_test")
   REQUIRE( result.n_rows == 1 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) result[i] == Approx(0.0) );
+    REQUIRE( (double) result[i] == Approx(0.0).margin(0.001) );
     }
 
   SpCol<double> colres = var(m, 1, 1);
@@ -126,7 +128,7 @@ TEST_CASE("fn_var_empty_cx_sparse_test")
   REQUIRE( colres.n_rows == 100 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) colres[i] == Approx(0.0) );
+    REQUIRE( (double) colres[i] == Approx(0.0).margin(0.001) );
     }
 
   colres = var(m, 0, 1);
@@ -135,7 +137,7 @@ TEST_CASE("fn_var_empty_cx_sparse_test")
   REQUIRE( colres.n_rows == 100 );
   for (uword i = 0; i < 100; ++i)
     {
-    REQUIRE( (double) colres[i] == Approx(0.0) );
+    REQUIRE( (double) colres[i] == Approx(0.0).margin(0.001) );
     }
   }
 

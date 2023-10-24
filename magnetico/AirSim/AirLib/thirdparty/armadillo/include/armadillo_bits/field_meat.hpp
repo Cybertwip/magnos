@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -80,7 +82,7 @@ field<oT>::operator=(const field& x)
 
 
 
-//! construct a field from subview_field (e.g. construct a field from a delayed subfield operation)
+//! construct a field from subview_field (eg. construct a field from a delayed subfield operation)
 template<typename oT>
 inline
 field<oT>::field(const subview_field<oT>& X)
@@ -97,7 +99,7 @@ field<oT>::field(const subview_field<oT>& X)
 
 
 
-//! construct a field from subview_field (e.g. construct a field from a delayed subfield operation)
+//! construct a field from subview_field (eg. construct a field from a delayed subfield operation)
 template<typename oT>
 inline
 field<oT>&
@@ -200,12 +202,14 @@ field<oT>::field(const SizeCube& s)
 //! assuming a column-major layout (data is not preserved)
 template<typename oT>
 inline
-void
+field<oT>&
 field<oT>::set_size(const uword n_elem_in)
   {
-  arma_extra_debug_sigprint(arma_str::format("n_elem_in = %d") % n_elem_in);
+  arma_extra_debug_sigprint(arma_str::format("n_elem_in = %u") % n_elem_in);
   
   init(n_elem_in, 1);
+  
+  return *this;
   }
 
 
@@ -213,12 +217,14 @@ field<oT>::set_size(const uword n_elem_in)
 //! change the field to have the specified dimensions (data is not preserved)
 template<typename oT>
 inline
-void
+field<oT>&
 field<oT>::set_size(const uword n_rows_in, const uword n_cols_in)
   {
-  arma_extra_debug_sigprint(arma_str::format("n_rows_in = %d, n_cols_in = %d") % n_rows_in % n_cols_in);
+  arma_extra_debug_sigprint(arma_str::format("n_rows_in = %u, n_cols_in = %u") % n_rows_in % n_cols_in);
   
   init(n_rows_in, n_cols_in);
+  
+  return *this;
   }
 
 
@@ -226,32 +232,42 @@ field<oT>::set_size(const uword n_rows_in, const uword n_cols_in)
 //! change the field to have the specified dimensions (data is not preserved)
 template<typename oT>
 inline
-void
+field<oT>&
 field<oT>::set_size(const uword n_rows_in, const uword n_cols_in, const uword n_slices_in)
   {
-  arma_extra_debug_sigprint(arma_str::format("n_rows_in = %d, n_cols_in = %d, n_slices_in = %d") % n_rows_in % n_cols_in % n_slices_in);
+  arma_extra_debug_sigprint(arma_str::format("n_rows_in = %u, n_cols_in = %u, n_slices_in = %u") % n_rows_in % n_cols_in % n_slices_in);
   
   init(n_rows_in, n_cols_in, n_slices_in);
+  
+  return *this;
   }
 
 
 
 template<typename oT>
 inline
-void
+field<oT>&
 field<oT>::set_size(const SizeMat& s)
   {
+  arma_extra_debug_sigprint();
+  
   init(s.n_rows, s.n_cols);
+  
+  return *this;
   }
 
 
 
 template<typename oT>
 inline
-void
+field<oT>&
 field<oT>::set_size(const SizeCube& s)
   {
+  arma_extra_debug_sigprint();
+  
   init(s.n_rows, s.n_cols, s.n_slices);
+  
+  return *this;
   }
 
 
@@ -425,6 +441,8 @@ field<oT>::operator=(field<oT>&& X)
   {
   arma_extra_debug_sigprint(arma_str::format("this = %x   X = %x") % this % &X);
   
+  if(this == &X)  { return *this; }
+  
   reset();
   
   access::rw(n_rows  ) = X.n_rows;
@@ -457,12 +475,14 @@ field<oT>::operator=(field<oT>&& X)
 template<typename oT>
 template<typename oT2>
 inline
-void
+field<oT>&
 field<oT>::copy_size(const field<oT2>& x)
   {
   arma_extra_debug_sigprint();
   
   init(x.n_rows, x.n_cols, x.n_slices);
+  
+  return *this;
   }
 
 
@@ -589,6 +609,32 @@ field<oT>::operator() (const uword in_row, const uword in_col, const uword in_sl
 
 
 
+#if defined(__cpp_multidimensional_subscript)
+  
+  //! element accessor; no bounds check
+  template<typename oT>
+  arma_inline
+    oT&
+  field<oT>::operator[] (const uword in_row, const uword in_col)
+    {
+    return (*mem[in_row + in_col*n_rows]);
+    }
+  
+  
+  
+  //! element accessor; no bounds check
+  template<typename oT>
+  arma_inline
+    const oT&
+  field<oT>::operator[] (const uword in_row, const uword in_col) const
+    {
+    return (*mem[in_row + in_col*n_rows]);
+    }
+  
+#endif
+
+
+
 //! element accessor; no bounds check
 template<typename oT>
 arma_inline
@@ -608,6 +654,32 @@ field<oT>::at(const uword in_row, const uword in_col) const
   {
   return (*mem[in_row + in_col*n_rows]);
   }
+
+
+
+#if defined(__cpp_multidimensional_subscript)
+  
+  //! element accessor; no bounds check
+  template<typename oT>
+  arma_inline
+    oT&
+  field<oT>::operator[] (const uword in_row, const uword in_col, const uword in_slice)
+    {
+    return (*mem[in_row + in_col*n_rows + in_slice*(n_rows*n_cols)]);
+    }
+  
+  
+  
+  //! element accessor; no bounds check
+  template<typename oT>
+  arma_inline
+    const oT&
+  field<oT>::operator[] (const uword in_row, const uword in_col, const uword in_slice) const
+    {
+    return (*mem[in_row + in_col*n_rows + in_slice*(n_rows*n_cols)]);
+    }
+  
+#endif
 
 
 
@@ -634,7 +706,54 @@ field<oT>::at(const uword in_row, const uword in_col, const uword in_slice) cons
 
 
 template<typename oT>
-arma_cold
+arma_inline
+oT&
+field<oT>::front()
+  {
+  arma_debug_check( (n_elem == 0), "field::front(): field is empty" );
+  
+  return (*mem[0]);
+  }
+
+
+
+template<typename oT>
+arma_inline
+const oT&
+field<oT>::front() const
+  {
+  arma_debug_check( (n_elem == 0), "field::front(): field is empty" );
+  
+  return (*mem[0]);
+  }
+
+
+
+template<typename oT>
+arma_inline
+oT&
+field<oT>::back()
+  {
+  arma_debug_check( (n_elem == 0), "field::back(): field is empty" );
+  
+  return (*mem[n_elem-1]);
+  }
+
+
+
+template<typename oT>
+arma_inline
+const oT&
+field<oT>::back() const
+  {
+  arma_debug_check( (n_elem == 0), "field::back(): field is empty" );
+  
+  return (*mem[n_elem-1]);
+  }
+
+
+
+template<typename oT>
 inline
 field_injector< field<oT> >
 field<oT>::operator<<(const oT& val)
@@ -645,7 +764,6 @@ field<oT>::operator<<(const oT& val)
 
 
 template<typename oT>
-arma_cold
 inline
 field_injector< field<oT> >
 field<oT>::operator<<(const injector_end_of_row<>& x)
@@ -1355,11 +1473,10 @@ field<oT>::operator()(const uword in_row1, const uword in_col1, const uword in_s
 //! but the associated operator<< function for type oT 
 //! may still modify the stream's parameters.
 //! NOTE: this function assumes that type oT can be printed,
-//! i.e. the function "std::ostream& operator<< (std::ostream&, const oT&)"
+//! ie. the function "std::ostream& operator<< (std::ostream&, const oT&)"
 //! has been defined.
 
 template<typename oT>
-arma_cold
 inline
 void
 field<oT>::print(const std::string extra_text) const
@@ -1386,11 +1503,10 @@ field<oT>::print(const std::string extra_text) const
 //! but the associated operator<< function for type oT 
 //! may still modify the stream's parameters.
 //! NOTE: this function assumes that type oT can be printed,
-//! i.e. the function "std::ostream& operator<< (std::ostream&, const oT&)"
+//! ie. the function "std::ostream& operator<< (std::ostream&, const oT&)"
 //! has been defined.
 
 template<typename oT>
-arma_cold
 inline
 void
 field<oT>::print(std::ostream& user_stream, const std::string extra_text) const
@@ -1414,7 +1530,7 @@ field<oT>::print(std::ostream& user_stream, const std::string extra_text) const
 //! apply a lambda function to each object
 template<typename oT>
 inline
-const field<oT>&
+field<oT>&
 field<oT>::for_each(const std::function< void(oT&) >& F)
   {
   arma_extra_debug_sigprint();
@@ -1443,7 +1559,7 @@ field<oT>::for_each(const std::function< void(const oT&) >& F) const
 //! fill the field with an object
 template<typename oT>
 inline
-const field<oT>&
+field<oT>&
 field<oT>::fill(const oT& x)
   {
   arma_extra_debug_sigprint();
@@ -1457,7 +1573,7 @@ field<oT>::fill(const oT& x)
 
 
 
-//! reset the field to an empty state (i.e. the field will have no objects)
+//! reset the field to an empty state (ie. the field will have no objects)
 template<typename oT>
 inline
 void
@@ -1497,7 +1613,6 @@ field<oT>::is_empty() const
 //! returns true if the given index is currently in range
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const uword i) const
   {
@@ -1509,7 +1624,6 @@ field<oT>::in_range(const uword i) const
 //! returns true if the given start and end indices are currently in range
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const span& x) const
   {
@@ -1533,7 +1647,6 @@ field<oT>::in_range(const span& x) const
 //! returns true if the given location is currently in range
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const uword in_row, const uword in_col) const
   {
@@ -1544,7 +1657,6 @@ field<oT>::in_range(const uword in_row, const uword in_col) const
 
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const span& row_span, const uword in_col) const
   {
@@ -1567,7 +1679,6 @@ field<oT>::in_range(const span& row_span, const uword in_col) const
 
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const uword in_row, const span& col_span) const
   {
@@ -1590,7 +1701,6 @@ field<oT>::in_range(const uword in_row, const span& col_span) const
 
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const span& row_span, const span& col_span) const
   {
@@ -1612,7 +1722,6 @@ field<oT>::in_range(const span& row_span, const span& col_span) const
 
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const uword in_row, const uword in_col, const SizeMat& s) const
   {
@@ -1633,7 +1742,6 @@ field<oT>::in_range(const uword in_row, const uword in_col, const SizeMat& s) co
 
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const uword in_row, const uword in_col, const uword in_slice) const
   {
@@ -1644,7 +1752,6 @@ field<oT>::in_range(const uword in_row, const uword in_col, const uword in_slice
 
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const span& row_span, const span& col_span, const span& slice_span) const
   {
@@ -1670,7 +1777,6 @@ field<oT>::in_range(const span& row_span, const span& col_span, const span& slic
 
 template<typename oT>
 arma_inline
-arma_warn_unused
 bool
 field<oT>::in_range(const uword in_row, const uword in_col, const uword in_slice, const SizeCube& s) const
   {
@@ -1692,9 +1798,8 @@ field<oT>::in_range(const uword in_row, const uword in_col, const uword in_slice
 
 template<typename oT>
 inline
-arma_cold
 bool
-field<oT>::save(const std::string name, const file_type type, const bool print_status) const
+field<oT>::save(const std::string name, const file_type type) const
   {
   arma_extra_debug_sigprint();
   
@@ -1702,15 +1807,15 @@ field<oT>::save(const std::string name, const file_type type, const bool print_s
   
   const bool save_okay = field_aux::save(*this, name, type, err_msg);
   
-  if(print_status && (save_okay == false))
+  if(save_okay == false)
     {
     if(err_msg.length() > 0)
       {
-      arma_debug_warn("field::save(): ", err_msg, "; file: ", name);
+      arma_debug_warn_level(3, "field::save(): ", err_msg, "; file: ", name);
       }
     else
       {
-      arma_debug_warn("field::save(): couldn't write; file: ", name);
+      arma_debug_warn_level(3, "field::save(): write failed; file: ", name);
       }
     }
   
@@ -1721,9 +1826,8 @@ field<oT>::save(const std::string name, const file_type type, const bool print_s
 
 template<typename oT>
 inline
-arma_cold
 bool
-field<oT>::save(std::ostream& os, const file_type type, const bool print_status) const
+field<oT>::save(std::ostream& os, const file_type type) const
   {
   arma_extra_debug_sigprint();
   
@@ -1731,15 +1835,15 @@ field<oT>::save(std::ostream& os, const file_type type, const bool print_status)
   
   const bool save_okay = field_aux::save(*this, os, type, err_msg);
   
-  if(print_status && (save_okay == false))
+  if(save_okay == false)
     {
     if(err_msg.length() > 0)
       {
-      arma_debug_warn("field::save(): ", err_msg);
+      arma_debug_warn_level(3, "field::save(): ", err_msg);
       }
     else
       {
-      arma_debug_warn("field::save(): couldn't write to the given stream");
+      arma_debug_warn_level(3, "field::save(): stream write failed");
       }
     }
   
@@ -1750,9 +1854,8 @@ field<oT>::save(std::ostream& os, const file_type type, const bool print_status)
 
 template<typename oT>
 inline
-arma_cold
 bool
-field<oT>::load(const std::string name, const file_type type, const bool print_status)
+field<oT>::load(const std::string name, const file_type type)
   {
   arma_extra_debug_sigprint();
   
@@ -1760,15 +1863,15 @@ field<oT>::load(const std::string name, const file_type type, const bool print_s
   
   const bool load_okay = field_aux::load(*this, name, type, err_msg);
   
-  if(print_status && (load_okay == false))
+  if(load_okay == false)
     {
     if(err_msg.length() > 0)
       {
-      arma_debug_warn("field::load(): ", err_msg, "; file: ", name);
+      arma_debug_warn_level(3, "field::load(): ", err_msg, "; file: ", name);
       }
     else
       {
-      arma_debug_warn("field::load(): couldn't read; file: ", name);
+      arma_debug_warn_level(3, "field::load(): read failed; file: ", name);
       }
     }
   
@@ -1781,24 +1884,23 @@ field<oT>::load(const std::string name, const file_type type, const bool print_s
 
 template<typename oT>
 inline
-arma_cold
 bool
-field<oT>::load(std::istream& is, const file_type type, const bool print_status)
+field<oT>::load(std::istream& is, const file_type type)
   {
   arma_extra_debug_sigprint();
   
   std::string err_msg;
   const bool load_okay = field_aux::load(*this, is, type, err_msg);
   
-  if(print_status && (load_okay == false))
+  if(load_okay == false)
     {
     if(err_msg.length() > 0)
       {
-      arma_debug_warn("field::load(): ", err_msg);
+      arma_debug_warn_level(3, "field::load(): ", err_msg);
       }
     else
       {
-      arma_debug_warn("field::load(): couldn't read from the given stream");
+      arma_debug_warn_level(3, "field::load(): stream read failed");
       }
     }
   
@@ -1811,52 +1913,48 @@ field<oT>::load(std::istream& is, const file_type type, const bool print_status)
 
 template<typename oT>
 inline
-arma_cold
 bool
 field<oT>::quiet_save(const std::string name, const file_type type) const
   {
   arma_extra_debug_sigprint();
   
-  return (*this).save(name, type, false);
+  return (*this).save(name, type);
   }
 
 
 
 template<typename oT>
 inline
-arma_cold
 bool
 field<oT>::quiet_save(std::ostream& os, const file_type type) const
   {
   arma_extra_debug_sigprint();
   
-  return (*this).save(os, type, false);
+  return (*this).save(os, type);
   }
 
 
 
 template<typename oT>
 inline
-arma_cold
 bool
 field<oT>::quiet_load(const std::string name, const file_type type)
   {
   arma_extra_debug_sigprint();
   
-  return (*this).load(name, type, false);
+  return (*this).load(name, type);
   }
 
 
 
 template<typename oT>
 inline
-arma_cold
 bool
 field<oT>::quiet_load(std::istream& is, const file_type type)
   {
   arma_extra_debug_sigprint();
   
-  return (*this).load(is, type, false);
+  return (*this).load(is, type);
   }
 
 
@@ -1916,7 +2014,7 @@ inline
 void
 field<oT>::init(const uword n_rows_in, const uword n_cols_in, const uword n_slices_in)
   {
-  arma_extra_debug_sigprint( arma_str::format("n_rows_in = %d, n_cols_in = %d, n_slices_in = %d") % n_rows_in % n_cols_in % n_slices_in );
+  arma_extra_debug_sigprint( arma_str::format("n_rows_in = %u, n_cols_in = %u, n_slices_in = %u") % n_rows_in % n_cols_in % n_slices_in );
   
   #if defined(ARMA_64BIT_WORD)
     const char* error_message = "field::init(): requested size is too large";
@@ -1977,7 +2075,7 @@ inline
 void
 field<oT>::delete_objects()
   {
-  arma_extra_debug_sigprint( arma_str::format("n_elem = %d") % n_elem );
+  arma_extra_debug_sigprint( arma_str::format("n_elem = %u") % n_elem );
   
   for(uword i=0; i<n_elem; ++i)
     {
@@ -1996,7 +2094,7 @@ inline
 void
 field<oT>::create_objects()
   {
-  arma_extra_debug_sigprint( arma_str::format("n_elem = %d") % n_elem );
+  arma_extra_debug_sigprint( arma_str::format("n_elem = %u") % n_elem );
   
   for(uword i=0; i<n_elem; ++i)  { mem[i] = new oT; }
   }
@@ -2377,7 +2475,7 @@ field_aux::save(const field<oT>&, const std::string&, const file_type, std::stri
   {
   arma_extra_debug_sigprint();
   
-  err_msg = " [saving/loading this type of field is currently not supported] filename = ";
+  err_msg = "saving/loading this type of field is currently not supported";
   
   return false;
   }
@@ -2391,7 +2489,7 @@ field_aux::save(const field<oT>&, std::ostream&, const file_type, std::string& e
   {
   arma_extra_debug_sigprint();
   
-  err_msg = " [saving/loading this type of field is currently not supported] filename = ";
+  err_msg = "saving/loading this type of field is currently not supported";
   
   return false;
   }
@@ -2405,7 +2503,7 @@ field_aux::load(field<oT>&, const std::string&, const file_type, std::string& er
   {
   arma_extra_debug_sigprint();
   
-  err_msg = " [saving/loading this type of field is currently not supported] filename = ";
+  err_msg = "saving/loading this type of field is currently not supported";
   
   return false;
   }
@@ -2419,7 +2517,7 @@ field_aux::load(field<oT>&, std::istream&, const file_type, std::string& err_msg
   {
   arma_extra_debug_sigprint();
   
-  err_msg = " [saving/loading this type of field is currently not supported] filename = ";
+  err_msg = "saving/loading this type of field is currently not supported";
   
   return false;
   }
@@ -2444,7 +2542,7 @@ field_aux::save(const field< Mat<eT> >& x, const std::string& name, const file_t
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2469,7 +2567,7 @@ field_aux::save(const field< Mat<eT> >& x, std::ostream& os, const file_type typ
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2498,7 +2596,7 @@ field_aux::load(field< Mat<eT> >& x, const std::string& name, const file_type ty
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2527,7 +2625,7 @@ field_aux::load(field< Mat<eT> >& x, std::istream& is, const file_type type, std
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2552,7 +2650,7 @@ field_aux::save(const field< Col<eT> >& x, const std::string& name, const file_t
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2577,7 +2675,7 @@ field_aux::save(const field< Col<eT> >& x, std::ostream& os, const file_type typ
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2606,7 +2704,7 @@ field_aux::load(field< Col<eT> >& x, const std::string& name, const file_type ty
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2635,7 +2733,7 @@ field_aux::load(field< Col<eT> >& x, std::istream& is, const file_type type, std
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2660,7 +2758,7 @@ field_aux::save(const field< Row<eT> >& x, const std::string& name, const file_t
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2685,7 +2783,7 @@ field_aux::save(const field< Row<eT> >& x, std::ostream& os, const file_type typ
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2714,7 +2812,7 @@ field_aux::load(field< Row<eT> >& x, const std::string& name, const file_type ty
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2743,7 +2841,7 @@ field_aux::load(field< Row<eT> >& x, std::istream& is, const file_type type, std
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2764,7 +2862,7 @@ field_aux::save(const field< Cube<eT> >& x, const std::string& name, const file_
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2785,7 +2883,7 @@ field_aux::save(const field< Cube<eT> >& x, std::ostream& os, const file_type ty
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2807,7 +2905,7 @@ field_aux::load(field< Cube<eT> >& x, const std::string& name, const file_type t
       break;
     
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2829,7 +2927,7 @@ field_aux::load(field< Cube<eT> >& x, std::istream& is, const file_type type, st
       break;
       
     default:
-      err_msg = " [unsupported type] filename = ";
+      err_msg = "unsupported type";
       return false;
     }
   }
@@ -2892,7 +2990,7 @@ field_aux::load(field< std::string >& x, std::istream& is, const file_type type,
 
 
 
-#ifdef ARMA_EXTRA_FIELD_MEAT
+#if defined(ARMA_EXTRA_FIELD_MEAT)
   #include ARMA_INCFILE_WRAP(ARMA_EXTRA_FIELD_MEAT)
 #endif
 

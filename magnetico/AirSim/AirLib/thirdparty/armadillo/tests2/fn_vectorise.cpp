@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -44,7 +46,7 @@ TEST_CASE("fn_vectorise_1")
   
   rowvec b = { 0.061198, 0.201990, 0.437242, 0.058956, -0.492474, -0.031309, 0.336352, 0.411541 };
   
-  REQUIRE( accu(abs(a - vectorise(A  ))) == Approx(0.0) );
-  REQUIRE( accu(abs(a - vectorise(A,0))) == Approx(0.0) );
-  REQUIRE( accu(abs(b - vectorise(A,1))) == Approx(0.0) );
+  REQUIRE( accu(abs(a - vectorise(A  ))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(a - vectorise(A,0))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(b - vectorise(A,1))) == Approx(0.0).margin(0.001) );
   }

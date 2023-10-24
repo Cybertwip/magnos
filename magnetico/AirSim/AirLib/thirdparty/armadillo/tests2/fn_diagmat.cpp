@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -77,11 +79,11 @@ TEST_CASE("fn_diagmat_2")
   mat Amain(size(A),fill::zeros);  Amain.diag(  ) = dmain;
   mat Am1  (size(A),fill::zeros);    Am1.diag(-1) = dm1;
   
-  REQUIRE( accu(abs(diagmat(A   ) - Amain)) == Approx(0.0) );
-  REQUIRE( accu(abs(diagmat(A, 0) - Amain)) == Approx(0.0) );
+  REQUIRE( accu(abs(diagmat(A   ) - Amain)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diagmat(A, 0) - Amain)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs(diagmat(A, 1) - Ap1)) == Approx(0.0) );
-  REQUIRE( accu(abs(diagmat(A,-1) - Am1)) == Approx(0.0) );
+  REQUIRE( accu(abs(diagmat(A, 1) - Ap1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diagmat(A,-1) - Am1)) == Approx(0.0).margin(0.001) );
   }
 
 
@@ -129,13 +131,13 @@ TEST_CASE("fn_diagmat_3")
     -0.109213   0.011096  -0.057961;\
     ";
   
-  REQUIRE( accu(abs((diagmat(Asub) * diagmat(Bsub)) - Asubdiagmat_times_Bsubdiagmat)) == Approx(0.0) );
+  REQUIRE( accu(abs((diagmat(Asub) * diagmat(Bsub)) - Asubdiagmat_times_Bsubdiagmat)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((Bsub                    * diagmat(A)) - Bsub_times_Adiagmat)) == Approx(0.0) );
-  REQUIRE( accu(abs((B(span::all, span(0,2)) * diagmat(A)) - Bsub_times_Adiagmat)) == Approx(0.0) );
+  REQUIRE( accu(abs((Bsub                    * diagmat(A)) - Bsub_times_Adiagmat)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((B(span::all, span(0,2)) * diagmat(A)) - Bsub_times_Adiagmat)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((diagmat(A) * Bt    ) - Adiagmat_times_Bt  )) == Approx(0.0) );
-  REQUIRE( accu(abs((diagmat(A) * B.t() ) - Adiagmat_times_Bt  )) == Approx(0.0) );
+  REQUIRE( accu(abs((diagmat(A) * Bt    ) - Adiagmat_times_Bt  )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((diagmat(A) * B.t() ) - Adiagmat_times_Bt  )) == Approx(0.0).margin(0.001) );
   
   // TODO: Asub and At
   }

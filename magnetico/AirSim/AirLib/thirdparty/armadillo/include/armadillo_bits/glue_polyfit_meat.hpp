@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -28,7 +30,7 @@ glue_polyfit::apply_noalias(Mat<eT>& out, const Col<eT>& X, const Col<eT>& Y, co
   
   // create Vandermonde matrix
   
-  Mat<eT> V(X.n_elem, N+1);
+  Mat<eT> V(X.n_elem, N+1, arma_nozeros_indicator());
   
   V.tail_cols(1).ones();
   

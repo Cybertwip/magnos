@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -15,7 +17,7 @@
 
 
 
-#ifdef ARMA_USE_LAPACK
+#if defined(ARMA_USE_LAPACK)
 
 #if defined(dgetrf) || defined(DGETRF)
   #pragma message ("WARNING: detected possible interference with definitions of LAPACK functions;")
@@ -257,13 +259,15 @@
   #define arma_strevc strevc
   #define arma_dtrevc dtrevc
   
-  #define arma_slarnv slarnv
-  #define arma_dlarnv dlarnv
-  
   #define arma_sgehrd sgehrd
   #define arma_dgehrd dgehrd
   #define arma_cgehrd cgehrd
   #define arma_zgehrd zgehrd
+  
+  #define arma_spstrf spstrf
+  #define arma_dpstrf dpstrf
+  #define arma_cpstrf cpstrf
+  #define arma_zpstrf zpstrf
   
 #else
   
@@ -491,13 +495,15 @@
   #define arma_strevc STREVC
   #define arma_dtrevc DTREVC
   
-  #define arma_slarnv SLARNV
-  #define arma_dlarnv DLARNV
-  
   #define arma_sgehrd SGEHRD
   #define arma_dgehrd DGEHRD
   #define arma_cgehrd CGEHRD
   #define arma_zgehrd ZGEHRD
+  
+  #define arma_spstrf SPSTRF
+  #define arma_dpstrf DPSTRF
+  #define arma_cpstrf CPSTRF
+  #define arma_zpstrf ZPSTRF
   
 #endif
 
@@ -828,15 +834,17 @@ extern "C"
   void arma_fortran(arma_strevc)(const char* side, const char* howmny, blas_int* select, const blas_int* n, const  float* t, const blas_int* ldt,  float* vl, const blas_int* ldvl,  float* vr, const blas_int* ldvr, const blas_int* mm, blas_int* m,  float* work, blas_int* info, blas_len side_len, blas_len howmny_len) ARMA_NOEXCEPT;
   void arma_fortran(arma_dtrevc)(const char* side, const char* howmny, blas_int* select, const blas_int* n, const double* t, const blas_int* ldt, double* vl, const blas_int* ldvl, double* vr, const blas_int* ldvr, const blas_int* mm, blas_int* m, double* work, blas_int* info, blas_len side_len, blas_len howmny_len) ARMA_NOEXCEPT;
   
-  // generate a vector of random numbers
-  void arma_fortran(arma_slarnv)(const blas_int* idist, blas_int* iseed, const blas_int* n,  float* x) ARMA_NOEXCEPT;
-  void arma_fortran(arma_dlarnv)(const blas_int* idist, blas_int* iseed, const blas_int* n, double* x) ARMA_NOEXCEPT;
-  
   // hessenberg decomposition
   void arma_fortran(arma_sgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi,    float* a, const blas_int* lda,    float* tao,    float* work, const blas_int* lwork, blas_int* info) ARMA_NOEXCEPT;
   void arma_fortran(arma_dgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi,   double* a, const blas_int* lda,   double* tao,   double* work, const blas_int* lwork, blas_int* info) ARMA_NOEXCEPT;
   void arma_fortran(arma_cgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi, blas_cxf* a, const blas_int* lda, blas_cxf* tao, blas_cxf* work, const blas_int* lwork, blas_int* info) ARMA_NOEXCEPT;
   void arma_fortran(arma_zgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi, blas_cxd* a, const blas_int* lda, blas_cxd* tao, blas_cxd* work, const blas_int* lwork, blas_int* info) ARMA_NOEXCEPT;
+  
+  // pivoted cholesky
+  void arma_fortran(arma_spstrf)(const char* uplo, const blas_int* n,    float* a, const blas_int* lda, blas_int* piv, blas_int* rank, const  float* tol,  float* work, blas_int* info, blas_len uplo_len) ARMA_NOEXCEPT;
+  void arma_fortran(arma_dpstrf)(const char* uplo, const blas_int* n,   double* a, const blas_int* lda, blas_int* piv, blas_int* rank, const double* tol, double* work, blas_int* info, blas_len uplo_len) ARMA_NOEXCEPT;
+  void arma_fortran(arma_cpstrf)(const char* uplo, const blas_int* n, blas_cxf* a, const blas_int* lda, blas_int* piv, blas_int* rank, const  float* tol,  float* work, blas_int* info, blas_len uplo_len) ARMA_NOEXCEPT;
+  void arma_fortran(arma_zpstrf)(const char* uplo, const blas_int* n, blas_cxd* a, const blas_int* lda, blas_int* piv, blas_int* rank, const double* tol, double* work, blas_int* info, blas_len uplo_len) ARMA_NOEXCEPT;
   
 #else
   
@@ -1150,16 +1158,18 @@ extern "C"
   void arma_fortran(arma_strevc)(const char* side, const char* howmny, blas_int* select, const blas_int* n, const  float* t, const blas_int* ldt,  float* vl, const blas_int* ldvl,  float* vr, const blas_int* ldvr, const blas_int* mm, blas_int* m,  float* work, blas_int* info) ARMA_NOEXCEPT;
   void arma_fortran(arma_dtrevc)(const char* side, const char* howmny, blas_int* select, const blas_int* n, const double* t, const blas_int* ldt, double* vl, const blas_int* ldvl, double* vr, const blas_int* ldvr, const blas_int* mm, blas_int* m, double* work, blas_int* info) ARMA_NOEXCEPT;
   
-  // generate a vector of random numbers
-  void arma_fortran(arma_slarnv)(const blas_int* idist, blas_int* iseed, const blas_int* n,  float* x) ARMA_NOEXCEPT;
-  void arma_fortran(arma_dlarnv)(const blas_int* idist, blas_int* iseed, const blas_int* n, double* x) ARMA_NOEXCEPT;
-  
   // hessenberg decomposition
   void arma_fortran(arma_sgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi,    float* a, const blas_int* lda,    float* tao,    float* work, const blas_int* lwork, blas_int* info) ARMA_NOEXCEPT;
   void arma_fortran(arma_dgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi,   double* a, const blas_int* lda,   double* tao,   double* work, const blas_int* lwork, blas_int* info) ARMA_NOEXCEPT;
   void arma_fortran(arma_cgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi, blas_cxf* a, const blas_int* lda, blas_cxf* tao, blas_cxf* work, const blas_int* lwork, blas_int* info) ARMA_NOEXCEPT;
   void arma_fortran(arma_zgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi, blas_cxd* a, const blas_int* lda, blas_cxd* tao, blas_cxd* work, const blas_int* lwork, blas_int* info) ARMA_NOEXCEPT;
-
+  
+  // pivoted cholesky
+  void arma_fortran(arma_spstrf)(const char* uplo, const blas_int* n,    float* a, const blas_int* lda, blas_int* piv, blas_int* rank, const  float* tol,  float* work, blas_int* info) ARMA_NOEXCEPT;
+  void arma_fortran(arma_dpstrf)(const char* uplo, const blas_int* n,   double* a, const blas_int* lda, blas_int* piv, blas_int* rank, const double* tol, double* work, blas_int* info) ARMA_NOEXCEPT;
+  void arma_fortran(arma_cpstrf)(const char* uplo, const blas_int* n, blas_cxf* a, const blas_int* lda, blas_int* piv, blas_int* rank, const  float* tol,  float* work, blas_int* info) ARMA_NOEXCEPT;
+  void arma_fortran(arma_zpstrf)(const char* uplo, const blas_int* n, blas_cxd* a, const blas_int* lda, blas_int* piv, blas_int* rank, const double* tol, double* work, blas_int* info) ARMA_NOEXCEPT;
+  
 #endif
 }
 

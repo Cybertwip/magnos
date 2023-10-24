@@ -1,5 +1,7 @@
-// Copyright 2014 Conrad Sanderson (http://conradsanderson.id.au)
-// Copyright 2014 National ICT Australia (NICTA)
+// SPDX-License-Identifier: Apache-2.0
+// 
+// Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
+// Copyright 2008-2016 National ICT Australia (NICTA)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,24 +16,29 @@
 // ------------------------------------------------------------------------
 
 
-// Demonstration of how to connect Armadillo with Matlab mex functions.
-// Version 0.5
+//! \addtogroup SpToDGlue
+//! @{
 
 
-#include "armaMex.hpp"
 
-
-void
-mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+template<typename T1, typename T2, typename glue_type>
+inline
+SpToDGlue<T1,T2,glue_type>::SpToDGlue(const T1& in_A, const T2& in_B)
+  : A(in_A)
+  , B(in_B)
   {
-  // Read the matrix from the file inData.mat
-  mat fromFile = armaReadMatFromFile("inData.mat");
-  
-  fromFile.print();
-  
-  mat tmp(4,6);
-  tmp.randu();
-  
-  // Write the matrix tmp as outData in the file outData.mat
-  armaWriteMatToFile("outData.mat", tmp, "outData");
+  arma_extra_debug_sigprint();
   }
+
+
+
+template<typename T1, typename T2, typename glue_type>
+inline
+SpToDGlue<T1,T2,glue_type>::~SpToDGlue()
+  {
+  arma_extra_debug_sigprint();
+  }
+
+
+
+//! @}

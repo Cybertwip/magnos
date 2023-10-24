@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -28,8 +30,8 @@ TEST_CASE("fn_conj_1")
   cx_vec a = cx_vec(re,im);
   cx_vec b = conj(a);
   
-  REQUIRE( accu(abs(real(b) - ( re))) == Approx(0.0) );
-  REQUIRE( accu(abs(imag(b) - (-im))) == Approx(0.0) );
+  REQUIRE( accu(abs(real(b) - ( re))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(imag(b) - (-im))) == Approx(0.0).margin(0.001) );
   }
 
 

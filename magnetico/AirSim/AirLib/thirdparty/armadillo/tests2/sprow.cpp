@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2011-2017 Ryan Curtin (http://www.ratml.org/)
 // Copyright 2017 National ICT Australia (NICTA)
 //

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 //
@@ -73,15 +75,15 @@ TEST_CASE("fn_accu_2")
   cx_mat C = cx_mat(A, 2*fliplr(A));
   cx_mat D = cx_mat(2*fliplr(A), A);
 
-  REQUIRE( abs(accu(C) - cx_double(0.240136, +0.480272)) == Approx(0.0) );
+  REQUIRE( abs(accu(C) - cx_double(0.240136, +0.480272)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( abs(accu(cx_double(2,3)*C) - cx_double(-0.960544000000001, +1.680951999999999)) == Approx(0.0) );
+  REQUIRE( abs(accu(cx_double(2,3)*C) - cx_double(-0.960544000000001, +1.680951999999999)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( abs(accu(C*D.t() ) - cx_double(-0.710872588088, +3.656114082498002)) == Approx(0.0) );
-  REQUIRE( abs(accu(C*D.st()) - cx_double(0.0,             +6.093523470830000)) == Approx(0.0) );
+  REQUIRE( abs(accu(C*D.t() ) - cx_double(-0.710872588088, +3.656114082498002)) == Approx(0.0).margin(0.001) );
+  REQUIRE( abs(accu(C*D.st()) - cx_double(0.0,             +6.093523470830000)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( abs(accu(C.t() *D) - cx_double(10.341858962800, -7.756394222100000)) == Approx(0.0) );
-  REQUIRE( abs(accu(C.st()*D) - cx_double(0.0,             +1.29273237035e+01)) == Approx(0.0) );
+  REQUIRE( abs(accu(C.t() *D) - cx_double(10.341858962800, -7.756394222100000)) == Approx(0.0).margin(0.001) );
+  REQUIRE( abs(accu(C.st()*D) - cx_double(0.0,             +1.29273237035e+01)) == Approx(0.0).margin(0.001) );
   }
 
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -90,8 +92,8 @@ normpdf_helper(Mat<typename T1::elem_type>& out, const Base<typename T1::elem_ty
 
 
 template<typename eT>
-inline
 arma_warn_unused
+inline
 typename enable_if2< (is_real<eT>::value), eT >::result
 normpdf(const eT x)
   {
@@ -103,8 +105,8 @@ normpdf(const eT x)
 
 
 template<typename eT>
-inline
 arma_warn_unused
+inline
 typename enable_if2< (is_real<eT>::value), eT >::result
 normpdf(const eT x, const eT mu, const eT sigma)
   {
@@ -118,8 +120,8 @@ normpdf(const eT x, const eT mu, const eT sigma)
 
 
 template<typename eT, typename T2, typename T3>
-inline
 arma_warn_unused
+inline
 typename enable_if2< (is_real<eT>::value), Mat<eT> >::result
 normpdf(const eT x, const Base<eT, T2>& M_expr, const Base<eT, T3>& S_expr)
   {
@@ -138,8 +140,8 @@ normpdf(const eT x, const Base<eT, T2>& M_expr, const Base<eT, T3>& S_expr)
 
 
 template<typename T1>
-inline
 arma_warn_unused
+inline
 typename enable_if2< (is_real<typename T1::elem_type>::value), Mat<typename T1::elem_type> >::result
 normpdf(const Base<typename T1::elem_type, T1>& X_expr)
   {
@@ -160,8 +162,8 @@ normpdf(const Base<typename T1::elem_type, T1>& X_expr)
 
 
 template<typename T1>
-inline
 arma_warn_unused
+inline
 typename enable_if2< (is_real<typename T1::elem_type>::value), Mat<typename T1::elem_type> >::result
 normpdf(const Base<typename T1::elem_type, T1>& X_expr, const typename T1::elem_type mu, const typename T1::elem_type sigma)
   {
@@ -182,8 +184,8 @@ normpdf(const Base<typename T1::elem_type, T1>& X_expr, const typename T1::elem_
 
 
 template<typename T1, typename T2, typename T3>
-inline
 arma_warn_unused
+inline
 typename enable_if2< (is_real<typename T1::elem_type>::value), Mat<typename T1::elem_type> >::result
 normpdf(const Base<typename T1::elem_type, T1>& X_expr, const Base<typename T1::elem_type, T2>& M_expr, const Base<typename T1::elem_type, T3>& S_expr)
   {

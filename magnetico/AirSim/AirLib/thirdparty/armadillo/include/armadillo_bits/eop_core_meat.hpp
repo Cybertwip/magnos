@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -239,7 +241,6 @@
 
 template<typename eop_type>
 template<typename outT, typename T1>
-arma_hot
 inline
 void
 eop_core<eop_type>::apply(outT& out, const eOp<T1, eop_type>& x)
@@ -315,7 +316,6 @@ eop_core<eop_type>::apply(outT& out, const eOp<T1, eop_type>& x)
 
 template<typename eop_type>
 template<typename T1>
-arma_hot
 inline
 void
 eop_core<eop_type>::apply_inplace_plus(Mat<typename T1::elem_type>& out, const eOp<T1, eop_type>& x)
@@ -390,7 +390,7 @@ eop_core<eop_type>::apply_inplace_plus(Mat<typename T1::elem_type>& out, const e
 
 template<typename eop_type>
 template<typename T1>
-arma_hot
+
 inline
 void
 eop_core<eop_type>::apply_inplace_minus(Mat<typename T1::elem_type>& out, const eOp<T1, eop_type>& x)
@@ -465,7 +465,7 @@ eop_core<eop_type>::apply_inplace_minus(Mat<typename T1::elem_type>& out, const 
 
 template<typename eop_type>
 template<typename T1>
-arma_hot
+
 inline
 void
 eop_core<eop_type>::apply_inplace_schur(Mat<typename T1::elem_type>& out, const eOp<T1, eop_type>& x)
@@ -540,7 +540,7 @@ eop_core<eop_type>::apply_inplace_schur(Mat<typename T1::elem_type>& out, const 
 
 template<typename eop_type>
 template<typename T1>
-arma_hot
+
 inline
 void
 eop_core<eop_type>::apply_inplace_div(Mat<typename T1::elem_type>& out, const eOp<T1, eop_type>& x)
@@ -620,7 +620,7 @@ eop_core<eop_type>::apply_inplace_div(Mat<typename T1::elem_type>& out, const eO
 
 template<typename eop_type>
 template<typename T1>
-arma_hot
+
 inline
 void
 eop_core<eop_type>::apply(Cube<typename T1::elem_type>& out, const eOpCube<T1, eop_type>& x)
@@ -697,7 +697,7 @@ eop_core<eop_type>::apply(Cube<typename T1::elem_type>& out, const eOpCube<T1, e
 
 template<typename eop_type>
 template<typename T1>
-arma_hot
+
 inline
 void
 eop_core<eop_type>::apply_inplace_plus(Cube<typename T1::elem_type>& out, const eOpCube<T1, eop_type>& x)
@@ -773,7 +773,7 @@ eop_core<eop_type>::apply_inplace_plus(Cube<typename T1::elem_type>& out, const 
 
 template<typename eop_type>
 template<typename T1>
-arma_hot
+
 inline
 void
 eop_core<eop_type>::apply_inplace_minus(Cube<typename T1::elem_type>& out, const eOpCube<T1, eop_type>& x)
@@ -849,7 +849,7 @@ eop_core<eop_type>::apply_inplace_minus(Cube<typename T1::elem_type>& out, const
 
 template<typename eop_type>
 template<typename T1>
-arma_hot
+
 inline
 void
 eop_core<eop_type>::apply_inplace_schur(Cube<typename T1::elem_type>& out, const eOpCube<T1, eop_type>& x)
@@ -925,7 +925,7 @@ eop_core<eop_type>::apply_inplace_schur(Cube<typename T1::elem_type>& out, const
 
 template<typename eop_type>
 template<typename T1>
-arma_hot
+
 inline
 void
 eop_core<eop_type>::apply_inplace_div(Cube<typename T1::elem_type>& out, const eOpCube<T1, eop_type>& x)

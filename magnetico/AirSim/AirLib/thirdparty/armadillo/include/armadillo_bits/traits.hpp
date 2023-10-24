@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -201,6 +203,19 @@ struct is_subview_col< const subview_col<eT> >
 
 
 template<typename T>
+struct is_subview_cols
+  { static constexpr bool value = false; };
+
+template<typename eT>
+struct is_subview_cols< subview_cols<eT> >
+  { static constexpr bool value = true; };
+
+template<typename eT>
+struct is_subview_cols< const subview_cols<eT> >
+  { static constexpr bool value = true; };
+
+
+template<typename T>
 struct is_subview_elem1
   { static constexpr bool value = false; };
 
@@ -324,6 +339,19 @@ struct is_SpToDOp< SpToDOp<T1,op_type> >
  
 template<typename T1, typename op_type>
 struct is_SpToDOp< const SpToDOp<T1,op_type> >
+  { static constexpr bool value = true; };
+
+
+template<typename T>
+struct is_SpToDGlue
+  { static constexpr bool value = false; };
+ 
+template<typename T1, typename T2, typename glue_type>
+struct is_SpToDGlue< SpToDGlue<T1,T2,glue_type> >
+  { static constexpr bool value = true; };
+ 
+template<typename T1, typename T2, typename glue_type>
+struct is_SpToDGlue< const SpToDGlue<T1,T2,glue_type> >
   { static constexpr bool value = true; };
 
 
@@ -531,8 +559,6 @@ struct is_arma_type2
   =  is_Mat<T1>::value
   || is_Gen<T1>::value
   || is_Op<T1>::value
-  || is_CubeToMatOp<T1>::value
-  || is_SpToDOp<T1>::value
   || is_Glue<T1>::value
   || is_eOp<T1>::value
   || is_eGlue<T1>::value
@@ -542,8 +568,12 @@ struct is_arma_type2
   || is_subview<T1>::value
   || is_subview_row<T1>::value
   || is_subview_col<T1>::value
+  || is_subview_cols<T1>::value
   || is_subview_elem1<T1>::value
   || is_subview_elem2<T1>::value
+  || is_CubeToMatOp<T1>::value
+  || is_SpToDOp<T1>::value
+  || is_SpToDGlue<T1>::value
   ;
   };
 
@@ -1048,6 +1078,18 @@ struct is_supported_blas_type
 
 
 
+template<typename T1>
+struct has_blas_float_bug
+  {
+  #if defined(ARMA_BLAS_FLOAT_BUG)
+    static constexpr bool value = is_float<typename get_pod_type<T1>::result>::value;
+  #else
+    static constexpr bool value = false;
+  #endif
+  };
+
+
+
 template<typename T>
 struct is_signed
   {
@@ -1191,38 +1233,57 @@ struct is_outer_product< Glue<T1,T2,glue_times> >
 
 
 template<typename T1>
-struct has_op_inv
+struct has_op_inv_any
   { static constexpr bool value = false; };
 
 template<typename T1>
-struct has_op_inv< Op<T1,op_inv> >
+struct has_op_inv_any< Op<T1,op_inv_gen_full> >
   { static constexpr bool value = true;  };
-
-template<typename T1, typename T2>
-struct has_op_inv< Glue<Op<T1,op_inv>, T2, glue_times> >
-  { static constexpr bool value = true;  };
-
-template<typename T1, typename T2>
-struct has_op_inv< Glue<T1, Op<T2,op_inv>, glue_times> >
-  { static constexpr bool value = true;  };
-
-
 
 template<typename T1>
-struct has_op_inv_sympd
-  { static constexpr bool value = false; };
+struct has_op_inv_any< Op<T1,op_inv_spd_full> >
+  { static constexpr bool value = true;  };
 
 template<typename T1>
-struct has_op_inv_sympd< Op<T1,op_inv_sympd> >
+struct has_op_inv_any< Op<T1,op_inv_gen_default> >
+  { static constexpr bool value = true;  };
+
+template<typename T1>
+struct has_op_inv_any< Op<T1,op_inv_spd_default> >
   { static constexpr bool value = true;  };
 
 template<typename T1, typename T2>
-struct has_op_inv_sympd< Glue<Op<T1,op_inv_sympd>, T2, glue_times> >
+struct has_op_inv_any< Glue<Op<T1,op_inv_gen_full>, T2, glue_times> >
   { static constexpr bool value = true;  };
 
 template<typename T1, typename T2>
-struct has_op_inv_sympd< Glue<T1, Op<T2,op_inv_sympd>, glue_times> >
+struct has_op_inv_any< Glue<Op<T1,op_inv_spd_full>, T2, glue_times> >
   { static constexpr bool value = true;  };
+
+template<typename T1, typename T2>
+struct has_op_inv_any< Glue<Op<T1,op_inv_gen_default>, T2, glue_times> >
+  { static constexpr bool value = true;  };
+
+template<typename T1, typename T2>
+struct has_op_inv_any< Glue<Op<T1,op_inv_spd_default>, T2, glue_times> >
+  { static constexpr bool value = true;  };
+
+template<typename T1, typename T2>
+struct has_op_inv_any< Glue<T1, Op<T2,op_inv_gen_full>, glue_times> >
+  { static constexpr bool value = true;  };
+
+template<typename T1, typename T2>
+struct has_op_inv_any< Glue<T1, Op<T2,op_inv_spd_full>, glue_times> >
+  { static constexpr bool value = true;  };
+
+template<typename T1, typename T2>
+struct has_op_inv_any< Glue<T1, Op<T2,op_inv_gen_default>, glue_times> >
+  { static constexpr bool value = true;  };
+
+template<typename T1, typename T2>
+struct has_op_inv_any< Glue<T1, Op<T2,op_inv_spd_default>, glue_times> >
+  { static constexpr bool value = true;  };
+
 
 
 

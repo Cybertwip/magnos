@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -326,8 +328,8 @@ spop_repelem::apply(SpMat<typename T1::elem_type>& out, const SpOp<T1, spop_repe
   
   if( (out_n_rows > 0) && (out_n_cols > 0) && (out_nnz > 0) )
     {
-    umat    locs(2, out_nnz);
-    Col<eT> vals(   out_nnz);
+    umat    locs(2, out_nnz, arma_nozeros_indicator());
+    Col<eT> vals(   out_nnz, arma_nozeros_indicator());
     
     uword* locs_mem = locs.memptr();
     eT*    vals_mem = vals.memptr();
@@ -532,7 +534,7 @@ spop_diagvec::apply(SpMat<typename T1::elem_type>& out, const SpOp<T1,spop_diagv
   
   const uword len = (std::min)(X.n_rows - row_offset, X.n_cols - col_offset);
   
-  Col<eT> cache(len);
+  Col<eT> cache(len, arma_nozeros_indicator());
   eT* cache_mem = cache.memptr();
   
   uword n_nonzero = 0;

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 //
@@ -49,9 +51,9 @@ TEST_CASE("sum2")
     1.43577
     };
 
-  REQUIRE( accu(abs(colsums - sum(A  ))) == Approx(0.0) );
-  REQUIRE( accu(abs(colsums - sum(A,0))) == Approx(0.0) );
-  REQUIRE( accu(abs(rowsums - sum(A,1))) == Approx(0.0) );
+  REQUIRE( accu(abs(colsums - sum(A  ))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(colsums - sum(A,0))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(rowsums - sum(A,1))) == Approx(0.0).margin(0.001) );
   }
 
 
@@ -79,9 +81,9 @@ TEST_CASE("sum3")
 
   cx_colvec cx_rowsums = cx_colvec(re_rowsums, 0.5*re_rowsums);
 
-  REQUIRE( accu(abs(cx_colsums - sum(A  ))) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_colsums - sum(A,0))) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_rowsums - sum(A,1))) == Approx(0.0) );
+  REQUIRE( accu(abs(cx_colsums - sum(A  ))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_colsums - sum(A,0))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_rowsums - sum(A,1))) == Approx(0.0).margin(0.001) );
   }
 
 
@@ -89,8 +91,8 @@ TEST_CASE("sum4")
   {
   mat X(100,101, fill::randu);
 
-  REQUIRE( (sum(sum(X))/X.n_elem)                      == Approx(0.5).epsilon(0.02) );
-  REQUIRE( (sum(sum(X(span::all,span::all)))/X.n_elem) == Approx(0.5).epsilon(0.02) );
+  REQUIRE( (sum(sum(X))/X.n_elem)                      == Approx(0.5).margin(0.02) );
+  REQUIRE( (sum(sum(X(span::all,span::all)))/X.n_elem) == Approx(0.5).margin(0.02) );
   }
 
 
@@ -135,9 +137,9 @@ TEST_CASE("sum_spmat")
   REQUIRE( (double) result(0, 1) == Approx(4.3) );
   REQUIRE( (double) result(0, 2) == Approx(1.3) );
   REQUIRE( (double) result(0, 3) == Approx(4.1) );
-  REQUIRE( (double) result(0, 4) == Approx(0.0) );
+  REQUIRE( (double) result(0, 4) == Approx(0.0).margin(0.001) );
   REQUIRE( (double) result(0, 5) == Approx(6.6) );
-  REQUIRE( (double) result(0, 6) == Approx(0.0) );
+  REQUIRE( (double) result(0, 6) == Approx(0.0).margin(0.001) );
   REQUIRE( (double) result(0, 7) == Approx(3.4) );
 
   result = sum(c, 1);
@@ -148,7 +150,7 @@ TEST_CASE("sum_spmat")
   REQUIRE( (double) result(0, 0) == Approx(3.0) );
   REQUIRE( (double) result(1, 0) == Approx(3.8) );
   REQUIRE( (double) result(2, 0) == Approx(4.1) );
-  REQUIRE( (double) result(3, 0) == Approx(0.0) );
+  REQUIRE( (double) result(3, 0) == Approx(0.0).margin(0.001) );
   REQUIRE( (double) result(4, 0) == Approx(3.2) );
   REQUIRE( (double) result(5, 0) == Approx(3.4) );
   REQUIRE( (double) result(6, 0) == Approx(5.2) );

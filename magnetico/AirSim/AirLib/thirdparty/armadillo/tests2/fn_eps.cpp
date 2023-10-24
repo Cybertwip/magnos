@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -43,5 +45,5 @@ TEST_CASE("fn_eps_1")
      2.77555756156289e-17   5.55111512312578e-17   5.55111512312578e-17   5.55111512312578e-17   5.55111512312578e-17;\
     ";
   
-  REQUIRE( accu(abs(eps(A) - B)) == Approx(0.0) );
+  REQUIRE( accu(abs(eps(A) - B)) == Approx(0.0).margin(0.001) );
   }

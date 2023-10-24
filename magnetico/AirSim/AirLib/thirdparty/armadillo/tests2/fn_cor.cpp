@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -26,8 +28,8 @@ TEST_CASE("fn_cor_1")
   vec b = 0.5*linspace<vec>(1,5,6);
   vec c = flipud(b);
   
-  REQUIRE( as_scalar(cor(a,b) - (+1.0)) == Approx(0.0) );
-  REQUIRE( as_scalar(cor(a,c) - (-1.0)) == Approx(0.0) );
+  REQUIRE( as_scalar(cor(a,b) - (+1.0)) == Approx(0.0).margin(0.001) );
+  REQUIRE( as_scalar(cor(a,c) - (-1.0)) == Approx(0.0).margin(0.001) );
   }
 
 
@@ -69,7 +71,7 @@ TEST_CASE("fn_cor_2")
      1.00000   0.38630   0.45559  -0.99459;\
     ";
     
-  REQUIRE( accu(abs(cor(A)   - AA)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(cor(A,B) - AA)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(cor(A,C) - AC)) == Approx(0.0).epsilon(0.0001) );
+  REQUIRE( accu(abs(cor(A)   - AA)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(cor(A,B) - AA)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(cor(A,C) - AC)) == Approx(0.0).margin(0.0001) );
   }

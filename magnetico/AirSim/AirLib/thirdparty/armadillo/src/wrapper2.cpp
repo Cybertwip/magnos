@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -17,11 +19,6 @@
 #include <climits>
 #include <limits>
 #include <complex>
-
-#if (__cplusplus >= 201103L)
-  #undef  ARMA_USE_CXX11
-  #define ARMA_USE_CXX11
-#endif
 
 #include "armadillo_bits/config.hpp"
 
@@ -1117,18 +1114,6 @@ extern "C"
     
     
     
-    void arma_fortran_with_prefix(arma_slarnv)(const blas_int* idist, blas_int* iseed, const blas_int* n,  float* x)
-      {
-      arma_fortran_sans_prefix(arma_slarnv)(idist, iseed, n, x);
-      }
-    
-    void arma_fortran_with_prefix(arma_dlarnv)(const blas_int* idist, blas_int* iseed, const blas_int* n, double* x)
-      {
-      arma_fortran_sans_prefix(arma_dlarnv)(idist, iseed, n, x);
-      }
-    
-    
-    
     void arma_fortran_with_prefix(arma_sgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi,    float* a, const blas_int* lda,    float* tao,    float* work, const blas_int* lwork, blas_int* info)
       {
       arma_fortran_sans_prefix(arma_sgehrd)(n, ilo, ihi, a, lda, tao, work, lwork, info);
@@ -1147,6 +1132,28 @@ extern "C"
     void arma_fortran_with_prefix(arma_zgehrd)(const blas_int* n, const blas_int* ilo, const blas_int* ihi, blas_cxd* a, const blas_int* lda, blas_cxd* tao, blas_cxd* work, const blas_int* lwork, blas_int* info)
       {
       arma_fortran_sans_prefix(arma_zgehrd)(n, ilo, ihi, a, lda, tao, work, lwork, info);
+      }
+    
+    
+    
+    void arma_fortran_with_prefix(arma_spstrf)(const char* uplo, const blas_int* n,    float* a, const blas_int* lda, blas_int* piv, blas_int* rank, const  float* tol,  float* work, blas_int* info, blas_len uplo_len)
+      {
+      arma_fortran_sans_prefix(arma_spstrf)(uplo, n, a, lda, piv, rank, tol, work, info, uplo_len);
+      }
+    
+    void arma_fortran_with_prefix(arma_dpstrf)(const char* uplo, const blas_int* n,   double* a, const blas_int* lda, blas_int* piv, blas_int* rank, const double* tol, double* work, blas_int* info, blas_len uplo_len)
+      {
+      arma_fortran_sans_prefix(arma_dpstrf)(uplo, n, a, lda, piv, rank, tol, work, info, uplo_len);
+      }
+    
+    void arma_fortran_with_prefix(arma_cpstrf)(const char* uplo, const blas_int* n, blas_cxf* a, const blas_int* lda, blas_int* piv, blas_int* rank, const  float* tol,  float* work, blas_int* info, blas_len uplo_len)
+      {
+      arma_fortran_sans_prefix(arma_cpstrf)(uplo, n, a, lda, piv, rank, tol, work, info, uplo_len);
+      }
+    
+    void arma_fortran_with_prefix(arma_zpstrf)(const char* uplo, const blas_int* n, blas_cxd* a, const blas_int* lda, blas_int* piv, blas_int* rank, const double* tol, double* work, blas_int* info, blas_len uplo_len)
+      {
+      arma_fortran_sans_prefix(arma_zpstrf)(uplo, n, a, lda, piv, rank, tol, work, info, uplo_len);
       }
     
   #endif

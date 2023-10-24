@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -94,43 +96,43 @@ TEST_CASE("expr_elem_1")
      8.34776801552685    -4.66295029528133    -4.91457244448376    -6.87237990516116    -5.65342258203116     7.73084297111757;\
     ";
   
-  REQUIRE( accu(abs((  A -    A ))) == Approx(0.0) );
-  REQUIRE( accu(abs((2*A -  2*A ))) == Approx(0.0) );
-  REQUIRE( accu(abs((2*A - (A+A)))) == Approx(0.0) );
+  REQUIRE( accu(abs((  A -    A ))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((2*A -  2*A ))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((2*A - (A+A)))) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((A+0) - A       )) == Approx(0.0) );
-  REQUIRE( accu(abs((A-0) - A       )) == Approx(0.0) );
+  REQUIRE( accu(abs((A+0) - A       )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((A-0) - A       )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((A*1) - A       )) == Approx(0.0) );
-  REQUIRE( accu(abs((A/1) - A       )) == Approx(0.0) );
+  REQUIRE( accu(abs((A*1) - A       )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((A/1) - A       )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((A+2) - A_plus_2)) == Approx(0.0) );
-  REQUIRE( accu(abs((2+A) - A_plus_2)) == Approx(0.0) );
+  REQUIRE( accu(abs((A+2) - A_plus_2)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((2+A) - A_plus_2)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((A*2) - A_times_2)) == Approx(0.0) );
-  REQUIRE( accu(abs((2*A) - A_times_2)) == Approx(0.0) );
-  REQUIRE( accu(abs((A+A) - A_times_2)) == Approx(0.0) );
+  REQUIRE( accu(abs((A*2) - A_times_2)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((2*A) - A_times_2)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((A+A) - A_times_2)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((A+A+A - A) - A_times_2)) == Approx(0.0) );
-  REQUIRE( accu(abs((3*A   - A) - A_times_2)) == Approx(0.0) );
+  REQUIRE( accu(abs((A+A+A - A) - A_times_2)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((3*A   - A) - A_times_2)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((A/2  ) - A_div_2)) == Approx(0.0) );
-  REQUIRE( accu(abs((A*0.5) - A_div_2)) == Approx(0.0) );
+  REQUIRE( accu(abs((A/2  ) - A_div_2)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((A*0.5) - A_div_2)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((2/A  ) - two_div_A)) == Approx(0.0) );
+  REQUIRE( accu(abs((2/A  ) - two_div_A)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( (A % A) - A_elem_mul_A )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A % A) - square(A) )) == Approx(0.0) );
+  REQUIRE( accu(abs( (A % A) - A_elem_mul_A )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A % A) - square(A) )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs(( (2/A) % (A/2) ) - ones(size(A)))) == Approx(0.0) );
+  REQUIRE( accu(abs(( (2/A) % (A/2) ) - ones(size(A)))) == Approx(0.0).margin(0.001) );
   
   
-  REQUIRE( accu(abs(( A - A(span::all,span::all) ))) == Approx(0.0) );
+  REQUIRE( accu(abs(( A - A(span::all,span::all) ))) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs((A(span::all,span::all)+2) - A_plus_2)) == Approx(0.0) );
-  REQUIRE( accu(abs((2+A(span::all,span::all)) - A_plus_2)) == Approx(0.0) );
+  REQUIRE( accu(abs((A(span::all,span::all)+2) - A_plus_2)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((2+A(span::all,span::all)) - A_plus_2)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs(((A+A+A) / (3*A)) - ones(size(A)))) == Approx(0.0) );
+  REQUIRE( accu(abs(((A+A+A) / (3*A)) - ones(size(A)))) == Approx(0.0).margin(0.001) );
   
   REQUIRE_THROWS( A + randu<mat>(A.n_rows+1, A.n_cols  ) );
   REQUIRE_THROWS( A + randu<mat>(A.n_rows  , A.n_cols+1) );

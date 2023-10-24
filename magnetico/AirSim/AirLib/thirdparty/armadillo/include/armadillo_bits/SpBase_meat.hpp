@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -69,7 +71,6 @@ SpBase<elem_type,derived>::st() const
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type,derived>::print(const std::string extra_text) const
@@ -93,7 +94,6 @@ SpBase<elem_type,derived>::print(const std::string extra_text) const
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type,derived>::print(std::ostream& user_stream, const std::string extra_text) const
@@ -117,7 +117,6 @@ SpBase<elem_type,derived>::print(std::ostream& user_stream, const std::string ex
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type,derived>::raw_print(const std::string extra_text) const
@@ -141,7 +140,6 @@ SpBase<elem_type,derived>::raw_print(const std::string extra_text) const
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type,derived>::raw_print(std::ostream& user_stream, const std::string extra_text) const
@@ -165,7 +163,6 @@ SpBase<elem_type,derived>::raw_print(std::ostream& user_stream, const std::strin
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type, derived>::print_dense(const std::string extra_text) const
@@ -189,7 +186,6 @@ SpBase<elem_type, derived>::print_dense(const std::string extra_text) const
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type, derived>::print_dense(std::ostream& user_stream, const std::string extra_text) const
@@ -213,7 +209,6 @@ SpBase<elem_type, derived>::print_dense(std::ostream& user_stream, const std::st
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type, derived>::raw_print_dense(const std::string extra_text) const
@@ -237,7 +232,6 @@ SpBase<elem_type, derived>::raw_print_dense(const std::string extra_text) const
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type, derived>::raw_print_dense(std::ostream& user_stream, const std::string extra_text) const
@@ -261,7 +255,6 @@ SpBase<elem_type, derived>::raw_print_dense(std::ostream& user_stream, const std
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type,derived>::brief_print(const std::string extra_text) const
@@ -285,7 +278,6 @@ SpBase<elem_type,derived>::brief_print(const std::string extra_text) const
 
 
 template<typename elem_type, typename derived>
-arma_cold
 inline
 void
 SpBase<elem_type,derived>::brief_print(std::ostream& user_stream, const std::string extra_text) const
@@ -340,7 +332,6 @@ SpBase_eval_expr<elem_type, derived>::eval() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 elem_type
 SpBase<elem_type, derived>::min() const
   {
@@ -351,7 +342,6 @@ SpBase<elem_type, derived>::min() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 elem_type
 SpBase<elem_type, derived>::max() const
   {
@@ -428,7 +418,6 @@ SpBase<elem_type, derived>::max(uword& row_of_max_val, uword& col_of_max_val) co
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 uword
 SpBase<elem_type,derived>::index_min() const
   {
@@ -452,7 +441,6 @@ SpBase<elem_type,derived>::index_min() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 uword
 SpBase<elem_type,derived>::index_max() const
   {
@@ -476,7 +464,6 @@ SpBase<elem_type,derived>::index_max() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_symmetric() const
   {
@@ -491,7 +478,6 @@ SpBase<elem_type,derived>::is_symmetric() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_symmetric(const typename get_pod_type<elem_type>::result tol) const
   {
@@ -506,7 +492,6 @@ SpBase<elem_type,derived>::is_symmetric(const typename get_pod_type<elem_type>::
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_hermitian() const
   {
@@ -521,7 +506,6 @@ SpBase<elem_type,derived>::is_hermitian() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_hermitian(const typename get_pod_type<elem_type>::result tol) const
   {
@@ -536,7 +520,6 @@ SpBase<elem_type,derived>::is_hermitian(const typename get_pod_type<elem_type>::
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_zero(const typename get_pod_type<elem_type>::result tol) const
   {
@@ -594,7 +577,6 @@ SpBase<elem_type,derived>::is_zero(const typename get_pod_type<elem_type>::resul
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_trimatu() const
   {
@@ -620,7 +602,6 @@ SpBase<elem_type,derived>::is_trimatu() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_trimatl() const
   {
@@ -646,7 +627,6 @@ SpBase<elem_type,derived>::is_trimatl() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_diagmat() const
   {
@@ -670,7 +650,6 @@ SpBase<elem_type,derived>::is_diagmat() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_empty() const
   {
@@ -685,7 +664,6 @@ SpBase<elem_type,derived>::is_empty() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_square() const
   {
@@ -700,7 +678,6 @@ SpBase<elem_type,derived>::is_square() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_vec() const
   {
@@ -717,7 +694,6 @@ SpBase<elem_type,derived>::is_vec() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_colvec() const
   {
@@ -734,7 +710,6 @@ SpBase<elem_type,derived>::is_colvec() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_rowvec() const
   {
@@ -751,22 +726,23 @@ SpBase<elem_type,derived>::is_rowvec() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::is_finite() const
   {
   arma_extra_debug_sigprint();
   
-  const SpProxy<derived> P( (*this).get_ref() );
+  if(arma_config::fast_math_warn)  { arma_debug_warn_level(1, "is_finite(): detection of non-finite values is not reliable in fast math mode"); }
   
   if(is_SpMat<typename SpProxy<derived>::stored_type>::value)
     {
-    const unwrap_spmat<typename SpProxy<derived>::stored_type> U(P.Q);
+    const unwrap_spmat<derived> U( (*this).get_ref() );
     
-    return U.M.is_finite();
+    return U.M.internal_is_finite();
     }
   else
     {
+    const SpProxy<derived> P( (*this).get_ref() );
+    
     typename SpProxy<derived>::const_iterator_type it     = P.begin();
     typename SpProxy<derived>::const_iterator_type it_end = P.end();
     
@@ -784,22 +760,23 @@ SpBase<elem_type,derived>::is_finite() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::has_inf() const
   {
   arma_extra_debug_sigprint();
   
-  const SpProxy<derived> P( (*this).get_ref() );
+  if(arma_config::fast_math_warn)  { arma_debug_warn_level(1, "has_inf(): detection of non-finite values is not reliable in fast math mode"); }
   
   if(is_SpMat<typename SpProxy<derived>::stored_type>::value)
     {
-    const unwrap_spmat<typename SpProxy<derived>::stored_type> U(P.Q);
+    const unwrap_spmat<derived> U( (*this).get_ref() );
     
-    return U.M.has_inf();
+    return U.M.internal_has_inf();
     }
   else
     {
+    const SpProxy<derived> P( (*this).get_ref() );
+    
     typename SpProxy<derived>::const_iterator_type it     = P.begin();
     typename SpProxy<derived>::const_iterator_type it_end = P.end();
     
@@ -817,22 +794,23 @@ SpBase<elem_type,derived>::has_inf() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 bool
 SpBase<elem_type,derived>::has_nan() const
   {
   arma_extra_debug_sigprint();
   
-  const SpProxy<derived> P( (*this).get_ref() );
+  if(arma_config::fast_math_warn)  { arma_debug_warn_level(1, "has_nan(): detection of non-finite values is not reliable in fast math mode"); }
   
   if(is_SpMat<typename SpProxy<derived>::stored_type>::value)
     {
-    const unwrap_spmat<typename SpProxy<derived>::stored_type> U(P.Q);
+    const unwrap_spmat<derived> U( (*this).get_ref() );
     
-    return U.M.has_nan();
+    return U.M.internal_has_nan();
     }
   else
     {
+    const SpProxy<derived> P( (*this).get_ref() );
+    
     typename SpProxy<derived>::const_iterator_type it     = P.begin();
     typename SpProxy<derived>::const_iterator_type it_end = P.end();
     
@@ -850,7 +828,40 @@ SpBase<elem_type,derived>::has_nan() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
+bool
+SpBase<elem_type,derived>::has_nonfinite() const
+  {
+  arma_extra_debug_sigprint();
+  
+  if(arma_config::fast_math_warn)  { arma_debug_warn_level(1, "has_nonfinite(): detection of non-finite values is not reliable in fast math mode"); }
+  
+  if(is_SpMat<typename SpProxy<derived>::stored_type>::value)
+    {
+    const unwrap_spmat<derived> U( (*this).get_ref() );
+    
+    return U.M.internal_has_nonfinite();
+    }
+  else
+    {
+    const SpProxy<derived> P( (*this).get_ref() );
+    
+    typename SpProxy<derived>::const_iterator_type it     = P.begin();
+    typename SpProxy<derived>::const_iterator_type it_end = P.end();
+    
+    while(it != it_end)
+      {
+      if(arma_isfinite(*it) == false)  { return true; }
+      ++it;
+      }
+    }
+  
+  return false;
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
 const SpOp<derived,spop_vectorise_col>
 SpBase<elem_type, derived>::as_col() const
   {
@@ -861,7 +872,6 @@ SpBase<elem_type, derived>::as_col() const
 
 template<typename elem_type, typename derived>
 inline
-arma_warn_unused
 const SpOp<derived,spop_vectorise_row>
 SpBase<elem_type, derived>::as_row() const
   {

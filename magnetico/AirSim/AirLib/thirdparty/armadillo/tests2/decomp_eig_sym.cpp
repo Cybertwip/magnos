@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -54,10 +56,10 @@ TEST_CASE("decomp_eig_sym_1")
   mat B = eigvecs4 * diagmat(eigvals4) * eigvecs4.t();
   
   REQUIRE( status == true );
-  REQUIRE( accu(abs(eigvals2 - eigvals1)) == Approx(0.0) );
-  REQUIRE( accu(abs(eigvals3 - eigvals1)) == Approx(0.0) );
-  REQUIRE( accu(abs(eigvals4 - eigvals1)) == Approx(0.0) );
-  REQUIRE( accu(abs(A        - B       )) == Approx(0.0) );
+  REQUIRE( accu(abs(eigvals2 - eigvals1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(eigvals3 - eigvals1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(eigvals4 - eigvals1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(A        - B       )) == Approx(0.0).margin(0.001) );
   }
 
 
@@ -94,10 +96,10 @@ TEST_CASE("eig_sym_2")
   cx_mat B = eigvecs4 * diagmat(eigvals4) * eigvecs4.t();
    
   REQUIRE( status == true );
-  REQUIRE( accu(abs(eigvals2 - eigvals1)) == Approx(0.0) );
-  REQUIRE( accu(abs(eigvals3 - eigvals1)) == Approx(0.0) );
-  REQUIRE( accu(abs(eigvals4 - eigvals1)) == Approx(0.0) );
-  REQUIRE( accu(abs(A        - B       )) == Approx(0.0) );
+  REQUIRE( accu(abs(eigvals2 - eigvals1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(eigvals3 - eigvals1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(eigvals4 - eigvals1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(A        - B       )) == Approx(0.0).margin(0.001) );
   }
 
 

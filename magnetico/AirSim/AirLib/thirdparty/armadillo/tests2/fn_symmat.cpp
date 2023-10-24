@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -52,8 +54,8 @@ TEST_CASE("fn_symmat_1")
      0.239585  -0.428913  -0.406953  -0.291020  -0.353768;\
     ";
   
-  REQUIRE( accu(abs( B - BB )) == Approx(0.0) );
-  REQUIRE( accu(abs( C - CC )) == Approx(0.0) );
+  REQUIRE( accu(abs( B - BB )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( C - CC )) == Approx(0.0).margin(0.001) );
   
   mat X;
   REQUIRE_THROWS( X = symmatu(A) ); // symmatu() and symmatl() currently handle only square matrices
@@ -109,14 +111,14 @@ TEST_CASE("fn_symmat_2")
     { cx_double(-0.49247, +0.41973), cx_double(-0.03131, +0.06832), cx_double( 0.31416, -0.45450) }
     };
   
-  REQUIRE( accu(abs( B1 - BB )) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs( C1 - CC )) == Approx(0.0).epsilon(0.0001) );
+  REQUIRE( accu(abs( B1 - BB )) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs( C1 - CC )) == Approx(0.0).margin(0.0001) );
   
-  REQUIRE( accu(abs( B2 - BB )) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs( C2 - CC )) == Approx(0.0).epsilon(0.0001) );
+  REQUIRE( accu(abs( B2 - BB )) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs( C2 - CC )) == Approx(0.0).margin(0.0001) );
   
-  REQUIRE( accu(abs( D  - DD )) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs( E  - EE )) == Approx(0.0).epsilon(0.0001) );
+  REQUIRE( accu(abs( D  - DD )) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs( E  - EE )) == Approx(0.0).margin(0.0001) );
   
   cx_mat  X;
   REQUIRE_THROWS( X = symmatu( cx_mat(A(0,0,size(2,3)), A(0,3,size(2,3))) ) ); // symmatu() and symmatl() currently handle only square matrices

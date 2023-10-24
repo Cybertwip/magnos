@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -71,11 +73,11 @@ mvnrnd(Mat<typename T1::elem_type>& out, const Base<typename T1::elem_type, T1>&
   
   if(status == false)
     {
-    arma_debug_warn("mvnrnd(): given covariance matrix is not symmetric positive semi-definite");
-    return false;
+    out.soft_reset();
+    arma_debug_warn_level(3, "mvnrnd(): given covariance matrix is not symmetric positive semi-definite");
     }
   
-  return true;
+  return status;
   }
 
 
@@ -96,11 +98,11 @@ mvnrnd(Mat<typename T1::elem_type>& out, const Base<typename T1::elem_type, T1>&
   
   if(status == false)
     {
-    arma_debug_warn("mvnrnd(): given covariance matrix is not symmetric positive semi-definite");
-    return false;
+    out.soft_reset();
+    arma_debug_warn_level(3, "mvnrnd(): given covariance matrix is not symmetric positive semi-definite");
     }
   
-  return true;
+  return status;
   }
 
 

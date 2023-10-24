@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -421,7 +423,7 @@ SpCol<eT>::end_row(const uword row_num) const
 
 
 
-#ifdef ARMA_EXTRA_SPCOL_MEAT
+#if defined(ARMA_EXTRA_SPCOL_MEAT)
   #include ARMA_INCFILE_WRAP(ARMA_EXTRA_SPCOL_MEAT)
 #endif
 

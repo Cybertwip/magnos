@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 //
@@ -80,11 +82,11 @@ TEST_CASE("fn_abs_1")
   REQUIRE( Y(3,5) == Approx(0.373833) );
   REQUIRE( Y(4,5) == Approx(0.258704) );
 
-  REQUIRE( accu(   abs(A) -   abs_A ) == Approx(0.0) );
-  REQUIRE( accu( 2*abs(A) - 2*abs_A ) == Approx(0.0) );
+  REQUIRE( accu(   abs(A) -   abs_A ) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu( 2*abs(A) - 2*abs_A ) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(   abs(-A) -   abs_A ) == Approx(0.0) );
-  REQUIRE( accu( 2*abs(-A) - 2*abs_A ) == Approx(0.0) );
+  REQUIRE( accu(   abs(-A) -   abs_A ) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu( 2*abs(-A) - 2*abs_A ) == Approx(0.0).margin(0.001) );
 
   // REQUIRE_THROWS(  );
   }
@@ -133,7 +135,7 @@ TEST_CASE("fn_abs_2")
   REQUIRE( X(3,5) == Approx(0.502876) );
   REQUIRE( X(4,5) == Approx(0.352603) );
 
-  REQUIRE( accu(   abs(C) -   abs_C ) == Approx(0.0) );
+  REQUIRE( accu(   abs(C) -   abs_C ) == Approx(0.0).margin(0.001) );
 
   // REQUIRE_THROWS(  );
   }
@@ -160,8 +162,8 @@ TEST_CASE("fn_abs_3")
 
   vec c = abs(a);
 
-  REQUIRE( accu(c      - b) == Approx(0.0) );
-  REQUIRE( accu(abs(a) - b) == Approx(0.0) );
+  REQUIRE( accu(c      - b) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(a) - b) == Approx(0.0).margin(0.001) );
   }
 
 
@@ -170,8 +172,8 @@ TEST_CASE("fn_abs_4")
   vec a = -2*linspace<vec>(1,5,6);
   vec b = +2*linspace<vec>(1,5,6);
 
-  REQUIRE( accu(abs(a) - b) == Approx(0.0) );
-  REQUIRE( accu(abs(a(span::all)) - b(span::all)) == Approx(0.0) );
+  REQUIRE( accu(abs(a) - b) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(a(span::all)) - b(span::all)) == Approx(0.0).margin(0.001) );
   }
 
 
@@ -180,8 +182,8 @@ TEST_CASE("fn_abs_5")
   {
   mat A = randu<mat>(5,6);
 
-  REQUIRE( accu(abs(-2*A) - (2*A)) == Approx(0.0) );
-  REQUIRE( accu(abs(-2*A(span::all,span::all)) - (2*A(span::all,span::all))) == Approx(0.0) );
+  REQUIRE( accu(abs(-2*A) - (2*A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(-2*A(span::all,span::all)) - (2*A(span::all,span::all))) == Approx(0.0).margin(0.001) );
   }
 
 

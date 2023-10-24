@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -69,13 +71,13 @@ TEST_CASE("decomp_eig_pair_1")
   cx_mat Cr = A2 *           reigvecs5   * diagmat(eigvals5) *   inv(reigvecs5)     ;
   
   REQUIRE( status == true );
-  REQUIRE( accu(abs(eigvals2 - eigvals1)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(eigvals3 - eigvals1)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(eigvals4 - eigvals1)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(eigvals5 - eigvals1)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(A1       - B       )) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(A1       - Cl      )) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(A1       - Cr      )) == Approx(0.0).epsilon(0.0001) );
+  REQUIRE( accu(abs(eigvals2 - eigvals1)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(eigvals3 - eigvals1)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(eigvals4 - eigvals1)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(eigvals5 - eigvals1)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(A1       - B       )) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(A1       - Cl      )) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(A1       - Cr      )) == Approx(0.0).margin(0.0001) );
   }
 
 
@@ -129,11 +131,11 @@ TEST_CASE("decomp_eig_pair_2")
   cx_mat Cr = A2 *           reigvecs5   * diagmat(eigvals5) *   inv(reigvecs5)     ;
 
   REQUIRE( status == true );
-  REQUIRE( accu(abs(eigvals2 - eigvals1)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(eigvals3 - eigvals1)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(eigvals4 - eigvals1)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(eigvals5 - eigvals1)) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(A1       - B       )) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(A1       - Cl      )) == Approx(0.0).epsilon(0.0001) );
-  REQUIRE( accu(abs(A1       - Cr      )) == Approx(0.0).epsilon(0.0001) );
+  REQUIRE( accu(abs(eigvals2 - eigvals1)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(eigvals3 - eigvals1)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(eigvals4 - eigvals1)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(eigvals5 - eigvals1)) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(A1       - B       )) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(A1       - Cl      )) == Approx(0.0).margin(0.0001) );
+  REQUIRE( accu(abs(A1       - Cr      )) == Approx(0.0).margin(0.0001) );
   }

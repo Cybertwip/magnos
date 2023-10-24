@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -27,7 +29,7 @@ op_dot::direct_dot_arma(const uword n_elem, const eT* const A, const eT* const B
   {
   arma_extra_debug_sigprint();
   
-  #if defined(__FINITE_MATH_ONLY__) && (__FINITE_MATH_ONLY__ > 0)
+  #if defined(__FAST_MATH__)
     {
     eT val = eT(0);
     
@@ -65,7 +67,6 @@ op_dot::direct_dot_arma(const uword n_elem, const eT* const A, const eT* const B
 
 //! for two arrays, generic version for complex values
 template<typename eT>
-arma_hot
 inline
 typename arma_cx_only<eT>::result
 op_dot::direct_dot_arma(const uword n_elem, const eT* const A, const eT* const B)
@@ -99,7 +100,6 @@ op_dot::direct_dot_arma(const uword n_elem, const eT* const A, const eT* const B
 
 //! for two arrays, float and double version
 template<typename eT>
-arma_hot
 inline
 typename arma_real_only<eT>::result
 op_dot::direct_dot(const uword n_elem, const eT* const A, const eT* const B)
@@ -137,7 +137,6 @@ op_dot::direct_dot(const uword n_elem, const eT* const A, const eT* const B)
 //! for two arrays, complex version
 template<typename eT>
 inline
-arma_hot
 typename arma_cx_only<eT>::result
 op_dot::direct_dot(const uword n_elem, const eT* const A, const eT* const B)
   {
@@ -171,7 +170,6 @@ op_dot::direct_dot(const uword n_elem, const eT* const A, const eT* const B)
 
 //! for two arrays, integral version
 template<typename eT>
-arma_hot
 inline
 typename arma_integral_only<eT>::result
 op_dot::direct_dot(const uword n_elem, const eT* const A, const eT* const B)
@@ -184,7 +182,6 @@ op_dot::direct_dot(const uword n_elem, const eT* const A, const eT* const B)
 
 //! for three arrays
 template<typename eT>
-arma_hot
 inline
 eT
 op_dot::direct_dot(const uword n_elem, const eT* const A, const eT* const B, const eT* C)
@@ -204,7 +201,6 @@ op_dot::direct_dot(const uword n_elem, const eT* const A, const eT* const B, con
 
 
 template<typename T1, typename T2>
-arma_hot
 inline
 typename T1::elem_type
 op_dot::apply(const T1& X, const T2& Y)
@@ -264,7 +260,6 @@ op_dot::apply(const T1& X, const T2& Y)
 
 
 template<typename T1, typename T2>
-arma_hot
 inline
 typename arma_not_cx<typename T1::elem_type>::result
 op_dot::apply_proxy(const Proxy<T1>& PA, const Proxy<T2>& PB)
@@ -302,7 +297,6 @@ op_dot::apply_proxy(const Proxy<T1>& PA, const Proxy<T2>& PB)
 
 
 template<typename T1, typename T2>
-arma_hot
 inline
 typename arma_cx_only<typename T1::elem_type>::result
 op_dot::apply_proxy(const Proxy<T1>& PA, const Proxy<T2>& PB)
@@ -349,7 +343,6 @@ op_dot::apply_proxy(const Proxy<T1>& PA, const Proxy<T2>& PB)
 
 
 template<typename T1, typename T2>
-arma_hot
 inline
 typename T1::elem_type
 op_norm_dot::apply(const T1& X, const T2& Y)
@@ -380,7 +373,6 @@ op_norm_dot::apply(const T1& X, const T2& Y)
 
 
 template<typename eT>
-arma_hot
 inline
 eT
 op_cdot::direct_cdot_arma(const uword n_elem, const eT* const A, const eT* const B)
@@ -413,7 +405,6 @@ op_cdot::direct_cdot_arma(const uword n_elem, const eT* const A, const eT* const
 
 
 template<typename eT>
-arma_hot
 inline
 eT
 op_cdot::direct_cdot(const uword n_elem, const eT* const A, const eT* const B)
@@ -449,12 +440,6 @@ op_cdot::direct_cdot(const uword n_elem, const eT* const A, const eT* const B)
       
       return result[0];
       }
-    #elif defined(ARMA_USE_ATLAS)
-      {
-      // TODO: use dedicated atlas functions cblas_cdotc_sub() and cblas_zdotc_sub() and retune threshold
-
-      return op_cdot::direct_cdot_arma(n_elem, A, B);
-      }
     #else
       {
       return op_cdot::direct_cdot_arma(n_elem, A, B);
@@ -466,7 +451,6 @@ op_cdot::direct_cdot(const uword n_elem, const eT* const A, const eT* const B)
 
 
 template<typename T1, typename T2>
-arma_hot
 inline
 typename T1::elem_type
 op_cdot::apply(const T1& X, const T2& Y)
@@ -486,7 +470,6 @@ op_cdot::apply(const T1& X, const T2& Y)
 
 
 template<typename T1, typename T2>
-arma_hot
 inline
 typename T1::elem_type
 op_cdot::apply_unwrap(const T1& X, const T2& Y)
@@ -509,7 +492,6 @@ op_cdot::apply_unwrap(const T1& X, const T2& Y)
 
 
 template<typename T1, typename T2>
-arma_hot
 inline
 typename T1::elem_type
 op_cdot::apply_proxy(const T1& X, const T2& Y)
@@ -565,7 +547,6 @@ op_cdot::apply_proxy(const T1& X, const T2& Y)
 
 
 template<typename T1, typename T2>
-arma_hot
 inline
 typename promote_type<typename T1::elem_type, typename T2::elem_type>::result
 op_dot_mixed::apply(const T1& A, const T2& B)

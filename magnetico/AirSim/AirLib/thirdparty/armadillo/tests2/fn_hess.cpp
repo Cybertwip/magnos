@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 //
@@ -83,8 +85,8 @@ TEST_CASE("fn_hess_2")
   hess(H2, A);
   
   REQUIRE( U(0, 0) == Approx(1.0) );
-  REQUIRE( U(0, 1) == Approx(0.0) );
-  REQUIRE( U(1, 0) == Approx(0.0) );
+  REQUIRE( U(0, 1) == Approx(0.0).margin(0.001) );
+  REQUIRE( U(1, 0) == Approx(0.0).margin(0.001) );
   REQUIRE( U(1, 1) == Approx(1.0) );
   
   REQUIRE( H(0, 0) == Approx(0.061198) );
@@ -120,8 +122,8 @@ TEST_CASE("fn_hess_3")
   hess(H2, A);
   
   REQUIRE( U(0, 0) == Approx(1.0) );
-  REQUIRE( U(0, 1) == Approx(0.0) );
-  REQUIRE( U(0, 2) == Approx(0.0) );
+  REQUIRE( U(0, 1) == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 2) == Approx(0.0).margin(0.001) );
   
   REQUIRE( U(1, 0) == Approx( 0.0) );
   REQUIRE( U(1, 1) == Approx(-0.663928864062532) );
@@ -190,9 +192,9 @@ TEST_CASE("fn_hess_4")
   hess(H2, A);
   
   REQUIRE( U(0, 0) == Approx(1.0) );
-  REQUIRE( U(0, 1) == Approx(0.0) );
-  REQUIRE( U(0, 2) == Approx(0.0) );
-  REQUIRE( U(0, 3) == Approx(0.0) );
+  REQUIRE( U(0, 1) == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 2) == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 3) == Approx(0.0).margin(0.001) );
   
   REQUIRE( U(1, 0) == Approx( 0.0) );
   REQUIRE( U(1, 1) == Approx(-0.591275924818639) );
@@ -306,7 +308,7 @@ TEST_CASE("fn_hess_cx_1")
   hess(H2, A);
   
   REQUIRE( U(0, 0).real() == Approx(1.0) );
-  REQUIRE( U(0, 0).imag() == Approx(0.0) );
+  REQUIRE( U(0, 0).imag() == Approx(0.0).margin(0.001) );
   
   REQUIRE( H(0, 0).real() == Approx(0.061198) );
   REQUIRE( H(0, 0).imag() == Approx(1.012234) );
@@ -335,13 +337,13 @@ TEST_CASE("fn_hess_cx_2")
   hess(H2, A);
   
   REQUIRE( U(0, 0).real() == Approx(1.0) );
-  REQUIRE( U(0, 0).imag() == Approx(0.0) );
-  REQUIRE( U(0, 1).real() == Approx(0.0) );
-  REQUIRE( U(0, 1).imag() == Approx(0.0) );
-  REQUIRE( U(1, 0).real() == Approx(0.0) );
-  REQUIRE( U(1, 0).imag() == Approx(0.0) );
+  REQUIRE( U(0, 0).imag() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 1).real() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 1).imag() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(1, 0).real() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(1, 0).imag() == Approx(0.0).margin(0.001) );
   REQUIRE( U(1, 1).real() == Approx(1.0) );
-  REQUIRE( U(1, 1).imag() == Approx(0.0) );
+  REQUIRE( U(1, 1).imag() == Approx(0.0).margin(0.001) );
   
   REQUIRE( H(0, 0).real() == Approx( 0.061198000000000) );
   REQUIRE( H(0, 0).imag() == Approx( 0.092063706784000) );
@@ -389,11 +391,11 @@ TEST_CASE("fn_hess_cx_3")
   hess(H2, A);
   
   REQUIRE( U(0, 0).real() == Approx(1.0) );
-  REQUIRE( U(0, 0).imag() == Approx(0.0) );
-  REQUIRE( U(0, 1).real() == Approx(0.0) );
-  REQUIRE( U(0, 1).imag() == Approx(0.0) );
-  REQUIRE( U(0, 2).real() == Approx(0.0) );
-  REQUIRE( U(0, 2).imag() == Approx(0.0) );
+  REQUIRE( U(0, 0).imag() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 1).real() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 1).imag() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 2).real() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 2).imag() == Approx(0.0).margin(0.001) );
   
   REQUIRE( U(1, 0).real() == Approx( 0.0) );
   REQUIRE( U(1, 0).imag() == Approx( 0.0) );
@@ -496,13 +498,13 @@ TEST_CASE("fn_hess_cx_4")
   hess(H2, A*A);
   
   REQUIRE( U(0, 0).real() == Approx(1.0) );
-  REQUIRE( U(0, 0).imag() == Approx(0.0) );
-  REQUIRE( U(0, 1).real() == Approx(0.0) );
-  REQUIRE( U(0, 1).imag() == Approx(0.0) );
-  REQUIRE( U(0, 2).real() == Approx(0.0) );
-  REQUIRE( U(0, 2).imag() == Approx(0.0) );
-  REQUIRE( U(0, 3).real() == Approx(0.0) );
-  REQUIRE( U(0, 3).imag() == Approx(0.0) );
+  REQUIRE( U(0, 0).imag() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 1).real() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 1).imag() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 2).real() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 2).imag() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 3).real() == Approx(0.0).margin(0.001) );
+  REQUIRE( U(0, 3).imag() == Approx(0.0).margin(0.001) );
   
   REQUIRE( U(1, 0).real() == Approx( 0.0) );
   REQUIRE( U(1, 0).imag() == Approx( 0.0) );

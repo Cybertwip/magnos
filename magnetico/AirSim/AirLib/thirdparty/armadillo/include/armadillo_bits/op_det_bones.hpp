@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -14,49 +16,37 @@
 // ------------------------------------------------------------------------
 
 
-//! \addtogroup op_inv
+//! \addtogroup op_det
 //! @{
 
 
 
-//! 'invert matrix' operation (general matrices)
-class op_inv
+class op_det
   : public traits_op_default
   {
   public:
   
+  template<const uword row, const uword col>
+  struct pos
+    {
+    static constexpr uword n2 = row + col*2;
+    static constexpr uword n3 = row + col*3;
+    };
+  
   template<typename T1>
-  inline static void apply(Mat<typename T1::elem_type>& out, const Op<T1,op_inv>& in);
+  inline static bool apply_direct(typename T1::elem_type& out_val, const Base<typename T1::elem_type,T1>& expr);
+  
+  template<typename T1>
+  inline static typename T1::elem_type apply_diagmat(const Base<typename T1::elem_type,T1>& expr);
+  
+  template<typename T1>
+  inline static typename T1::elem_type apply_trimat(const Base<typename T1::elem_type,T1>& expr);
   
   template<typename eT>
-  inline static bool apply_noalias(Mat<eT>& out, const Mat<eT>& A);
+  arma_cold inline static eT apply_tiny_2x2(const Mat<eT>& X);
   
-  template<typename T1>
-  inline static bool apply_diagmat(Mat<typename T1::elem_type>& out, const T1& X);
-  };
-
-
-
-//! 'invert matrix' operation (triangular matrices)
-class op_inv_tr
-  : public traits_op_default
-  {
-  public:
-  
-  template<typename T1>
-  inline static void apply(Mat<typename T1::elem_type>& out, const Op<T1,op_inv_tr>& in);
-  };
-
-
-
-//! 'invert matrix' operation (symmetric positive definite matrices)
-class op_inv_sympd
-  : public traits_op_default
-  {
-  public:
-  
-  template<typename T1>
-  inline static void apply(Mat<typename T1::elem_type>& out, const Op<T1,op_inv_sympd>& in);
+  template<typename eT>
+  arma_cold inline static eT apply_tiny_3x3(const Mat<eT>& X);
   };
 
 

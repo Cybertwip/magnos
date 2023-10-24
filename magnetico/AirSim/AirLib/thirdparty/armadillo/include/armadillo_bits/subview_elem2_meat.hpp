@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -328,6 +330,22 @@ subview_elem2<eT,T1,T2>::clean(const pod_type threshold)
   Mat<eT> tmp(*this);
   
   tmp.clean(threshold);
+  
+  (*this).operator=(tmp);
+  }
+
+
+
+template<typename eT, typename T1, typename T2>
+inline
+void
+subview_elem2<eT,T1,T2>::clamp(const eT min_val, const eT max_val)
+  {
+  arma_extra_debug_sigprint();
+  
+  Mat<eT> tmp(*this);
+  
+  tmp.clamp(min_val, max_val);
   
   (*this).operator=(tmp);
   }
@@ -681,7 +699,7 @@ subview_elem2<eT,T1,T2>::extract(Mat<eT>& actual_out, const subview_elem2<eT,T1,
   
   if(alias)  { arma_extra_debug_print("subview_elem2::extract(): aliasing detected"); }
   
-  Mat<eT>* tmp_out = alias ? new Mat<eT>() : 0;
+  Mat<eT>* tmp_out = alias ? new Mat<eT>() : nullptr;
   Mat<eT>& out     = alias ? *tmp_out      : actual_out;
   
   if( (in.all_rows == false) && (in.all_cols == false) )

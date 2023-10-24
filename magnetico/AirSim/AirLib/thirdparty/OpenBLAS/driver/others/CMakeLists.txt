@@ -8,7 +8,6 @@ else ()
 endif ()
 
 if (USE_THREAD)
-
   if (USE_OPENMP)
     set(BLAS_SERVER blas_server_omp.c)
   elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")

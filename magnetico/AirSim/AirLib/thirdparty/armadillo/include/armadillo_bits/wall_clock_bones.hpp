@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -26,8 +28,8 @@ class wall_clock
   inline  wall_clock();
   inline ~wall_clock();
   
-  inline                  void   tic();  //!< start the timer
-  inline arma_warn_unused double toc();  //!< return the number of seconds since the last call to tic()
+                   inline void   tic();  //!< start the timer
+  arma_warn_unused inline double toc();  //!< return the number of seconds since the last call to tic()
   
   
   private:

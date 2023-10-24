@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -60,7 +62,6 @@ running_mean_scalar<eT>::operator=(const running_mean_scalar<eT>& in)
 
 
 template<typename eT>
-arma_hot
 inline
 void
 running_mean_scalar<eT>::operator() (const eT X)

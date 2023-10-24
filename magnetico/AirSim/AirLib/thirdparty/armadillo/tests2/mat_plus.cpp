@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -84,10 +86,10 @@ TEST_CASE("mat_plus_1")
   REQUIRE( Y(4,5) == Approx( 0.498289) );
   
   
-  REQUIRE( accu(abs( mat(A+B) - A_plus_B )) == Approx(0.0) );
-  REQUIRE( accu(abs(    (A+B) - A_plus_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( mat(A+B) - A_plus_B )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(    (A+B) - A_plus_B )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( 2*(A+B) - 2*A_plus_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*(A+B) - 2*A_plus_B )) == Approx(0.0).margin(0.001) );
   
   // REQUIRE_THROWS(  );
   }
@@ -107,7 +109,8 @@ TEST_CASE("mat_plus_2")
   REQUIRE( accu(A + B/2 + C) == Approx(double(5*6*5)) );
   
   mat X(6,5);
-  REQUIRE_THROWS( A+X );  // adding non-conformant matrices will throw unless ARMA_NO_DEBUG is defined
+  mat Y;
+  REQUIRE_THROWS( Y = A+X );  // adding non-conformant matrices will throw unless ARMA_NO_DEBUG is defined
   }
 
 

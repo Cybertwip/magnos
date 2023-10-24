@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 //
@@ -70,95 +72,96 @@ TEST_CASE("fn_trans_1")
   double accu_A_col1_t = 0.21227;
   double accu_A_row1_t = 0.63296;
 
-  REQUIRE( accu(abs(mat(A.t().t()) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(    A.t().t()  - A)) == Approx(0.0) );
+  REQUIRE( accu(abs(mat(A.t().t()) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(    A.t().t()  - A)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(mat(A.t()    ) - At)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(A.st()   ) - At)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(A.ht()   ) - At)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat( trans(A)) - At)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(strans(A)) - At)) == Approx(0.0) );
+  REQUIRE( accu(abs(mat(A.t()    ) - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(A.st()   ) - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(A.ht()   ) - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat( trans(A)) - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(strans(A)) - At)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(A.t()     - At)) == Approx(0.0) );
-  REQUIRE( accu(abs(A.st()    - At)) == Approx(0.0) );
-  REQUIRE( accu(abs(A.ht()    - At)) == Approx(0.0) );
-  REQUIRE( accu(abs( trans(A) - At)) == Approx(0.0) );
-  REQUIRE( accu(abs(strans(A) - At)) == Approx(0.0) );
+  REQUIRE( accu(abs(A.t()     - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(A.st()    - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(A.ht()    - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( trans(A) - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(strans(A) - At)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(mat(At.t()    ) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(At.st()   ) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(At.ht()   ) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat( trans(At)) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(strans(At)) - A)) == Approx(0.0) );
+  REQUIRE( accu(abs(mat(At.t()    ) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(At.st()   ) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(At.ht()   ) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat( trans(At)) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(strans(At)) - A)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(At.t()     - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(At.st()    - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(At.ht()    - A)) == Approx(0.0) );
-  REQUIRE( accu(abs( trans(At) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(strans(At) - A)) == Approx(0.0) );
+  REQUIRE( accu(abs(At.t()     - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(At.st()    - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(At.ht()    - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( trans(At) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(strans(At) - A)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs((0 + At.t()    ) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs((0 + At.st()   ) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs((0 + At.ht()   ) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs((0 +  trans(At)) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs((0 + strans(At)) - A)) == Approx(0.0) );
+  REQUIRE( accu(abs((0 + At.t()    ) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((0 + At.st()   ) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((0 + At.ht()   ) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((0 +  trans(At)) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((0 + strans(At)) - A)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(mat(0 + At.t()    ) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(0 + At.st()   ) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(0 + At.ht()   ) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(0 +  trans(At)) - A)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(0 + strans(At)) - A)) == Approx(0.0) );
-
-
-  REQUIRE( accu(abs(2*A.t()    - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(2*trans(A) - 2*At)) == Approx(0.0) );
-
-  REQUIRE( accu(abs((2*A).t()  - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(trans(2*A) - 2*At)) == Approx(0.0) );
-
-  REQUIRE( accu(abs((A+A).t()  - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(trans(A+A) - 2*At)) == Approx(0.0) );
-
-  REQUIRE( accu(abs((A.t()    + At) - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs((trans(A) + At) - 2*At)) == Approx(0.0) );
+  REQUIRE( accu(abs(mat(0 + At.t()    ) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(0 + At.st()   ) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(0 + At.ht()   ) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(0 +  trans(At)) - A)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(0 + strans(At)) - A)) == Approx(0.0).margin(0.001) );
 
 
-  REQUIRE( accu(abs(mat(2*A.t())    - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(2*trans(A)) - 2*At)) == Approx(0.0) );
+  REQUIRE( accu(abs(2*A.t()    - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(2*trans(A) - 2*At)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(mat((2*A).t())  - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(trans(2*A)) - 2*At)) == Approx(0.0) );
+  REQUIRE( accu(abs((2*A).t()  - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(trans(2*A) - 2*At)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(mat((A+A).t())  - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(trans(A+A)) - 2*At)) == Approx(0.0) );
+  REQUIRE( accu(abs((A+A).t()  - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(trans(A+A) - 2*At)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(mat(A.t()    + At) - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(mat(trans(A) + At) - 2*At)) == Approx(0.0) );
-
-
-  REQUIRE( accu(abs(rowvec(A.col(1).t()) - A_col1_t)) == Approx(0.0) );
-  REQUIRE( accu(abs(colvec(A.row(1).t()) - A_row1_t)) == Approx(0.0) );
-
-  REQUIRE( accu(abs(A.col(1).t() - A_col1_t)) == Approx(0.0) );
-  REQUIRE( accu(abs(A.row(1).t() - A_row1_t)) == Approx(0.0) );
-
-  REQUIRE( accu(abs(2*A.col(1).t() - 2*A_col1_t)) == Approx(0.0) );
-  REQUIRE( accu(abs(2*A.row(1).t() - 2*A_row1_t)) == Approx(0.0) );
-
-  REQUIRE( accu(abs( (A.col(1).t() + A_col1_t) - 2*A_col1_t)) == Approx(0.0) );
-  REQUIRE( accu(abs( (A.row(1).t() + A_row1_t) - 2*A_row1_t)) == Approx(0.0) );
+  REQUIRE( accu(abs((A.t()    + At) - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((trans(A) + At) - 2*At)) == Approx(0.0).margin(0.001) );
 
 
-  REQUIRE( abs( accu(A.col(1).t()) - accu_A_col1_t ) == Approx(0.0) );
-  REQUIRE( abs( accu(A.row(1).t()) - accu_A_row1_t ) == Approx(0.0) );
+  REQUIRE( accu(abs(mat(2*A.t())    - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(2*trans(A)) - 2*At)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( abs( accu(A.col(1).t()) - accu(A.col(1)) ) == Approx(0.0) );
-  REQUIRE( abs( accu(A.row(1).t()) - accu(A.row(1)) ) == Approx(0.0) );
+  REQUIRE( accu(abs(mat((2*A).t())  - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(trans(2*A)) - 2*At)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( abs( sum(A.col(1).t()) - accu_A_col1_t ) == Approx(0.0) );
-  REQUIRE( abs( sum(A.row(1).t()) - accu_A_row1_t ) == Approx(0.0) );
+  REQUIRE( accu(abs(mat((A+A).t())  - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(trans(A+A)) - 2*At)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE_THROWS( A + A.t() );
+  REQUIRE( accu(abs(mat(A.t()    + At) - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(mat(trans(A) + At) - 2*At)) == Approx(0.0).margin(0.001) );
+
+
+  REQUIRE( accu(abs(rowvec(A.col(1).t()) - A_col1_t)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(colvec(A.row(1).t()) - A_row1_t)) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs(A.col(1).t() - A_col1_t)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(A.row(1).t() - A_row1_t)) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs(2*A.col(1).t() - 2*A_col1_t)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(2*A.row(1).t() - 2*A_row1_t)) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs( (A.col(1).t() + A_col1_t) - 2*A_col1_t)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A.row(1).t() + A_row1_t) - 2*A_row1_t)) == Approx(0.0).margin(0.001) );
+
+
+  REQUIRE( abs( accu(A.col(1).t()) - accu_A_col1_t ) == Approx(0.0).margin(0.001) );
+  REQUIRE( abs( accu(A.row(1).t()) - accu_A_row1_t ) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( abs( accu(A.col(1).t()) - accu(A.col(1)) ) == Approx(0.0).margin(0.001) );
+  REQUIRE( abs( accu(A.row(1).t()) - accu(A.row(1)) ) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( abs( sum(A.col(1).t()) - accu_A_col1_t ) == Approx(0.0).margin(0.001) );
+  REQUIRE( abs( sum(A.row(1).t()) - accu_A_row1_t ) == Approx(0.0).margin(0.001) );
+  
+  mat B; 
+  REQUIRE_THROWS( B = A + A.t() );
   }
 
 
@@ -199,95 +202,97 @@ TEST_CASE("fn_trans_2")
     };
 
 
-  REQUIRE( accu(abs(C.t().t() - C)) == Approx(0.0) );
+  REQUIRE( accu(abs(C.t().t() - C)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(cx_mat(C.t()   ) - Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_mat(C.ht()  ) - Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_mat(trans(C)) - Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs(cx_mat(C.t()   ) - Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_mat(C.ht()  ) - Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_mat(trans(C)) - Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(C.t()    - Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(C.ht()   - Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(trans(C) - Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs(C.t()    - Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(C.ht()   - Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(trans(C) - Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(cx_mat(Ct.t()   ) - C)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_mat(Ct.ht()  ) - C)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_mat(trans(Ct)) - C)) == Approx(0.0) );
+  REQUIRE( accu(abs(cx_mat(Ct.t()   ) - C)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_mat(Ct.ht()  ) - C)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_mat(trans(Ct)) - C)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(Ct.t()    - C)) == Approx(0.0) );
-  REQUIRE( accu(abs(Ct.ht()   - C)) == Approx(0.0) );
-  REQUIRE( accu(abs(trans(Ct) - C)) == Approx(0.0) );
+  REQUIRE( accu(abs(Ct.t()    - C)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Ct.ht()   - C)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(trans(Ct) - C)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(2*C.t()    - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(2*trans(C) - 2*Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs(2*C.t()    - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(2*trans(C) - 2*Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs((2*C).t()  - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(trans(2*C) - 2*Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs((2*C).t()  - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(trans(2*C) - 2*Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs((C+C).t()  - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(trans(C+C) - 2*Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs((C+C).t()  - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(trans(C+C) - 2*Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(cx_double(2,3)*C.t()    - cx_double(2,3)*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_double(2,3)*trans(C) - cx_double(2,3)*Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs(cx_double(2,3)*C.t()    - cx_double(2,3)*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_double(2,3)*trans(C) - cx_double(2,3)*Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(cx_mat(2*C.t())    - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_mat(2*trans(C)) - 2*Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs(cx_mat(2*C.t())    - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_mat(2*trans(C)) - 2*Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(cx_mat((2*C).t())  - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_mat(trans(2*C)) - 2*Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs(cx_mat((2*C).t())  - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_mat(trans(2*C)) - 2*Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(cx_mat((C+C).t())  - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_mat(trans(C+C)) - 2*Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs(cx_mat((C+C).t())  - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_mat(trans(C+C)) - 2*Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(cx_mat(cx_double(2,3)*C.t())    - cx_double(2,3)*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_mat(cx_double(2,3)*trans(C)) - cx_double(2,3)*Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs(cx_mat(cx_double(2,3)*C.t())    - cx_double(2,3)*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_mat(cx_double(2,3)*trans(C)) - cx_double(2,3)*Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs((C.t()    + Ct) - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs((trans(C) + Ct) - 2*Ct)) == Approx(0.0) );
+  REQUIRE( accu(abs((C.t()    + Ct) - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((trans(C) + Ct) - 2*Ct)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(cx_rowvec(C.col(1).t()) - C_col1_t)) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_colvec(C.row(1).t()) - C_row1_t)) == Approx(0.0) );
+  REQUIRE( accu(abs(cx_rowvec(C.col(1).t()) - C_col1_t)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_colvec(C.row(1).t()) - C_row1_t)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(C.col(1).t() - C_col1_t)) == Approx(0.0) );
-  REQUIRE( accu(abs(C.row(1).t() - C_row1_t)) == Approx(0.0) );
+  REQUIRE( accu(abs(C.col(1).t() - C_col1_t)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(C.row(1).t() - C_row1_t)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs(2*C.col(1).t() - 2*C_col1_t)) == Approx(0.0) );
-  REQUIRE( accu(abs(2*C.row(1).t() - 2*C_row1_t)) == Approx(0.0) );
+  REQUIRE( accu(abs(2*C.col(1).t() - 2*C_col1_t)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(2*C.row(1).t() - 2*C_row1_t)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( (C.col(1).t() + C_col1_t) - 2*C_col1_t)) == Approx(0.0) );
-  REQUIRE( accu(abs( (C.row(1).t() + C_row1_t) - 2*C_row1_t)) == Approx(0.0) );
-
-  //
-
-  REQUIRE( accu(abs(cx_mat(C.st())    - conj(Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_mat(strans(C)) - conj(Ct))) == Approx(0.0) );
-
-  REQUIRE( accu(abs(C.st()    - conj(Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(strans(C) - conj(Ct))) == Approx(0.0) );
-
-  REQUIRE( accu(abs(2*C.st()    - conj(2*Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(2*strans(C) - conj(2*Ct))) == Approx(0.0) );
-
-  REQUIRE( accu(abs(cx_double(2,3)*C.st()    - cx_double(2,3)*conj(Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_double(2,3)*strans(C) - cx_double(2,3)*conj(Ct))) == Approx(0.0) );
-
-  REQUIRE( accu(abs((C.st()    + C.st()) - conj(2*Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs((strans(C) + C.st()) - conj(2*Ct))) == Approx(0.0) );
-
-  REQUIRE( accu(abs(cx_rowvec(C.col(1).st()) - conj(C_col1_t))) == Approx(0.0) );
-  REQUIRE( accu(abs(cx_colvec(C.row(1).st()) - conj(C_row1_t))) == Approx(0.0) );
-
-  REQUIRE( accu(abs(C.col(1).st() - conj(C_col1_t))) == Approx(0.0) );
-  REQUIRE( accu(abs(C.row(1).st() - conj(C_row1_t))) == Approx(0.0) );
-
-  REQUIRE( accu(abs(2*C.col(1).st() - conj(2*C_col1_t))) == Approx(0.0) );
-  REQUIRE( accu(abs(2*C.row(1).st() - conj(2*C_row1_t))) == Approx(0.0) );
-
-  REQUIRE( accu(abs( (C.col(1).st() + conj(C_col1_t)) - conj(2*C_col1_t))) == Approx(0.0) );
-  REQUIRE( accu(abs( (C.row(1).st() + conj(C_row1_t)) - conj(2*C_row1_t))) == Approx(0.0) );
+  REQUIRE( accu(abs( (C.col(1).t() + C_col1_t) - 2*C_col1_t)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (C.row(1).t() + C_row1_t) - 2*C_row1_t)) == Approx(0.0).margin(0.001) );
 
   //
 
-  REQUIRE_THROWS( C + C.t() );
+  REQUIRE( accu(abs(cx_mat(C.st())    - conj(Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_mat(strans(C)) - conj(Ct))) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs(C.st()    - conj(Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(strans(C) - conj(Ct))) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs(2*C.st()    - conj(2*Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(2*strans(C) - conj(2*Ct))) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs(cx_double(2,3)*C.st()    - cx_double(2,3)*conj(Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_double(2,3)*strans(C) - cx_double(2,3)*conj(Ct))) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs((C.st()    + C.st()) - conj(2*Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs((strans(C) + C.st()) - conj(2*Ct))) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs(cx_rowvec(C.col(1).st()) - conj(C_col1_t))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cx_colvec(C.row(1).st()) - conj(C_row1_t))) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs(C.col(1).st() - conj(C_col1_t))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(C.row(1).st() - conj(C_row1_t))) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs(2*C.col(1).st() - conj(2*C_col1_t))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(2*C.row(1).st() - conj(2*C_row1_t))) == Approx(0.0).margin(0.001) );
+
+  REQUIRE( accu(abs( (C.col(1).st() + conj(C_col1_t)) - conj(2*C_col1_t))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (C.row(1).st() + conj(C_row1_t)) - conj(2*C_row1_t))) == Approx(0.0).margin(0.001) );
+
+  //
+  
+  cx_mat D;
+  
+  REQUIRE_THROWS( D = C + C.t() );
   }
 
 
@@ -323,38 +328,38 @@ TEST_CASE("fn_trans_3")
   X = A;  X = X.t();
   Y = B;  Y = Y.t();
 
-  REQUIRE( accu(abs(X - At)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - Bt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - Bt)) == Approx(0.0).margin(0.001) );
 
   X = A;  X = 0 + X.t();
   Y = B;  Y = 0 + Y.t();
 
-  REQUIRE( accu(abs(X - At)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - Bt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - Bt)) == Approx(0.0).margin(0.001) );
 
   X = A;  X = 2*X.t();
   Y = B;  Y = 2*Y.t();
 
-  REQUIRE( accu(abs(X - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*Bt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*Bt)) == Approx(0.0).margin(0.001) );
 
   X = A;  X = 0 + 2*X.t();
   Y = B;  Y = 0 + 2*Y.t();
 
-  REQUIRE( accu(abs(X - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*Bt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*Bt)) == Approx(0.0).margin(0.001) );
 
   X = A;  X = (2*X).t();
   Y = B;  Y = (2*Y).t();
 
-  REQUIRE( accu(abs(X - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*Bt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*Bt)) == Approx(0.0).margin(0.001) );
 
   X = A;  X = (X+X).t();
   Y = B;  Y = (Y+Y).t();
 
-  REQUIRE( accu(abs(X - 2*At)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*Bt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*At)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*Bt)) == Approx(0.0).margin(0.001) );
 
   colvec q = A.col(1);
   rowvec r = A.row(1);
@@ -400,88 +405,88 @@ TEST_CASE("fn_trans_4")
   X = C;  X = X.t();
   Y = D;  Y = Y.t();
 
-  REQUIRE( accu(abs(X - Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - Dt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - Dt)) == Approx(0.0).margin(0.001) );
 
   X = C;  X = 0 + X.t();
   Y = D;  Y = 0 + Y.t();
 
-  REQUIRE( accu(abs(X - Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - Dt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - Dt)) == Approx(0.0).margin(0.001) );
 
   X = C;  X = 2*X.t();
   Y = D;  Y = 2*Y.t();
 
-  REQUIRE( accu(abs(X - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*Dt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*Dt)) == Approx(0.0).margin(0.001) );
 
   X = C;  X = 0 + 2*X.t();
   Y = D;  Y = 0 + 2*Y.t();
 
-  REQUIRE( accu(abs(X - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*Dt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*Dt)) == Approx(0.0).margin(0.001) );
 
   X = C;  X = (2*X).t();
   Y = D;  Y = (2*Y).t();
 
-  REQUIRE( accu(abs(X - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*Dt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*Dt)) == Approx(0.0).margin(0.001) );
 
   X = C;  X = (X+X).t();
   Y = D;  Y = (Y+Y).t();
 
-  REQUIRE( accu(abs(X - 2*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*Dt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*Dt)) == Approx(0.0).margin(0.001) );
 
   X = C;  X = cx_double(2,3)*X.t();
   Y = D;  Y = cx_double(2,3)*Y.t();
 
-  REQUIRE( accu(abs(X - cx_double(2,3)*Ct)) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - cx_double(2,3)*Dt)) == Approx(0.0) );
+  REQUIRE( accu(abs(X - cx_double(2,3)*Ct)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - cx_double(2,3)*Dt)) == Approx(0.0).margin(0.001) );
 
   //
 
   X = C;  X = X.st();
   Y = D;  Y = Y.st();
 
-  REQUIRE( accu(abs(X - conj(Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - conj(Dt))) == Approx(0.0) );
+  REQUIRE( accu(abs(X - conj(Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - conj(Dt))) == Approx(0.0).margin(0.001) );
 
   X = C;  X = 0 + X.st();
   Y = D;  Y = 0 + Y.st();
 
-  REQUIRE( accu(abs(X - conj(Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - conj(Dt))) == Approx(0.0) );
+  REQUIRE( accu(abs(X - conj(Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - conj(Dt))) == Approx(0.0).margin(0.001) );
 
   X = C;  X = 2*X.st();
   Y = D;  Y = 2*Y.st();
 
-  REQUIRE( accu(abs(X - 2*conj(Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*conj(Dt))) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*conj(Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*conj(Dt))) == Approx(0.0).margin(0.001) );
 
   X = C;  X = 0 + 2*X.st();
   Y = D;  Y = 0 + 2*Y.st();
 
-  REQUIRE( accu(abs(X - 2*conj(Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - 2*conj(Dt))) == Approx(0.0) );
+  REQUIRE( accu(abs(X - 2*conj(Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - 2*conj(Dt))) == Approx(0.0).margin(0.001) );
 
   X = C;  X = (2*X).st();
   Y = D;  Y = (2*Y).st();
 
-  REQUIRE( accu(abs(X - conj(2*Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - conj(2*Dt))) == Approx(0.0) );
+  REQUIRE( accu(abs(X - conj(2*Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - conj(2*Dt))) == Approx(0.0).margin(0.001) );
 
   X = C;  X = (X+X).st();
   Y = D;  Y = (Y+Y).st();
 
-  REQUIRE( accu(abs(X - conj(2*Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - conj(2*Dt))) == Approx(0.0) );
+  REQUIRE( accu(abs(X - conj(2*Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - conj(2*Dt))) == Approx(0.0).margin(0.001) );
 
   X = C;  X = cx_double(2,3)*X.st();
   Y = D;  Y = cx_double(2,3)*Y.st();
 
-  REQUIRE( accu(abs(X - cx_double(2,3)*conj(Ct))) == Approx(0.0) );
-  REQUIRE( accu(abs(Y - cx_double(2,3)*conj(Dt))) == Approx(0.0) );
+  REQUIRE( accu(abs(X - cx_double(2,3)*conj(Ct))) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(Y - cx_double(2,3)*conj(Dt))) == Approx(0.0).margin(0.001) );
   }
 
 

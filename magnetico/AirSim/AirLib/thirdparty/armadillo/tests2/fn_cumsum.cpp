@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -27,8 +29,8 @@ TEST_CASE("fn_cumsum_1")
   
   colvec c = { 1.0000, 2.8000, 5.4000, 8.8000, 13.0000, 18.0000 };
   
-  REQUIRE( accu(abs(cumsum(a) - c    )) == Approx(0.0) );
-  REQUIRE( accu(abs(cumsum(b) - c.t())) == Approx(0.0) );
+  REQUIRE( accu(abs(cumsum(a) - c    )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cumsum(b) - c.t())) == Approx(0.0).margin(0.001) );
   
   REQUIRE_THROWS( b = cumsum(a) );
   }
@@ -58,9 +60,9 @@ TEST_CASE("fn_cumsum_2")
     { 0.73573,  1.25677,  1.03414,  1.43577 }
     };
   
-  REQUIRE( accu(abs(cumsum(A)   - B)) == Approx(0.0) );
-  REQUIRE( accu(abs(cumsum(A,0) - B)) == Approx(0.0) );
-  REQUIRE( accu(abs(cumsum(A,1) - C)) == Approx(0.0) );
+  REQUIRE( accu(abs(cumsum(A)   - B)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cumsum(A,0) - B)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(cumsum(A,1) - C)) == Approx(0.0).margin(0.001) );
   }
 
 

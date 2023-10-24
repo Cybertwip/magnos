@@ -8,7 +8,7 @@
 SET(LAPACK_NAMES ${LAPACK_NAMES} lapack)
 FIND_LIBRARY(LAPACK_LIBRARY
   NAMES ${LAPACK_NAMES}
-  PATHS /usr/lib64/atlas /usr/lib/atlas /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib
+  PATHS ${CMAKE_SYSTEM_LIBRARY_PATH} /usr/lib64/atlas /usr/lib/atlas /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib
   )
 
 IF (LAPACK_LIBRARY)

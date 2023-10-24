@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -84,12 +86,12 @@ TEST_CASE("mat_mul_real_1")
     -0.0182371  -0.0207407  -0.0522859  -0.0485276   0.0678171;\
     ";
   
-  REQUIRE( accu(abs( (A00*B00) - A00_times_B00 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A11*B11) - A11_times_B11 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A22*B22) - A22_times_B22 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A33*B33) - A33_times_B33 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A44*B44) - A44_times_B44 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A55*B55) - A55_times_B55 )) == Approx(0.0) );
+  REQUIRE( accu(abs( (A00*B00) - A00_times_B00 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A11*B11) - A11_times_B11 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A22*B22) - A22_times_B22 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A33*B33) - A33_times_B33 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A44*B44) - A44_times_B44 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A55*B55) - A55_times_B55 )) == Approx(0.0).margin(0.001) );
   
   mat X;
   REQUIRE_THROWS( X = A22*B44 );
@@ -202,19 +204,19 @@ TEST_CASE("mat_mul_real_2")
      0.245991  -0.060162  -0.208409  -0.293470  -0.151911;\
     ";
   
-  REQUIRE( accu(abs( (A00*q0) - A00_times_q0 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A11*q1) - A11_times_q1 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A22*q2) - A22_times_q2 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A33*q3) - A33_times_q3 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A44*q4) - A44_times_q4 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A55*q5) - A55_times_q5 )) == Approx(0.0) );
+  REQUIRE( accu(abs( (A00*q0) - A00_times_q0 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A11*q1) - A11_times_q1 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A22*q2) - A22_times_q2 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A33*q3) - A33_times_q3 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A44*q4) - A44_times_q4 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A55*q5) - A55_times_q5 )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( (r0*A00) - r0_times_A00 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (r1*A11) - r1_times_A11 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (r2*A22) - r2_times_A22 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (r3*A33) - r3_times_A33 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (r4*A44) - r4_times_A44 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (r5*A55) - r5_times_A55 )) == Approx(0.0) );
+  REQUIRE( accu(abs( (r0*A00) - r0_times_A00 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (r1*A11) - r1_times_A11 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (r2*A22) - r2_times_A22 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (r3*A33) - r3_times_A33 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (r4*A44) - r4_times_A44 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (r5*A55) - r5_times_A55 )) == Approx(0.0).margin(0.001) );
   
   mat X;
   REQUIRE_THROWS( X = A22*q4 );
@@ -327,33 +329,33 @@ TEST_CASE("mat_mul_real_3")
      0.190504;\
     ";
   
-  REQUIRE( accu(abs( (q0.t()*A00) - q0_t_times_A00 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q1.t()*A11) - q1_t_times_A11 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q2.t()*A22) - q2_t_times_A22 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q3.t()*A33) - q3_t_times_A33 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q4.t()*A44) - q4_t_times_A44 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q5.t()*A55) - q5_t_times_A55 )) == Approx(0.0) );
+  REQUIRE( accu(abs( (q0.t()*A00) - q0_t_times_A00 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q1.t()*A11) - q1_t_times_A11 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q2.t()*A22) - q2_t_times_A22 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q3.t()*A33) - q3_t_times_A33 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q4.t()*A44) - q4_t_times_A44 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q5.t()*A55) - q5_t_times_A55 )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( (A00*r0.t()) - A00_times_r0_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A11*r1.t()) - A11_times_r1_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A22*r2.t()) - A22_times_r2_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A33*r3.t()) - A33_times_r3_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A44*r4.t()) - A44_times_r4_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A55*r5.t()) - A55_times_r5_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( (A00*r0.t()) - A00_times_r0_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A11*r1.t()) - A11_times_r1_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A22*r2.t()) - A22_times_r2_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A33*r3.t()) - A33_times_r3_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A44*r4.t()) - A44_times_r4_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A55*r5.t()) - A55_times_r5_t )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( (q0.t().eval()*A00) - q0_t_times_A00 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q1.t().eval()*A11) - q1_t_times_A11 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q2.t().eval()*A22) - q2_t_times_A22 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q3.t().eval()*A33) - q3_t_times_A33 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q4.t().eval()*A44) - q4_t_times_A44 )) == Approx(0.0) );
-  REQUIRE( accu(abs( (q5.t().eval()*A55) - q5_t_times_A55 )) == Approx(0.0) );
+  REQUIRE( accu(abs( (q0.t().eval()*A00) - q0_t_times_A00 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q1.t().eval()*A11) - q1_t_times_A11 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q2.t().eval()*A22) - q2_t_times_A22 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q3.t().eval()*A33) - q3_t_times_A33 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q4.t().eval()*A44) - q4_t_times_A44 )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (q5.t().eval()*A55) - q5_t_times_A55 )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( (A00*r0.t().eval()) - A00_times_r0_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A11*r1.t().eval()) - A11_times_r1_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A22*r2.t().eval()) - A22_times_r2_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A33*r3.t().eval()) - A33_times_r3_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A44*r4.t().eval()) - A44_times_r4_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (A55*r5.t().eval()) - A55_times_r5_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( (A00*r0.t().eval()) - A00_times_r0_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A11*r1.t().eval()) - A11_times_r1_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A22*r2.t().eval()) - A22_times_r2_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A33*r3.t().eval()) - A33_times_r3_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A44*r4.t().eval()) - A44_times_r4_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (A55*r5.t().eval()) - A55_times_r5_t )) == Approx(0.0).margin(0.001) );
   
   mat X;
   REQUIRE_THROWS( X = A22*r4.t() );
@@ -516,46 +518,46 @@ TEST_CASE("mat_mul_real_4")
   
   //
   
-  REQUIRE( accu(abs( A44     * B44     - A44_times_B44     )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44.t() * B44     - A44_t_times_B44   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44     * B44.t() - A44_times_B44_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44.t() * B44.t() - A44_t_times_B44_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( A44     * B44     - A44_times_B44     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44.t() * B44     - A44_t_times_B44   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44     * B44.t() - A44_times_B44_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44.t() * B44.t() - A44_t_times_B44_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( 2*A44     * B44     - two_times_A44_times_B44     )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A44.t() * B44     - two_times_A44_t_times_B44   )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A44     * B44.t() - two_times_A44_times_B44_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A44.t() * B44.t() - two_times_A44_t_times_B44_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A44     * B44     - two_times_A44_times_B44     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A44.t() * B44     - two_times_A44_t_times_B44   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A44     * B44.t() - two_times_A44_times_B44_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A44.t() * B44.t() - two_times_A44_t_times_B44_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( A44     * 2 * B44 -     A44_times_two_times_B44     )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44.t() * 2 * B44 -     A44_t_times_two_times_B44   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44     * 2 * B44.t() - A44_times_two_times_B44_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44.t() * 2 * B44.t() - A44_t_times_two_times_B44_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( A44     * 2 * B44 -     A44_times_two_times_B44     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44.t() * 2 * B44 -     A44_t_times_two_times_B44   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44     * 2 * B44.t() - A44_times_two_times_B44_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44.t() * 2 * B44.t() - A44_t_times_two_times_B44_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( 2*A44     * 2*B44     - two_times_A44_times_two_times_B44     )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A44.t() * 2*B44     - two_times_A44_t_times_two_times_B44   )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A44     * 2*B44.t() - two_times_A44_times_two_times_B44_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A44.t() * 2*B44.t() - two_times_A44_t_times_two_times_B44_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A44     * 2*B44     - two_times_A44_times_two_times_B44     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A44.t() * 2*B44     - two_times_A44_t_times_two_times_B44   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A44     * 2*B44.t() - two_times_A44_times_two_times_B44_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A44.t() * 2*B44.t() - two_times_A44_t_times_two_times_B44_t )) == Approx(0.0).margin(0.001) );
 
 
-  REQUIRE( accu(abs( A44            * B44            - A44_times_B44     )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44.t().eval() * B44            - A44_t_times_B44   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44            * B44.t().eval() - A44_times_B44_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44.t()        * B44.t().eval() - A44_t_times_B44_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( A44            * B44            - A44_times_B44     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44.t().eval() * B44            - A44_t_times_B44   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44            * B44.t().eval() - A44_times_B44_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44.t()        * B44.t().eval() - A44_t_times_B44_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( (2*A44).eval()     * B44            - two_times_A44_times_B44     )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A44.t()).eval() * B44            - two_times_A44_t_times_B44   )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A44).eval()     * B44.t().eval() - two_times_A44_times_B44_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A44.t()).eval() * B44.t().eval() - two_times_A44_t_times_B44_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( (2*A44).eval()     * B44            - two_times_A44_times_B44     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A44.t()).eval() * B44            - two_times_A44_t_times_B44   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A44).eval()     * B44.t().eval() - two_times_A44_times_B44_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A44.t()).eval() * B44.t().eval() - two_times_A44_t_times_B44_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( A44            * (2 * B44).eval()    - A44_times_two_times_B44     )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44.t().eval() * (2 * B44).eval()    - A44_t_times_two_times_B44   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44            * (2 * B44.t()).eval() - A44_times_two_times_B44_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A44.t().eval() * (2 * B44.t()).eval() - A44_t_times_two_times_B44_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( A44            * (2 * B44).eval()    - A44_times_two_times_B44     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44.t().eval() * (2 * B44).eval()    - A44_t_times_two_times_B44   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44            * (2 * B44.t()).eval() - A44_times_two_times_B44_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A44.t().eval() * (2 * B44.t()).eval() - A44_t_times_two_times_B44_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( (2*A44).eval()     * (2*B44).eval()     - two_times_A44_times_two_times_B44     )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A44.t()).eval() * (2*B44).eval()     - two_times_A44_t_times_two_times_B44   )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A44).eval()     * (2*B44.t()).eval() - two_times_A44_times_two_times_B44_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A44.t()).eval() * (2*B44.t()).eval() - two_times_A44_t_times_two_times_B44_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( (2*A44).eval()     * (2*B44).eval()     - two_times_A44_times_two_times_B44     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A44.t()).eval() * (2*B44).eval()     - two_times_A44_t_times_two_times_B44   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A44).eval()     * (2*B44.t()).eval() - two_times_A44_times_two_times_B44_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A44.t()).eval() * (2*B44.t()).eval() - two_times_A44_t_times_two_times_B44_t )) == Approx(0.0).margin(0.001) );
 
   }
 
@@ -730,47 +732,47 @@ TEST_CASE("mat_mul_real_5")
   //
   
   
-  REQUIRE( accu(abs( A55     * B55     - A55_times_B55     )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55.t() * B55     - A55_t_times_B55   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55     * B55.t() - A55_times_B55_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55.t() * B55.t() - A55_t_times_B55_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( A55     * B55     - A55_times_B55     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55.t() * B55     - A55_t_times_B55   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55     * B55.t() - A55_times_B55_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55.t() * B55.t() - A55_t_times_B55_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( 2*A55     * B55     - two_times_A55_times_B55     )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A55.t() * B55     - two_times_A55_t_times_B55   )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A55     * B55.t() - two_times_A55_times_B55_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A55.t() * B55.t() - two_times_A55_t_times_B55_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A55     * B55     - two_times_A55_times_B55     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A55.t() * B55     - two_times_A55_t_times_B55   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A55     * B55.t() - two_times_A55_times_B55_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A55.t() * B55.t() - two_times_A55_t_times_B55_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( A55     * 2 * B55 -     A55_times_two_times_B55     )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55.t() * 2 * B55 -     A55_t_times_two_times_B55   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55     * 2 * B55.t() - A55_times_two_times_B55_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55.t() * 2 * B55.t() - A55_t_times_two_times_B55_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( A55     * 2 * B55 -     A55_times_two_times_B55     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55.t() * 2 * B55 -     A55_t_times_two_times_B55   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55     * 2 * B55.t() - A55_times_two_times_B55_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55.t() * 2 * B55.t() - A55_t_times_two_times_B55_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( 2*A55     * 2*B55     - two_times_A55_times_two_times_B55     )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A55.t() * 2*B55     - two_times_A55_t_times_two_times_B55   )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A55     * 2*B55.t() - two_times_A55_times_two_times_B55_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A55.t() * 2*B55.t() - two_times_A55_t_times_two_times_B55_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A55     * 2*B55     - two_times_A55_times_two_times_B55     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A55.t() * 2*B55     - two_times_A55_t_times_two_times_B55   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A55     * 2*B55.t() - two_times_A55_times_two_times_B55_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A55.t() * 2*B55.t() - two_times_A55_t_times_two_times_B55_t )) == Approx(0.0).margin(0.001) );
   
   // 
 
-  REQUIRE( accu(abs( A55            * B55            - A55_times_B55     )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55.t().eval() * B55            - A55_t_times_B55   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55            * B55.t().eval() - A55_times_B55_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55.t().eval() * B55.t().eval() - A55_t_times_B55_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( A55            * B55            - A55_times_B55     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55.t().eval() * B55            - A55_t_times_B55   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55            * B55.t().eval() - A55_times_B55_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55.t().eval() * B55.t().eval() - A55_t_times_B55_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( (2*A55).eval()     * B55            - two_times_A55_times_B55     )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A55.t()).eval() * B55            - two_times_A55_t_times_B55   )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A55).eval()     * B55.t().eval() - two_times_A55_times_B55_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A55.t()).eval() * B55.t().eval() - two_times_A55_t_times_B55_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( (2*A55).eval()     * B55            - two_times_A55_times_B55     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A55.t()).eval() * B55            - two_times_A55_t_times_B55   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A55).eval()     * B55.t().eval() - two_times_A55_times_B55_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A55.t()).eval() * B55.t().eval() - two_times_A55_t_times_B55_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( A55            * (2 * B55).eval()     - A55_times_two_times_B55     )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55.t().eval() * (2 * B55).eval()     - A55_t_times_two_times_B55   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55            * (2 * B55.t()).eval() - A55_times_two_times_B55_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( A55.t().eval() * (2 * B55.t()).eval() - A55_t_times_two_times_B55_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( A55            * (2 * B55).eval()     - A55_times_two_times_B55     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55.t().eval() * (2 * B55).eval()     - A55_t_times_two_times_B55   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55            * (2 * B55.t()).eval() - A55_times_two_times_B55_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A55.t().eval() * (2 * B55.t()).eval() - A55_t_times_two_times_B55_t )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( (2*A55).eval()     * (2*B55).eval()     - two_times_A55_times_two_times_B55     )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A55.t()).eval() * (2*B55).eval()     - two_times_A55_t_times_two_times_B55   )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A55).eval()     * (2*B55.t()).eval() - two_times_A55_times_two_times_B55_t   )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A55.t()).eval() * (2*B55.t()).eval() - two_times_A55_t_times_two_times_B55_t )) == Approx(0.0) );
+  REQUIRE( accu(abs( (2*A55).eval()     * (2*B55).eval()     - two_times_A55_times_two_times_B55     )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A55.t()).eval() * (2*B55).eval()     - two_times_A55_t_times_two_times_B55   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A55).eval()     * (2*B55.t()).eval() - two_times_A55_times_two_times_B55_t   )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A55.t()).eval() * (2*B55.t()).eval() - two_times_A55_t_times_two_times_B55_t )) == Approx(0.0).margin(0.001) );
   }
 
 
@@ -874,53 +876,53 @@ TEST_CASE("mat_mul_real_6")
   
   //
   
-  REQUIRE( accu(abs( A*B.t() - A_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( A.t()*B - A_t_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( A*B.t() - A_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A.t()*B - A_t_times_B )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( 2*A*B.t()   - two_times_A_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A)*B.t() - two_times_A_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A.t()*B   - two_times_A_t_times_B )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A).t()*B - two_times_A_t_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A*B.t()   - two_times_A_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A)*B.t() - two_times_A_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A.t()*B   - two_times_A_t_times_B )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A).t()*B - two_times_A_t_times_B )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( A*2*B.t()   - A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( A*(2*B).t() - A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( A.t()*2*B   - A_t_times_two_times_B )) == Approx(0.0) );
-  REQUIRE( accu(abs( A.t()*(2*B) - A_t_times_two_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( A*2*B.t()   - A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A*(2*B).t() - A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A.t()*2*B   - A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A.t()*(2*B) - A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( 2*A*2*B.t()   - two_times_A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A)*2*B.t() - two_times_A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A.t()*2*B   - two_times_A_t_times_two_times_B )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A).t()*2*B - two_times_A_t_times_two_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A*2*B.t()   - two_times_A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A)*2*B.t() - two_times_A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A.t()*2*B   - two_times_A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A).t()*2*B - two_times_A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( 2*A*(2*B).t()   - two_times_A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A)*(2*B).t() - two_times_A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A.t()*(2*B)   - two_times_A_t_times_two_times_B )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A).t()*(2*B) - two_times_A_t_times_two_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A*(2*B).t()   - two_times_A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A)*(2*B).t() - two_times_A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A.t()*(2*B)   - two_times_A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A).t()*(2*B) - two_times_A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
   
   //
   
-  REQUIRE( accu(abs( A*B.t().eval() - A_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( A.t().eval()*B - A_t_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( A*B.t().eval() - A_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A.t().eval()*B - A_t_times_B )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( 2*A*B.t().eval()   - two_times_A_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A)*B.t().eval() - two_times_A_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A.t()).eval()*B - two_times_A_t_times_B )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A).t().eval()*B - two_times_A_t_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A*B.t().eval()   - two_times_A_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A)*B.t().eval() - two_times_A_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A.t()).eval()*B - two_times_A_t_times_B )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A).t().eval()*B - two_times_A_t_times_B )) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( accu(abs( A*2*(B.t().eval())        - A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( A*(2*B).t().eval()        - A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( A.t().eval()*2*B          - A_t_times_two_times_B )) == Approx(0.0) );
-  REQUIRE( accu(abs( A.t().eval()*(2*B).eval() - A_t_times_two_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( A*2*(B.t().eval())        - A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A*(2*B).t().eval()        - A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A.t().eval()*2*B          - A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( A.t().eval()*(2*B).eval() - A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( 2*A*2*(B.t()).eval()   - two_times_A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A)*(2*B.t()).eval() - two_times_A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A.t().eval()*2*B     - two_times_A_t_times_two_times_B )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A).t().eval()*2*B   - two_times_A_t_times_two_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A*2*(B.t()).eval()   - two_times_A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A)*(2*B.t()).eval() - two_times_A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A.t().eval()*2*B     - two_times_A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A).t().eval()*2*B   - two_times_A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( 2*A*(2*B).t().eval()   - two_times_A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A)*(2*B).t().eval() - two_times_A_times_two_times_B_t )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*A.t().eval()*(2*B)   - two_times_A_t_times_two_times_B )) == Approx(0.0) );
-  REQUIRE( accu(abs( (2*A).t().eval()*(2*B) - two_times_A_t_times_two_times_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*A*(2*B).t().eval()   - two_times_A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A)*(2*B).t().eval() - two_times_A_times_two_times_B_t )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*A.t().eval()*(2*B)   - two_times_A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (2*A).t().eval()*(2*B) - two_times_A_t_times_two_times_B )) == Approx(0.0).margin(0.001) );
   }
 
 

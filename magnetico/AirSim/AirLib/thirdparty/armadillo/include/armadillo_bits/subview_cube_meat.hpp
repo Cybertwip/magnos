@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -1117,7 +1119,7 @@ subview_cube<eT>::each_slice(const std::function< void(Mat<eT>&) >& F)
   {
   arma_extra_debug_sigprint();
   
-  Mat<eT> tmp1(n_rows, n_cols);
+  Mat<eT> tmp1(n_rows, n_cols, arma_nozeros_indicator());
   Mat<eT> tmp2('j', tmp1.memptr(), n_rows, n_cols);
   
   for(uword slice_id=0; slice_id < n_slices; ++slice_id)
@@ -1145,7 +1147,7 @@ subview_cube<eT>::each_slice(const std::function< void(const Mat<eT>&) >& F) con
   {
   arma_extra_debug_sigprint();
   
-        Mat<eT> tmp1(n_rows, n_cols);
+        Mat<eT> tmp1(n_rows, n_cols, arma_nozeros_indicator());
   const Mat<eT> tmp2('j', tmp1.memptr(), n_rows, n_cols);
   
   for(uword slice_id=0; slice_id < n_slices; ++slice_id)
@@ -1199,6 +1201,38 @@ subview_cube<eT>::clean(const typename get_pod_type<eT>::result threshold)
     for(uword col = 0; col < local_n_cols; ++col)
       {
       arrayops::clean( slice_colptr(slice,col), local_n_rows, threshold );
+      }
+    }
+  }
+
+
+
+template<typename eT>
+inline
+void
+subview_cube<eT>::clamp(const eT min_val, const eT max_val)
+  {
+  arma_extra_debug_sigprint();
+  
+  if(is_cx<eT>::no)
+    {
+    arma_debug_check( (access::tmp_real(min_val) > access::tmp_real(max_val)), "subview_cube::clamp(): min_val must be less than max_val" );
+    }
+  else
+    {
+    arma_debug_check( (access::tmp_real(min_val) > access::tmp_real(max_val)), "subview_cube::clamp(): real(min_val) must be less than real(max_val)" );
+    arma_debug_check( (access::tmp_imag(min_val) > access::tmp_imag(max_val)), "subview_cube::clamp(): imag(min_val) must be less than imag(max_val)" );
+    }
+  
+  const uword local_n_rows   = n_rows;
+  const uword local_n_cols   = n_cols;
+  const uword local_n_slices = n_slices;
+  
+  for(uword slice = 0; slice < local_n_slices; ++slice)
+    {
+    for(uword col = 0; col < local_n_cols; ++col)
+      {
+      arrayops::clamp( slice_colptr(slice,col), local_n_rows, min_val, max_val );
       }
     }
   }
@@ -1307,11 +1341,12 @@ subview_cube<eT>::randn()
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::is_finite() const
   {
   arma_extra_debug_sigprint();
+  
+  if(arma_config::fast_math_warn)  { arma_debug_warn_level(1, "is_finite(): detection of non-finite values is not reliable in fast math mode"); }
   
   const uword local_n_rows   = n_rows;
   const uword local_n_cols   = n_cols;
@@ -1332,7 +1367,6 @@ subview_cube<eT>::is_finite() const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::is_zero(const typename get_pod_type<eT>::result tol) const
   {
@@ -1357,11 +1391,12 @@ subview_cube<eT>::is_zero(const typename get_pod_type<eT>::result tol) const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::has_inf() const
   {
   arma_extra_debug_sigprint();
+  
+  if(arma_config::fast_math_warn)  { arma_debug_warn_level(1, "has_inf(): detection of non-finite values is not reliable in fast math mode"); }
   
   const uword local_n_rows   = n_rows;
   const uword local_n_cols   = n_cols;
@@ -1382,11 +1417,12 @@ subview_cube<eT>::has_inf() const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::has_nan() const
   {
   arma_extra_debug_sigprint();
+  
+  if(arma_config::fast_math_warn)  { arma_debug_warn_level(1, "has_nan(): detection of non-finite values is not reliable in fast math mode"); }
   
   const uword local_n_rows   = n_rows;
   const uword local_n_cols   = n_cols;
@@ -1397,6 +1433,32 @@ subview_cube<eT>::has_nan() const
     for(uword col = 0; col < local_n_cols; ++col)
       {
       if(arrayops::has_nan(slice_colptr(slice,col), local_n_rows))  { return true; }
+      }
+    }
+  
+  return false;
+  }
+
+
+
+template<typename eT>
+inline
+bool
+subview_cube<eT>::has_nonfinite() const
+  {
+  arma_extra_debug_sigprint();
+  
+  if(arma_config::fast_math_warn)  { arma_debug_warn_level(1, "has_nonfinite(): detection of non-finite values is not reliable in fast math mode"); }
+  
+  const uword local_n_rows   = n_rows;
+  const uword local_n_cols   = n_cols;
+  const uword local_n_slices = n_slices;
+  
+  for(uword slice = 0; slice < local_n_slices; ++slice)
+    {
+    for(uword col = 0; col < local_n_cols; ++col)
+      {
+      if(arrayops::is_finite(slice_colptr(slice,col), local_n_rows) == false)  { return true; }
       }
     }
   
@@ -1650,7 +1712,7 @@ subview_cube<eT>::extract(Cube<eT>& out, const subview_cube<eT>& in)
   const uword n_cols   = in.n_cols;
   const uword n_slices = in.n_slices;
   
-  arma_extra_debug_print(arma_str::format("out.n_rows = %d   out.n_cols = %d    out.n_slices = %d    in.m.n_rows = %d   in.m.n_cols = %d   in.m.n_slices = %d") % out.n_rows % out.n_cols % out.n_slices % in.m.n_rows % in.m.n_cols % in.m.n_slices);
+  arma_extra_debug_print(arma_str::format("out.n_rows = %u   out.n_cols = %u    out.n_slices = %u    in.m.n_rows = %u   in.m.n_cols = %u   in.m.n_slices = %u") % out.n_rows % out.n_cols % out.n_slices % in.m.n_rows % in.m.n_cols % in.m.n_slices);
   
   if( (in.aux_row1 == 0) && (n_rows == in.m.n_rows) )
     {
@@ -2392,7 +2454,6 @@ subview_cube<eT>::iterator::iterator(subview_cube<eT>& in_sv, const uword in_row
 
 template<typename eT>
 inline
-arma_warn_unused
 eT&
 subview_cube<eT>::iterator::operator*()
   {
@@ -2433,7 +2494,6 @@ subview_cube<eT>::iterator::operator++()
 
 template<typename eT>
 inline
-arma_warn_unused
 typename subview_cube<eT>::iterator
 subview_cube<eT>::iterator::operator++(int)
   {
@@ -2448,7 +2508,6 @@ subview_cube<eT>::iterator::operator++(int)
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::iterator::operator==(const iterator& rhs) const
   {
@@ -2459,7 +2518,6 @@ subview_cube<eT>::iterator::operator==(const iterator& rhs) const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::iterator::operator!=(const iterator& rhs) const
   {
@@ -2470,7 +2528,6 @@ subview_cube<eT>::iterator::operator!=(const iterator& rhs) const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::iterator::operator==(const const_iterator& rhs) const
   {
@@ -2481,7 +2538,6 @@ subview_cube<eT>::iterator::operator==(const const_iterator& rhs) const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::iterator::operator!=(const const_iterator& rhs) const
   {
@@ -2571,7 +2627,6 @@ subview_cube<eT>::const_iterator::const_iterator(const subview_cube<eT>& in_sv, 
 
 template<typename eT>
 inline
-arma_warn_unused
 const eT&
 subview_cube<eT>::const_iterator::operator*()
   {
@@ -2612,7 +2667,6 @@ subview_cube<eT>::const_iterator::operator++()
 
 template<typename eT>
 inline
-arma_warn_unused
 typename subview_cube<eT>::const_iterator
 subview_cube<eT>::const_iterator::operator++(int)
   {
@@ -2627,7 +2681,6 @@ subview_cube<eT>::const_iterator::operator++(int)
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::const_iterator::operator==(const iterator& rhs) const
   {
@@ -2638,7 +2691,6 @@ subview_cube<eT>::const_iterator::operator==(const iterator& rhs) const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::const_iterator::operator!=(const iterator& rhs) const
   {
@@ -2649,7 +2701,6 @@ subview_cube<eT>::const_iterator::operator!=(const iterator& rhs) const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::const_iterator::operator==(const const_iterator& rhs) const
   {
@@ -2660,7 +2711,6 @@ subview_cube<eT>::const_iterator::operator==(const const_iterator& rhs) const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 subview_cube<eT>::const_iterator::operator!=(const const_iterator& rhs) const
   {

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -195,6 +197,8 @@ void
 MapMat<eT>::operator=(MapMat<eT>&& x)
   {
   arma_extra_debug_sigprint();
+  
+  if(this == &x)  { return; }
   
   reset();
   
@@ -404,7 +408,6 @@ MapMat<eT>::speye(const SizeMat& s)
 
 template<typename eT>
 arma_inline
-arma_warn_unused
 MapMat_val<eT>
 MapMat<eT>::operator[](const uword index)
   {
@@ -415,7 +418,6 @@ MapMat<eT>::operator[](const uword index)
 
 template<typename eT>
 inline
-arma_warn_unused
 eT
 MapMat<eT>::operator[](const uword index) const
   {
@@ -431,7 +433,6 @@ MapMat<eT>::operator[](const uword index) const
 
 template<typename eT>
 arma_inline
-arma_warn_unused
 MapMat_val<eT>
 MapMat<eT>::operator()(const uword index)
   {
@@ -444,7 +445,6 @@ MapMat<eT>::operator()(const uword index)
 
 template<typename eT>
 inline
-arma_warn_unused
 eT
 MapMat<eT>::operator()(const uword index) const
   {
@@ -462,7 +462,6 @@ MapMat<eT>::operator()(const uword index) const
 
 template<typename eT>
 arma_inline
-arma_warn_unused
 MapMat_val<eT>
 MapMat<eT>::at(const uword in_row, const uword in_col)
   {
@@ -475,7 +474,6 @@ MapMat<eT>::at(const uword in_row, const uword in_col)
 
 template<typename eT>
 inline
-arma_warn_unused
 eT
 MapMat<eT>::at(const uword in_row, const uword in_col) const
   {
@@ -493,7 +491,6 @@ MapMat<eT>::at(const uword in_row, const uword in_col) const
 
 template<typename eT>
 arma_inline
-arma_warn_unused
 MapMat_val<eT>
 MapMat<eT>::operator()(const uword in_row, const uword in_col)
   {
@@ -508,7 +505,6 @@ MapMat<eT>::operator()(const uword in_row, const uword in_col)
 
 template<typename eT>
 inline
-arma_warn_unused
 eT
 MapMat<eT>::operator()(const uword in_row, const uword in_col) const
   {
@@ -528,7 +524,6 @@ MapMat<eT>::operator()(const uword in_row, const uword in_col) const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 MapMat<eT>::is_empty() const
   {
@@ -539,7 +534,6 @@ MapMat<eT>::is_empty() const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 MapMat<eT>::is_vec() const
   {
@@ -550,7 +544,6 @@ MapMat<eT>::is_vec() const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 MapMat<eT>::is_rowvec() const
   {
@@ -562,7 +555,6 @@ MapMat<eT>::is_rowvec() const
 //! returns true if the object can be interpreted as a column vector
 template<typename eT>
 inline
-arma_warn_unused
 bool
 MapMat<eT>::is_colvec() const
   {
@@ -573,7 +565,6 @@ MapMat<eT>::is_colvec() const
 
 template<typename eT>
 inline
-arma_warn_unused
 bool
 MapMat<eT>::is_square() const
   {
@@ -1182,11 +1173,9 @@ SpMat_MapMat_val<eT>::operator=(const eT in_val)
     }
   #elif (!defined(ARMA_DONT_USE_STD_MUTEX))
     {
-    s_parent.cache_mutex.lock();
+    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
     
     (*this).set(in_val);
-    
-    s_parent.cache_mutex.unlock();
     }
   #else
     {
@@ -1217,11 +1206,9 @@ SpMat_MapMat_val<eT>::operator+=(const eT in_val)
     }
   #elif (!defined(ARMA_DONT_USE_STD_MUTEX))
     {
-    s_parent.cache_mutex.lock();
+    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
     
     (*this).add(in_val);
-    
-    s_parent.cache_mutex.unlock();
     }
   #else
     {
@@ -1252,11 +1239,9 @@ SpMat_MapMat_val<eT>::operator-=(const eT in_val)
     }
   #elif (!defined(ARMA_DONT_USE_STD_MUTEX))
     {
-    s_parent.cache_mutex.lock();
+    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
     
     (*this).sub(in_val);
-    
-    s_parent.cache_mutex.unlock();
     }
   #else
     {
@@ -1285,11 +1270,9 @@ SpMat_MapMat_val<eT>::operator*=(const eT in_val)
     }
   #elif (!defined(ARMA_DONT_USE_STD_MUTEX))
     {
-    s_parent.cache_mutex.lock();
+    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
     
     (*this).mul(in_val);
-    
-    s_parent.cache_mutex.unlock();
     }
   #else
     {
@@ -1318,11 +1301,9 @@ SpMat_MapMat_val<eT>::operator/=(const eT in_val)
     }
   #elif (!defined(ARMA_DONT_USE_STD_MUTEX))
     {
-    s_parent.cache_mutex.lock();
+    const std::lock_guard<std::mutex> lock(s_parent.cache_mutex);
     
     (*this).div(in_val);
-    
-    s_parent.cache_mutex.unlock();
     }
   #else
     {
@@ -1349,7 +1330,6 @@ SpMat_MapMat_val<eT>::operator++()
 
 template<typename eT>
 inline
-arma_warn_unused
 eT
 SpMat_MapMat_val<eT>::operator++(int)
   {
@@ -1378,7 +1358,6 @@ SpMat_MapMat_val<eT>::operator--()
 
 template<typename eT>
 inline
-arma_warn_unused
 eT
 SpMat_MapMat_val<eT>::operator--(int)
   {
@@ -1741,7 +1720,6 @@ SpSubview_MapMat_val<eT>::operator++()
 
 template<typename eT>
 inline
-arma_warn_unused
 eT
 SpSubview_MapMat_val<eT>::operator++(int)
   {
@@ -1780,7 +1758,6 @@ SpSubview_MapMat_val<eT>::operator--()
 
 template<typename eT>
 inline
-arma_warn_unused
 eT
 SpSubview_MapMat_val<eT>::operator--(int)
   {

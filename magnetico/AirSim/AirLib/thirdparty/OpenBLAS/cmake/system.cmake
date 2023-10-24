@@ -152,6 +152,12 @@ elseif(NOT DEFINED USE_THREAD)
   set(USE_THREAD 1)
 endif ()
 
+if(EMSCRIPTEN)
+  set(USE_THREAD 1)
+  set(NUM_THREADS 4)
+endif()
+
+
 if (USE_THREAD)
   message(STATUS "Multi-threading enabled with ${NUM_THREADS} threads.")
 else()
@@ -433,7 +439,7 @@ endif ()
 if (USE_THREAD)
   # USE_SIMPLE_THREADED_LEVEL3 = 1
   # NO_AFFINITY = 1
-  set(CCOMMON_OPT "${CCOMMON_OPT} -DSMP_SERVER")
+  set(CCOMMON_OPT "${CCOMMON_OPT} -DSMP_SERVER -pthread")
 
   if (MIPS64)
     if (NOT ${CORE} STREQUAL "LOONGSON3B")

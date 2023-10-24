@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 //
@@ -66,11 +68,11 @@ TEST_CASE("fn_dot_2")
   cx_rowvec c = cx_rowvec(A.row(0), A.row(1));
   cx_rowvec d = cx_rowvec(A.row(2), A.row(3));
 
-  REQUIRE( abs( dot(a,b) - cx_double(-0.009544718641000, -0.110209641379000)) == Approx(0.0) );
-  REQUIRE( abs( dot(c,d) - cx_double(-0.326993347830000, +0.061084261990000)) == Approx(0.0) );
+  REQUIRE( abs( dot(a,b) - cx_double(-0.009544718641000, -0.110209641379000)) == Approx(0.0).margin(0.001) );
+  REQUIRE( abs( dot(c,d) - cx_double(-0.326993347830000, +0.061084261990000)) == Approx(0.0).margin(0.001) );
 
-  REQUIRE( abs(cdot(a,b) - cx_double(-0.314669805873000, -0.807333974477000)) == Approx(0.0) );
-  REQUIRE( abs(cdot(c,d) - cx_double(-0.165527940664000, +0.586984291846000)) == Approx(0.0) );
+  REQUIRE( abs(cdot(a,b) - cx_double(-0.314669805873000, -0.807333974477000)) == Approx(0.0).margin(0.001) );
+  REQUIRE( abs(cdot(c,d) - cx_double(-0.165527940664000, +0.586984291846000)) == Approx(0.0).margin(0.001) );
   }
 
 

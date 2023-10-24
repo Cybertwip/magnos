@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -186,105 +188,105 @@ TEST_CASE("mat_mul_cx_1")
   
   
   
-  REQUIRE( accu(abs( C*D.t() - C_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( C.t()*D - C_t_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( C*D.t() - C_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( C.t()*D - C_t_times_D )) == Approx(0.0).margin(0.00005) );
   
   //
   
-  REQUIRE( accu(abs( re*C*D.t() - re_times_C_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( re*C.t()*D - re_times_C_t_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( re*C*D.t() - re_times_C_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( re*C.t()*D - re_times_C_t_times_D )) == Approx(0.0).margin(0.00005) );
   
-  REQUIRE( accu(abs( C*re*D.t() - C_times_re_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( C.t()*re*D - C_t_times_re_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( C*re*D.t() - C_times_re_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( C.t()*re*D - C_t_times_re_times_D )) == Approx(0.0).margin(0.00005) );
   
-  REQUIRE( accu(abs( re*C*re*D.t() - re_times_C_times_re_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( re*C.t()*re*D - re_times_C_t_times_re_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( re*C*re*D.t() - re_times_C_times_re_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( re*C.t()*re*D - re_times_C_t_times_re_times_D )) == Approx(0.0).margin(0.00010) );
   
   //
   
-  REQUIRE( accu(abs( (re*C)*D.t() - re_times_C_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( (re*C.t())*D - re_times_C_t_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( (re*C)*D.t() - re_times_C_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( (re*C.t())*D - re_times_C_t_times_D )) == Approx(0.0).margin(0.00005) );
   
-  REQUIRE( accu(abs( C*(re*D.t()) - C_times_re_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( C.t()*(re*D) - C_t_times_re_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( C*(re*D.t()) - C_times_re_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( C.t()*(re*D) - C_t_times_re_times_D )) == Approx(0.0).margin(0.00005) );
   
-  REQUIRE( accu(abs( (re*C)*(re*D.t()) - re_times_C_times_re_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( (re*C.t())*(re*D) - re_times_C_t_times_re_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( (re*C)*(re*D.t()) - re_times_C_times_re_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( (re*C.t())*(re*D) - re_times_C_t_times_re_times_D )) == Approx(0.0).margin(0.00010) );
 
 
-  REQUIRE( accu(abs( C*D.t().eval() - C_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( C.t().eval()*D - C_t_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( C*D.t().eval() - C_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( C.t().eval()*D - C_t_times_D )) == Approx(0.0).margin(0.00005) );
   
   //
   
-  REQUIRE( accu(abs( re*C*D.t().eval() - re_times_C_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( re*C.t().eval()*D - re_times_C_t_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( re*C*D.t().eval() - re_times_C_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( re*C.t().eval()*D - re_times_C_t_times_D )) == Approx(0.0).margin(0.00005) );
   
-  REQUIRE( accu(abs( C*re*D.t().eval() - C_times_re_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( C.t().eval()*re*D - C_t_times_re_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( C*re*D.t().eval() - C_times_re_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( C.t().eval()*re*D - C_t_times_re_times_D )) == Approx(0.0).margin(0.00005) );
   
-  REQUIRE( accu(abs( re*C*re*D.t().eval() - re_times_C_times_re_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( re*C.t().eval()*re*D - re_times_C_t_times_re_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( re*C*re*D.t().eval() - re_times_C_times_re_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( re*C.t().eval()*re*D - re_times_C_t_times_re_times_D )) == Approx(0.0).margin(0.00010) );
   
   //
   
-  REQUIRE( accu(abs( (re*C)*(D.t().eval()) - re_times_C_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( (re*C.t()).eval()*D - re_times_C_t_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( (re*C)*(D.t().eval()) - re_times_C_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( (re*C.t()).eval()*D - re_times_C_t_times_D )) == Approx(0.0).margin(0.00005) );
   
-  REQUIRE( accu(abs( C*(re*D.t()).eval() - C_times_re_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( C.t().eval()*(re*D) - C_t_times_re_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( C*(re*D.t()).eval() - C_times_re_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( C.t().eval()*(re*D) - C_t_times_re_times_D )) == Approx(0.0).margin(0.00005) );
   
-  REQUIRE( accu(abs( (re*C)*(re*D.t()).eval() - re_times_C_times_re_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( (re*C.t()).eval()*(re*D) - re_times_C_t_times_re_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( (re*C)*(re*D.t()).eval() - re_times_C_times_re_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( (re*C.t()).eval()*(re*D) - re_times_C_t_times_re_times_D )) == Approx(0.0).margin(0.00010) );
 
 
   //
   
-  REQUIRE( accu(abs( cx*C*D.t() - cx_times_C_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( cx*C.t()*D - cx_times_C_t_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( cx*C*D.t() - cx_times_C_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( cx*C.t()*D - cx_times_C_t_times_D )) == Approx(0.0).margin(0.00010) );
   
-  REQUIRE( accu(abs( C*cx*D.t() - C_times_cx_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( C.t()*cx*D - C_t_times_cx_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( C*cx*D.t() - C_times_cx_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( C.t()*cx*D - C_t_times_cx_times_D )) == Approx(0.0).margin(0.00010) );
   
-  REQUIRE( accu(abs( cx*C*cx*D.t() - cx_times_C_times_cx_times_D_t )) == Approx(0.0).epsilon(0.00030) );
-  REQUIRE( accu(abs( cx*C.t()*cx*D - cx_times_C_t_times_cx_times_D )) == Approx(0.0).epsilon(0.00030) );
+  REQUIRE( accu(abs( cx*C*cx*D.t() - cx_times_C_times_cx_times_D_t )) == Approx(0.0).margin(0.00030) );
+  REQUIRE( accu(abs( cx*C.t()*cx*D - cx_times_C_t_times_cx_times_D )) == Approx(0.0).margin(0.00030) );
   
   //
   
-  REQUIRE( accu(abs( (cx*C)*D.t() - cx_times_C_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( (cx*C.t())*D - cx_times_C_t_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( (cx*C)*D.t() - cx_times_C_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( (cx*C.t())*D - cx_times_C_t_times_D )) == Approx(0.0).margin(0.00010) );
   
-  REQUIRE( accu(abs( C*(cx*D.t()) - C_times_cx_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( C.t()*(cx*D) - C_t_times_cx_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( C*(cx*D.t()) - C_times_cx_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( C.t()*(cx*D) - C_t_times_cx_times_D )) == Approx(0.0).margin(0.00010) );
   
-  REQUIRE( accu(abs( (cx*C)*(cx*D.t()) - cx_times_C_times_cx_times_D_t )) == Approx(0.0).epsilon(0.00030) );
-  REQUIRE( accu(abs( (cx*C.t())*(cx*D) - cx_times_C_t_times_cx_times_D )) == Approx(0.0).epsilon(0.00030) );
+  REQUIRE( accu(abs( (cx*C)*(cx*D.t()) - cx_times_C_times_cx_times_D_t )) == Approx(0.0).margin(0.00030) );
+  REQUIRE( accu(abs( (cx*C.t())*(cx*D) - cx_times_C_t_times_cx_times_D )) == Approx(0.0).margin(0.00030) );
 
 
-  REQUIRE( accu(abs( C*D.t().eval() - C_times_D_t )) == Approx(0.0).epsilon(0.00005) );
-  REQUIRE( accu(abs( C.t().eval()*D - C_t_times_D )) == Approx(0.0).epsilon(0.00005) );
+  REQUIRE( accu(abs( C*D.t().eval() - C_times_D_t )) == Approx(0.0).margin(0.00005) );
+  REQUIRE( accu(abs( C.t().eval()*D - C_t_times_D )) == Approx(0.0).margin(0.00005) );
   
   //
   
-  REQUIRE( accu(abs( cx*C*D.t().eval() - cx_times_C_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( cx*C.t().eval()*D - cx_times_C_t_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( cx*C*D.t().eval() - cx_times_C_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( cx*C.t().eval()*D - cx_times_C_t_times_D )) == Approx(0.0).margin(0.00010) );
   
-  REQUIRE( accu(abs( C*cx*D.t().eval() - C_times_cx_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( C.t().eval()*cx*D - C_t_times_cx_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( C*cx*D.t().eval() - C_times_cx_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( C.t().eval()*cx*D - C_t_times_cx_times_D )) == Approx(0.0).margin(0.00010) );
   
-  REQUIRE( accu(abs( cx*C*cx*D.t().eval() - cx_times_C_times_cx_times_D_t )) == Approx(0.0).epsilon(0.00030) );
-  REQUIRE( accu(abs( cx*C.t().eval()*cx*D - cx_times_C_t_times_cx_times_D )) == Approx(0.0).epsilon(0.00030) );
+  REQUIRE( accu(abs( cx*C*cx*D.t().eval() - cx_times_C_times_cx_times_D_t )) == Approx(0.0).margin(0.00030) );
+  REQUIRE( accu(abs( cx*C.t().eval()*cx*D - cx_times_C_t_times_cx_times_D )) == Approx(0.0).margin(0.00030) );
   
   //
   
-  REQUIRE( accu(abs( (cx*C)*(D.t().eval()) - cx_times_C_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( (cx*C.t()).eval()*D   - cx_times_C_t_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( (cx*C)*(D.t().eval()) - cx_times_C_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( (cx*C.t()).eval()*D   - cx_times_C_t_times_D )) == Approx(0.0).margin(0.00010) );
   
-  REQUIRE( accu(abs( C*(cx*D.t()).eval() - C_times_cx_times_D_t )) == Approx(0.0).epsilon(0.00010) );
-  REQUIRE( accu(abs( C.t().eval()*(cx*D) - C_t_times_cx_times_D )) == Approx(0.0).epsilon(0.00010) );
+  REQUIRE( accu(abs( C*(cx*D.t()).eval() - C_times_cx_times_D_t )) == Approx(0.0).margin(0.00010) );
+  REQUIRE( accu(abs( C.t().eval()*(cx*D) - C_t_times_cx_times_D )) == Approx(0.0).margin(0.00010) );
   
-  REQUIRE( accu(abs( (cx*C)*(cx*D.t()).eval() - cx_times_C_times_cx_times_D_t )) == Approx(0.0).epsilon(0.00030) );
-  REQUIRE( accu(abs( (cx*C.t()).eval()*(cx*D) - cx_times_C_t_times_cx_times_D )) == Approx(0.0).epsilon(0.00030) );
+  REQUIRE( accu(abs( (cx*C)*(cx*D.t()).eval() - cx_times_C_times_cx_times_D_t )) == Approx(0.0).margin(0.00030) );
+  REQUIRE( accu(abs( (cx*C.t()).eval()*(cx*D) - cx_times_C_t_times_cx_times_D )) == Approx(0.0).margin(0.00030) );
   }
 
 

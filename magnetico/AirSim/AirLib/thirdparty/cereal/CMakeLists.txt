@@ -81,6 +81,10 @@ if(BUILD_TESTS)
     add_subdirectory(unittests)
 endif()
 
-add_subdirectory(sandbox)
+if(BUILD_SANDBOX)
+    add_subdirectory(sandbox)
+endif()
 
-add_subdirectory(doc)
+if(BUILD_DOCS)
+    add_subdirectory(doc)
+endif()

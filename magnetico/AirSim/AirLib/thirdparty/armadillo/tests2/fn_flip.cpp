@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -68,20 +70,20 @@ TEST_CASE("fn_flip_1")
      0.122396   0.403980   0.039356  -0.987872  -0.253490   0.102816;\
     ";
   
-  REQUIRE( accu(abs( fliplr(A) - A_fliplr )) == Approx(0.0) );
-  REQUIRE( accu(abs( flipud(A) - A_flipud )) == Approx(0.0) );
+  REQUIRE( accu(abs( fliplr(A) - A_fliplr )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( flipud(A) - A_flipud )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( (-fliplr(A)) + A_fliplr )) == Approx(0.0) );
-  REQUIRE( accu(abs( (-flipud(A)) + A_flipud )) == Approx(0.0) );
+  REQUIRE( accu(abs( (-fliplr(A)) + A_fliplr )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( (-flipud(A)) + A_flipud )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( fliplr(-A) + A_fliplr )) == Approx(0.0) );
-  REQUIRE( accu(abs( flipud(-A) + A_flipud )) == Approx(0.0) );
+  REQUIRE( accu(abs( fliplr(-A) + A_fliplr )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( flipud(-A) + A_flipud )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( 2*fliplr(A) - two_times_A_fliplr )) == Approx(0.0) );
-  REQUIRE( accu(abs( 2*flipud(A) - two_times_A_flipud )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*fliplr(A) - two_times_A_fliplr )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( 2*flipud(A) - two_times_A_flipud )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( fliplr(2*A) - two_times_A_fliplr )) == Approx(0.0) );
-  REQUIRE( accu(abs( flipud(2*A) - two_times_A_flipud )) == Approx(0.0) );
+  REQUIRE( accu(abs( fliplr(2*A) - two_times_A_fliplr )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( flipud(2*A) - two_times_A_flipud )) == Approx(0.0).margin(0.001) );
   
   // REQUIRE_THROWS(  );
   }

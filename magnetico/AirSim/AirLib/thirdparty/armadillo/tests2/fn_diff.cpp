@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -33,17 +35,17 @@ TEST_CASE("fn_diff_1")
   rowvec b_diff_2 = { 2, 2, 2 };
   rowvec b_diff_9;
   
-  REQUIRE( accu(abs(diff(a,0) - a       )) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(a  ) - a_diff_1)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(a,1) - a_diff_1)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(a,2) - a_diff_2)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(a,9) - a_diff_9)) == Approx(0.0) );
+  REQUIRE( accu(abs(diff(a,0) - a       )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(a  ) - a_diff_1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(a,1) - a_diff_1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(a,2) - a_diff_2)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(a,9) - a_diff_9)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs(diff(b,0) - b       )) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(b  ) - b_diff_1)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(b,1) - b_diff_1)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(b,2) - b_diff_2)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(b,9) - b_diff_9)) == Approx(0.0) );
+  REQUIRE( accu(abs(diff(b,0) - b       )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(b  ) - b_diff_1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(b,1) - b_diff_1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(b,2) - b_diff_2)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(b,9) - b_diff_9)) == Approx(0.0).margin(0.001) );
   }
 
 
@@ -107,19 +109,19 @@ TEST_CASE("fn_diff_2")
     -0.5964850  -0.2726540;\
     ";
     
-  REQUIRE( accu(abs(diff(A,0) - A        )) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A  ) - A_diff1_0)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A,1) - A_diff1_0)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A,2) - A_diff2_0)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A,3) - A_diff3_0)) == Approx(0.0) );
+  REQUIRE( accu(abs(diff(A,0) - A        )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A  ) - A_diff1_0)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A,1) - A_diff1_0)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A,2) - A_diff2_0)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A,3) - A_diff3_0)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs(diff(A,0,0) - A        )) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A,1,0) - A_diff1_0)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A,2,0) - A_diff2_0)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A,3,0) - A_diff3_0)) == Approx(0.0) );
+  REQUIRE( accu(abs(diff(A,0,0) - A        )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A,1,0) - A_diff1_0)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A,2,0) - A_diff2_0)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A,3,0) - A_diff3_0)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs(diff(A,0,1) - A        )) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A,1,1) - A_diff1_1)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A,2,1) - A_diff2_1)) == Approx(0.0) );
-  REQUIRE( accu(abs(diff(A,3,1) - A_diff3_1)) == Approx(0.0) );
+  REQUIRE( accu(abs(diff(A,0,1) - A        )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A,1,1) - A_diff1_1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A,2,1) - A_diff2_1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs(diff(A,3,1) - A_diff3_1)) == Approx(0.0).margin(0.001) );
   }

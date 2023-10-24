@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -63,27 +65,27 @@ TEST_CASE("gen_ones_2")
   
   A.col(1).ones();
   
-  REQUIRE( accu(A.col(0)) == Approx(0.0)              );
+  REQUIRE( accu(A.col(0)) == Approx(0.0).margin(0.001)              );
   REQUIRE( accu(A.col(1)) == Approx(double(A.n_rows)) );
-  REQUIRE( accu(A.col(2)) == Approx(0.0)              );
+  REQUIRE( accu(A.col(2)) == Approx(0.0).margin(0.001)              );
   
   mat B(5,6,fill::zeros);
   
   B.row(1).ones();
   
-  REQUIRE( accu(B.row(0)) == Approx(0.0)              );
+  REQUIRE( accu(B.row(0)) == Approx(0.0).margin(0.001)              );
   REQUIRE( accu(B.row(1)) == Approx(double(B.n_cols)) );
-  REQUIRE( accu(B.row(2)) == Approx(0.0)              );
+  REQUIRE( accu(B.row(2)) == Approx(0.0).margin(0.001)              );
   
   mat C(5,6,fill::zeros);
   
   C(span(1,3),span(1,4)).ones();
   
-  REQUIRE( accu(C.head_cols(1)) == Approx(0.0) );
-  REQUIRE( accu(C.head_rows(1)) == Approx(0.0) );
+  REQUIRE( accu(C.head_cols(1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(C.head_rows(1)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(C.tail_cols(1)) == Approx(0.0) );
-  REQUIRE( accu(C.tail_rows(1)) == Approx(0.0) );
+  REQUIRE( accu(C.tail_cols(1)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(C.tail_rows(1)) == Approx(0.0).margin(0.001) );
   
   REQUIRE( accu(C(span(1,3),span(1,4))) == Approx(double(3*4)) );
 
@@ -106,8 +108,8 @@ TEST_CASE("gen_ones_3")
   
   REQUIRE( accu(A) == Approx(double(3)) );
   
-  REQUIRE( A(0)          == Approx(0.0) );
-  REQUIRE( A(A.n_elem-1) == Approx(0.0) );
+  REQUIRE( A(0)          == Approx(0.0).margin(0.001) );
+  REQUIRE( A(A.n_elem-1) == Approx(0.0).margin(0.001) );
   
   REQUIRE( A(indices(0)) == Approx(1.0) );
   REQUIRE( A(indices(1)) == Approx(1.0) );

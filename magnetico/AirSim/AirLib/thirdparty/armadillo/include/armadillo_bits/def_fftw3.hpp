@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -14,29 +16,34 @@
 // ------------------------------------------------------------------------
 
 
-#if defined(ARMA_USE_ATLAS)
-  #if !defined(ARMA_ATLAS_INCLUDE_DIR)
-    extern "C"
-      {
-      #include <cblas.h>
-      #include <clapack.h>
-      }
-  #else
-    #define ARMA_STR1(x) x
-    #define ARMA_STR2(x) ARMA_STR1(x)
-    
-    #define ARMA_CBLAS   ARMA_STR2(ARMA_ATLAS_INCLUDE_DIR)ARMA_STR2(cblas.h)
-    #define ARMA_CLAPACK ARMA_STR2(ARMA_ATLAS_INCLUDE_DIR)ARMA_STR2(clapack.h)
-    
-    extern "C"
-      {
-      #include ARMA_INCFILE_WRAP(ARMA_CBLAS)
-      #include ARMA_INCFILE_WRAP(ARMA_CLAPACK)
-      }
-    
-    #undef ARMA_STR1
-    #undef ARMA_STR2
-    #undef ARMA_CBLAS
-    #undef ARMA_CLAPACK
-  #endif
+#if defined(ARMA_USE_FFTW3)
+
+
+extern "C"
+  {
+  // function prefix for single precision: fftwf_
+  // function prefix for double precision: fftw_
+  
+  
+  // single precision (float)
+  
+  void_ptr fftwf_plan_dft_1d(int N, void* input, void* output, int fftw3_sign, unsigned int fftw3_flags);
+  
+  void      fftwf_execute(void_ptr plan);
+  void fftwf_destroy_plan(void_ptr plan);
+  
+  void fftwf_cleanup();
+  
+  
+  // double precision (double)
+  
+  void_ptr fftw_plan_dft_1d(int N, void* input, void* output, int fftw3_sign, unsigned int fftw3_flags);
+  
+  void      fftw_execute(void_ptr plan);
+  void fftw_destroy_plan(void_ptr plan);
+  
+  void fftw_cleanup();
+  }
+
+
 #endif

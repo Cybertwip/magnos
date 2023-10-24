@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -22,7 +24,7 @@
 template<typename T1>
 arma_warn_unused
 arma_inline
-typename enable_if2< is_supported_blas_type<typename T1::elem_type>::value, const Op<T1, op_inv> >::result
+typename enable_if2< is_supported_blas_type<typename T1::elem_type>::value, const Op<T1, op_inv_gen_default> >::result
 inv
   (
   const Base<typename T1::elem_type,T1>& X
@@ -30,23 +32,7 @@ inv
   {
   arma_extra_debug_sigprint();
   
-  return Op<T1, op_inv>(X.get_ref());
-  }
-
-
-
-template<typename T1>
-arma_warn_unused
-arma_inline
-typename enable_if2< is_supported_blas_type<typename T1::elem_type>::value, const Op<T1, op_inv_tr> >::result
-inv
-  (
-  const Op<T1, op_trimat>& X
-  )
-  {
-  arma_extra_debug_sigprint();
-  
-  return Op<T1, op_inv_tr>(X.m, X.aux_uword_a, 0);
+  return Op<T1, op_inv_gen_default>(X.get_ref());
   }
 
 
@@ -62,16 +48,15 @@ inv
   {
   arma_extra_debug_sigprint();
   
-  try
+  const bool status = op_inv_gen_default::apply_direct(out, X.get_ref(), "inv()");
+  
+  if(status == false)
     {
-    out = inv(X);
-    }
-  catch(std::runtime_error&)
-    {
-    return false;
+    out.soft_reset();
+    arma_debug_warn_level(3, "inv(): matrix is singular");
     }
   
-  return true;
+  return status;
   }
 
 
@@ -79,15 +64,16 @@ inv
 template<typename T1>
 arma_warn_unused
 arma_inline
-typename enable_if2< is_supported_blas_type<typename T1::elem_type>::value, const Op<T1, op_inv_sympd> >::result
-inv_sympd
+typename enable_if2< is_supported_blas_type<typename T1::elem_type>::value, const Op<T1, op_inv_gen_full> >::result
+inv
   (
-  const Base<typename T1::elem_type, T1>& X
+  const Base<typename T1::elem_type,T1>& X,
+  const inv_opts::opts&                  opts
   )
   {
   arma_extra_debug_sigprint();
   
-  return Op<T1, op_inv_sympd>(X.get_ref());
+  return Op<T1, op_inv_gen_full>(X.get_ref(), opts.flags, uword(0));
   }
 
 
@@ -95,24 +81,56 @@ inv_sympd
 template<typename T1>
 inline
 typename enable_if2< is_supported_blas_type<typename T1::elem_type>::value, bool >::result
-inv_sympd
+inv
   (
          Mat<typename T1::elem_type>&    out,
+  const Base<typename T1::elem_type,T1>& X,
+  const inv_opts::opts&                  opts
+  )
+  {
+  arma_extra_debug_sigprint();
+  
+  const bool status = op_inv_gen_full::apply_direct(out, X.get_ref(), "inv()", opts.flags);
+  
+  if(status == false)
+    {
+    out.soft_reset();
+    arma_debug_warn_level(3, "inv(): matrix is singular");
+    }
+  
+  return status;
+  }
+
+
+
+template<typename T1>
+inline
+typename enable_if2< is_supported_blas_type<typename T1::elem_type>::value, bool >::result
+inv
+  (
+         Mat<typename T1::elem_type>&    out_inv,
+             typename T1::pod_type&      out_rcond,
   const Base<typename T1::elem_type,T1>& X
   )
   {
   arma_extra_debug_sigprint();
   
-  try
+  typedef typename T1::pod_type T;
+  
+  op_inv_gen_state<T> inv_state;
+  
+  const bool status = op_inv_gen_rcond::apply_direct(out_inv, inv_state, X.get_ref());
+  
+  out_rcond = inv_state.rcond;
+  
+  if(status == false)
     {
-    out = inv_sympd(X);
-    }
-  catch(std::runtime_error&)
-    {
-    return false;
+    out_rcond = T(0);
+    out_inv.soft_reset();
+    arma_debug_warn_level(3, "inv(): matrix is singular");
     }
   
-  return true;
+  return status;
   }
 
 

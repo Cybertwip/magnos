@@ -50,10 +50,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MAGNOS_RUNTIME_OUTPUT_DIRECTORY}/bin)
 
 # Find Armadillo and link it.
 target_link_libraries(ensmallen INTERFACE armadillo)
-target_link_libraries(ensmallen INTERFACE openblas_static)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${RPC_LIB})
 target_link_libraries(${PROJECT_NAME} PUBLIC MavLinkCom)
-target_link_libraries(${PROJECT_NAME} PUBLIC openblas_static)
 target_link_libraries(${PROJECT_NAME} PUBLIC ensmallen)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
+target_link_libraries(${PROJECT_NAME} PUBLIC openblas_static)

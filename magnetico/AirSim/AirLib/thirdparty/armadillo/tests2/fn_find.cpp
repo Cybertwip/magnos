@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -45,17 +47,17 @@ TEST_CASE("fn_find_1")
   
   uvec indices_lessthan_neg04 = { 2, 9, 14, 15, 27 };
   
-  REQUIRE( accu(abs( conv_to<vec>::from(find(A       )) - conv_to<vec>::from(indices_nonzero       ) )) == Approx(0.0) );
+  REQUIRE( accu(abs( conv_to<vec>::from(find(A       )) - conv_to<vec>::from(indices_nonzero       ) )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( conv_to<vec>::from(find(A == 0.0)) - conv_to<vec>::from(indices_zero          ) )) == Approx(0.0) );
+  REQUIRE( accu(abs( conv_to<vec>::from(find(A == 0.0)) - conv_to<vec>::from(indices_zero          ) )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( conv_to<vec>::from(find(A >  0.0)) - conv_to<vec>::from(indices_greaterthan_00) )) == Approx(0.0) );
+  REQUIRE( accu(abs( conv_to<vec>::from(find(A >  0.0)) - conv_to<vec>::from(indices_greaterthan_00) )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( conv_to<vec>::from(find(A <  0.0)) - conv_to<vec>::from(indices_lessthan_00   ) )) == Approx(0.0) );
+  REQUIRE( accu(abs( conv_to<vec>::from(find(A <  0.0)) - conv_to<vec>::from(indices_lessthan_00   ) )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( conv_to<vec>::from(find(A >  0.4)) - conv_to<vec>::from(indices_greaterthan_04) )) == Approx(0.0) );
+  REQUIRE( accu(abs( conv_to<vec>::from(find(A >  0.4)) - conv_to<vec>::from(indices_greaterthan_04) )) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( conv_to<vec>::from(find(A < -0.4)) - conv_to<vec>::from(indices_lessthan_neg04) )) == Approx(0.0) );
+  REQUIRE( accu(abs( conv_to<vec>::from(find(A < -0.4)) - conv_to<vec>::from(indices_lessthan_neg04) )) == Approx(0.0).margin(0.001) );
   
   // REQUIRE_THROWS(  );
   }

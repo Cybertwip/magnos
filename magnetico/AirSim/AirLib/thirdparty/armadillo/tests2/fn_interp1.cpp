@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -46,8 +48,8 @@ TEST_CASE("fn_interp1_1")
   vec yi_a_gt = { 0.419733, 0.241248, 0.149666, 0.058084, 0.057588, 0.152062, -0.284524, -0.307613, -0.336627, 0.373833 };
   vec yi_b_gt = { 0.373833, -0.300357, -0.353940, -0.201854, -0.449865, 0.063571, 0.045817, 0.085559, 0.167982, 0.250406, 0.419733 };
   
-  REQUIRE( accu(abs( yi_a - yi_a_gt )) == Approx(0.0) );
-  REQUIRE( accu(abs( yi_b - yi_b_gt )) == Approx(0.0) );
+  REQUIRE( accu(abs( yi_a - yi_a_gt )) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(abs( yi_b - yi_b_gt )) == Approx(0.0).margin(0.001) );
   
   // REQUIRE_THROWS(  );
   }

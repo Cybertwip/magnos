@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -63,11 +65,12 @@ subview_each_common<parent,mode>::get_mat_ref() const
 
 
 template<typename parent, unsigned int mode>
+template<typename eT2>
 inline
 void
-subview_each_common<parent,mode>::check_size(const Mat<typename parent::elem_type>& A) const
+subview_each_common<parent,mode>::check_size(const Mat<eT2>& A) const
   {
-  if(arma_config::debug == true)
+  if(arma_config::debug)
     {
     if(mode == 0)
       {
@@ -89,10 +92,10 @@ subview_each_common<parent,mode>::check_size(const Mat<typename parent::elem_typ
 
 
 template<typename parent, unsigned int mode>
-arma_cold
+template<typename eT2>
 inline
 const std::string
-subview_each_common<parent,mode>::incompat_size_string(const Mat<typename parent::elem_type>& A) const
+subview_each_common<parent,mode>::incompat_size_string(const Mat<eT2>& A) const
   {
   std::ostringstream tmp;
   
@@ -190,7 +193,7 @@ subview_each1<parent,mode>::operator+= (const Base<eT,T1>& in)
   const eT*   A_mem    = A.memptr();
   const uword p_n_rows = p.n_rows;
   const uword p_n_cols = p.n_cols;
-    
+  
   if(mode == 0) // each column
     {
     for(uword i=0; i < p_n_cols; ++i)
@@ -227,7 +230,7 @@ subview_each1<parent,mode>::operator-= (const Base<eT,T1>& in)
   const eT*   A_mem    = A.memptr();
   const uword p_n_rows = p.n_rows;
   const uword p_n_cols = p.n_cols;
-    
+  
   if(mode == 0) // each column
     {
     for(uword i=0; i < p_n_cols; ++i)
@@ -654,7 +657,7 @@ subview_each1_aux::operator_plus
   const uword p_n_rows = p.n_rows;
   const uword p_n_cols = p.n_cols;
   
-  Mat<eT> out(p_n_rows, p_n_cols);
+  Mat<eT> out(p_n_rows, p_n_cols, arma_nozeros_indicator());
   
   const quasi_unwrap<T2> tmp(Y.get_ref());
   const Mat<eT>& A     = tmp.M;
@@ -716,7 +719,7 @@ subview_each1_aux::operator_minus
   const uword p_n_rows = p.n_rows;
   const uword p_n_cols = p.n_cols;
   
-  Mat<eT> out(p_n_rows, p_n_cols);
+  Mat<eT> out(p_n_rows, p_n_cols, arma_nozeros_indicator());
   
   const quasi_unwrap<T2> tmp(Y.get_ref());
   const Mat<eT>& A     = tmp.M;
@@ -778,7 +781,7 @@ subview_each1_aux::operator_minus
   const uword p_n_rows = p.n_rows;
   const uword p_n_cols = p.n_cols;
   
-  Mat<eT> out(p_n_rows, p_n_cols);
+  Mat<eT> out(p_n_rows, p_n_cols, arma_nozeros_indicator());
   
   const quasi_unwrap<T1> tmp(X.get_ref());
   const Mat<eT>& A     = tmp.M;
@@ -840,7 +843,7 @@ subview_each1_aux::operator_schur
   const uword p_n_rows = p.n_rows;
   const uword p_n_cols = p.n_cols;
   
-  Mat<eT> out(p_n_rows, p_n_cols);
+  Mat<eT> out(p_n_rows, p_n_cols, arma_nozeros_indicator());
   
   const quasi_unwrap<T2> tmp(Y.get_ref());
   const Mat<eT>& A     = tmp.M;
@@ -902,7 +905,7 @@ subview_each1_aux::operator_div
   const uword p_n_rows = p.n_rows;
   const uword p_n_cols = p.n_cols;
   
-  Mat<eT> out(p_n_rows, p_n_cols);
+  Mat<eT> out(p_n_rows, p_n_cols, arma_nozeros_indicator());
   
   const quasi_unwrap<T2> tmp(Y.get_ref());
   const Mat<eT>& A     = tmp.M;
@@ -964,7 +967,7 @@ subview_each1_aux::operator_div
   const uword p_n_rows = p.n_rows;
   const uword p_n_cols = p.n_cols;
   
-  Mat<eT> out(p_n_rows, p_n_cols);
+  Mat<eT> out(p_n_rows, p_n_cols, arma_nozeros_indicator());
   
   const quasi_unwrap<T1> tmp(X.get_ref());
   const Mat<eT>& A     = tmp.M;

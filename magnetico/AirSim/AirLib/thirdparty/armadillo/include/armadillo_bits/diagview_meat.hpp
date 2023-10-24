@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
@@ -875,36 +877,6 @@ diagview<eT>::operator()(const uword row, const uword col) const
 
 
 template<typename eT>
-arma_inline
-const Op<diagview<eT>,op_htrans>
-diagview<eT>::t() const
-  {
-  return Op<diagview<eT>,op_htrans>(*this);
-  }
-
-
-
-template<typename eT>
-arma_inline
-const Op<diagview<eT>,op_htrans>
-diagview<eT>::ht() const
-  {
-  return Op<diagview<eT>,op_htrans>(*this);
-  }
-
-
-
-template<typename eT>
-arma_inline
-const Op<diagview<eT>,op_strans>
-diagview<eT>::st() const
-  {
-  return Op<diagview<eT>,op_strans>(*this);
-  }
-
-
-
-template<typename eT>
 inline
 void
 diagview<eT>::replace(const eT old_val, const eT new_val)
@@ -933,6 +905,38 @@ diagview<eT>::replace(const eT old_val, const eT new_val)
       val = (val == old_val) ? new_val : val;
       }
     }
+  }
+
+
+
+template<typename eT>
+inline
+void
+diagview<eT>::clean(const typename get_pod_type<eT>::result threshold)
+  {
+  arma_extra_debug_sigprint();
+  
+  Mat<eT> tmp(*this);
+  
+  tmp.clean(threshold);
+  
+  (*this).operator=(tmp);
+  }
+
+
+
+template<typename eT>
+inline
+void
+diagview<eT>::clamp(const eT min_val, const eT max_val)
+  {
+  arma_extra_debug_sigprint();
+  
+  Mat<eT> tmp(*this);
+  
+  tmp.clamp(min_val, max_val);
+  
+  (*this).operator=(tmp);
   }
 
 

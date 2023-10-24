@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
 // Copyright 2015 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2015 National ICT Australia (NICTA)
 // 
@@ -93,10 +95,10 @@ TEST_CASE("mat_minus_1")
   REQUIRE( Y(4,5) == Approx( 0.0191190) );
   
   
-  REQUIRE( accu(mat(A-B) + (neg_of_A_minus_B)) == Approx(0.0) );
-  REQUIRE( accu(   (A-B) + (neg_of_A_minus_B)) == Approx(0.0) );
+  REQUIRE( accu(mat(A-B) + (neg_of_A_minus_B)) == Approx(0.0).margin(0.001) );
+  REQUIRE( accu(   (A-B) + (neg_of_A_minus_B)) == Approx(0.0).margin(0.001) );
   
-  REQUIRE( accu(abs( 2*(A-B) + 2*neg_of_A_minus_B )) == Approx(0.0) );
+  REQUIRE( accu(abs( 2*(A-B) + 2*neg_of_A_minus_B )) == Approx(0.0).margin(0.001) );
   
   // REQUIRE_THROWS(  );
   }
