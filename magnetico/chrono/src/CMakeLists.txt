@@ -542,6 +542,12 @@ endif()
 
 if(EMSCRIPTEN)
   add_compile_options(-pthread)
+  if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+    add_compile_options(-O2)
+  elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  add_compile_options(-g3)
+  endif()
+  add_link_options("-s ALLOW_MEMORY_GROWTH=1")  
 endif()
 
 #-----------------------------------------------------------------------------

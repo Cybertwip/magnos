@@ -19,7 +19,7 @@ class EVEngine : public msr::airlib::Node {
 public:
 	EVEngine(float max_engine_voltage = EVEngine::max_voltage);
 	
-	void init();
+	void init(const std::string& writablePath);
 	void update(float dt) override;
 
 	float getBatteryVoltage() const;

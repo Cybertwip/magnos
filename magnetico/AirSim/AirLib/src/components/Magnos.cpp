@@ -326,9 +326,10 @@ void Magnos::init() {
 }
 
 
-void Magnos::loadData(int id){
+void Magnos::loadData(const std::string& writablePath, int id){
 	outerCoilSystem =
-	std::make_unique<CoilSystem>(id,
+	std::make_unique<CoilSystem>(writablePath,
+								 id,
 								 1.5f,
 								 1.0f, // resistance
 								 1.0f, // current

@@ -49,8 +49,11 @@ project(armadillo CXX C)
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)
 
-set(ARMA_USE_WRAPPER true)
-
+if(EMSCRIPTEN)
+  set(ARMA_USE_WRAPPER false)
+else()
+  set(ARMA_USE_WRAPPER true)
+endif()
 # the settings below will be automatically configured by the rest of this script
 
 set(ARMA_USE_LAPACK  false)
@@ -437,6 +440,13 @@ else()
   
 endif()
 
+if(EMSCRIPTEN)
+  set(ARMA_USE_LAPACK true)
+  set(ARMA_USE_BLAS   true)
+  set(ARMA_USE_ATLAS  false)
+  set(ARMA_USE_ARPACK false)
+  set(ARMA_USE_SUPERLU false)
+endif()
 
 include(ARMA_FindARPACK)
 message(STATUS "ARPACK_FOUND = ${ARPACK_FOUND}")

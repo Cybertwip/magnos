@@ -52,7 +52,7 @@ public:
 	std::vector<std::shared_ptr<Coil>> coils;
 	
 public:
-	CoilSystem(int id, float voltage, float resistance, float current, float coilTurns);
+	CoilSystem(const std::string& writablePath, int id, float voltage, float resistance, float current, float coilTurns);
 	
 	~CoilSystem();
 	
@@ -128,6 +128,7 @@ private:
 	float designedEMFPerSecond;
 	std::function<void(int, float)> onVoltagePeak = nullptr;
 	
+	std::string writablePath;
 public:
 	float lastAccumulatedEMF = 0.0f;
 	float lastBaseAccumulatedEMF = 0.0f;

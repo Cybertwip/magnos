@@ -44,7 +44,7 @@ Car::Car() : acceleration(0.0f), maxSpeed(116.0f), friction(0.001f), maxSteering
 	engine_ = std::make_shared<EVEngine>();
 	
 	engine_->setPosition3D(msr::airlib::Vector3r(0, 0, 0));
-	engine_->init();
+	engine_->init(ax::FileUtils::getInstance()->getWritablePath());
 //
 //	auto magnos = engine_->getGimbals()[0];
 //

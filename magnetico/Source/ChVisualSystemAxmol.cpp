@@ -80,15 +80,8 @@ static void SetVisualMaterial(
 		renderer->setTexture("gray.jpg");
 		renderer->setColor(ax::Color3B::WHITE);
 	} else {
-#if defined(__EMSCRIPTEN__)
-		mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false));
-		renderer->setMaterial(mesh->getMaterial());
-		renderer->setTexture("gray.jpg");
-		renderer->setColor(ax::Color3B::WHITE);
-#else
 		PopulateWithAxmolMaterial(renderer, material);
 		mesh->setMaterial(renderer->getMaterial());
-#endif
 	}
 }
 

@@ -104,7 +104,7 @@ private:
 StellaMagnosDriver::StellaMagnosDriver(ChWheeledVehicle& vehicle, msr::airlib::Vector3r position) : ChDriver(vehicle) {
 	engine_ = std::make_shared<EVEngine>(120);
 	engine_->setPosition3D(position);
-	engine_->init();
+	engine_->init(ax::FileUtils::getInstance()->getWritablePath());
 	
 	for(int i = 0; i<4; ++i){
 		wheelMotors_.push_back(WheelMotor(80, 0.5f));

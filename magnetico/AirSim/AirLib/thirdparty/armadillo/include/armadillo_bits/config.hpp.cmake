@@ -114,7 +114,12 @@
 // #define ARMA_LAPACK_NOEXCEPT
 //// Uncomment the above line if you require LAPACK functions to have the 'noexcept' specification
 
+#if defined(__EMSCRIPTEN__)
+#define ARMA_DONT_USE_FORTRAN_HIDDEN_ARGS
+#else
 #define ARMA_USE_FORTRAN_HIDDEN_ARGS
+#endif
+
 //// Comment out the above line to call BLAS and LAPACK functions without using so-called "hidden" arguments.
 //// Fortran functions (compiled without a BIND(C) declaration) that have char arguments
 //// (like many BLAS and LAPACK functions) also have associated "hidden" arguments.

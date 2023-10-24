@@ -6,16 +6,19 @@
 static long long timePrev = 0;
 static long long timeNow = 0;
 
-CoilSystem::CoilSystem(int id, float voltage, float resistance, float current, float coilTurns)
+CoilSystem::CoilSystem(const std::string& homeWritablePath, int id, float voltage, float resistance, float current, float coilTurns)
 : coilResistance(resistance), maxCurrent(current), turns(coilTurns), coil_id(id),
 filterBase(VoltageController(32, Settings::desired_base_voltage, Settings::desired_base_voltage, false)),
-filterIncrease(VoltageController(32, Settings::desired_capacitor_voltage, Settings::desired_capacitor_voltage, true)){
+filterIncrease(VoltageController(32, Settings::desired_capacitor_voltage, Settings::desired_capacitor_voltage, true)), writablePath(homeWritablePath){
 		
     setCurrentFromVoltage(voltage);
-	std::string home = getenv("HOME");
-
-    hasML = loadDataAndTrainModel(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
-    
+	
+#if defined(__EMSCRIPTEN__)
+	auto mlPath = std::string("ml/calibration");
+	hasML = loadDataAndTrainModel(mlPath + "_" + std::to_string(coil_id) + ".bin");
+#else
+	hasML = loadDataAndTrainModel(writablePath + "calibration" + "_" + std::to_string(coil_id) + ".bin");
+#endif
     if(hasML){
 		data_collection_mode = false;
     }
@@ -146,7 +149,7 @@ bool CoilSystem::loadDataAndTrainModel(const std::string& filename) {
     
     dataCollection = loadedData;
     
-    // Convert loadedData to arma::mat format for mlpack
+	// Convert loadedData to arma::mat format for mlpack
     arma::mat dataset(4, loadedData.size());
     
     for (size_t i = 0; i < loadedData.size(); i++) {
@@ -425,13 +428,10 @@ void CoilSystem::update(float measuredEMF, float delta) {
 			dataCollection.push_back(point);
 			
 			if((dataCollection.size() * sizeof(DataPoint)) % Settings::data_collection_bin_size == 0){
-				std::string home = getenv("HOME");
-				
-				saveDataToBinary(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
+				saveDataToBinary(writablePath + "calibration" + "_" + std::to_string(coil_id) + ".bin");
 				
 				data_collection_mode = false;
-				
-				hasML = loadDataAndTrainModel(home + "/calibration" + "_" + std::to_string(coil_id) + ".bin");
+				hasML = loadDataAndTrainModel(writablePath + "calibration" + "_" + std::to_string(coil_id) + ".bin");
 				
 				this->recalibrate();
 				

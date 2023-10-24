@@ -142,7 +142,9 @@ bool WheelGameState::init() {
 	this->addChild(planeRenderer);
 	
 	outerCoilSystem =
-	std::make_unique<CoilSystem>(77,
+	std::make_unique<CoilSystem>(
+								 ax::FileUtils::getInstance()->getWritablePath(),
+								 77,
 								 80.0f,
 								 5.0f, // resistance
 								 1.0f, // current

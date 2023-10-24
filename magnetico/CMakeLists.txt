@@ -228,6 +228,25 @@ target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})
 
 target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
 
+if(EMSCRIPTEN)
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+        target_compile_options(${APP_NAME} PRIVATE "-O2")
+        target_compile_options(AirLib PRIVATE "-O2")
+    else()
+        target_compile_options(${APP_NAME} PRIVATE "-fsanitize=address")
+        target_compile_options(AirLib PRIVATE "-fsanitize=address")
+        target_compile_options(${APP_NAME} PRIVATE "-g3")
+        target_compile_options(AirLib PRIVATE "-g3")
+        target_compile_options(${APP_NAME} PRIVATE "-gseparate-dwarf")
+        target_compile_options(AirLib PRIVATE "-gseparate-dwarf")
+
+        target_link_options(${APP_NAME} PRIVATE "-fsanitize=address")
+        target_link_options(${APP_NAME} PRIVATE "-fsanitize=address")
+    endif()
+    target_link_options(${APP_NAME} PRIVATE "-s ALLOW_MEMORY_GROWTH=1")
+    target_link_options(${APP_NAME} PRIVATE "-s INITIAL_MEMORY=4gb")
+endif()
+
 #set(_geant4_lib_use_suffix -static)
 #set(Geant4_LIBRARIES
 # Geant4::G4Tree${_geant4_lib_use_suffix}
@@ -305,14 +324,3 @@ endif()
 
 
 ax_setup_app_props(${APP_NAME})
-
-if (WASM)
-    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-        target_compile_options(${APP_NAME} PRIVATE "-fsanitize=undefined")
-        target_compile_options(${APP_NAME} PRIVATE "-Og")
-        target_compile_options(${APP_NAME} PRIVATE "-g3")
-
-        target_link_options(${APP_NAME} PRIVATE "-fsanitize=undefined")
-
-    endif()
-endif()

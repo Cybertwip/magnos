@@ -12,7 +12,7 @@ private:
 	static constexpr float MU_0 = 4.0f * M_PI * 1e-7f;  // Vacuum permeability
 	static constexpr float B0 = 0.01;  // Example value in teslas for a standard lab magnet
 
-public:	
+public:
 	float calculateFlux(CoilEntity::AttachedEntity& coil, MagnetEntity::AttachedEntity& magnet);
 	
 	float calculateCoilEMF(const CoilEntity::AttachedEntity& coil, float delta);
@@ -51,7 +51,7 @@ public:
 
 public:
 	void init();
-	void loadData(int id);
+	void loadData(const std::string& writablePath, int id);
 	
 	void attachPinball();
 };

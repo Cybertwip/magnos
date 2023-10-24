@@ -155,9 +155,9 @@ extern "C"
       arma_fortran_sans_prefix(arma_sgetrf)(m, n, a, lda, ipiv, info);
       }
     
-    void arma_fortran_with_prefix(arma_dgetrf)(const blas_int* m, const blas_int* n,   double* a, const blas_int* lda, blas_int* ipiv, blas_int* info)
+    int arma_fortran_with_prefix(arma_dgetrf)(const blas_int* m, const blas_int* n,   double* a, const blas_int* lda, blas_int* ipiv, blas_int* info)
       {
-      arma_fortran_sans_prefix(arma_dgetrf)(m, n, a, lda, ipiv, info);
+      return arma_fortran_sans_prefix(arma_dgetrf)(m, n, a, lda, ipiv, info);
       }
     
     void arma_fortran_with_prefix(arma_cgetrf)(const blas_int* m, const blas_int* n, blas_cxf* a, const blas_int* lda, blas_int* ipiv, blas_int* info)
@@ -177,9 +177,9 @@ extern "C"
       arma_fortran_sans_prefix(arma_sgetrs)(trans, n, nrhs, a, lda, ipiv, b, ldb, info, trans_len);
       }
     
-    void arma_fortran_with_prefix(arma_dgetrs)(const char* trans, const blas_int* n, const blas_int* nrhs, const   double* a, const blas_int* lda, const blas_int* ipiv,   double* b, const blas_int* ldb, blas_int* info, const blas_len trans_len)
+    int arma_fortran_with_prefix(arma_dgetrs)(const char* trans, const blas_int* n, const blas_int* nrhs, const   double* a, const blas_int* lda, const blas_int* ipiv,   double* b, const blas_int* ldb, blas_int* info, const blas_len trans_len)
       {
-      arma_fortran_sans_prefix(arma_dgetrs)(trans, n, nrhs, a, lda, ipiv, b, ldb, info, trans_len);
+      return arma_fortran_sans_prefix(arma_dgetrs)(trans, n, nrhs, a, lda, ipiv, b, ldb, info, trans_len);
       }
     
     void arma_fortran_with_prefix(arma_cgetrs)(const char* trans, const blas_int* n, const blas_int* nrhs, const blas_cxf* a, const blas_int* lda, const blas_int* ipiv, blas_cxf* b, const blas_int* ldb, blas_int* info, const blas_len trans_len)
@@ -357,9 +357,9 @@ extern "C"
       arma_fortran_sans_prefix(arma_spotrf)(uplo, n, a, lda, info, uplo_len);
       }
     
-    void arma_fortran_with_prefix(arma_dpotrf)(const char* uplo, const blas_int* n,   double* a, const blas_int* lda, blas_int* info, blas_len uplo_len)
+    int arma_fortran_with_prefix(arma_dpotrf)(const char* uplo, const blas_int* n,   double* a, const blas_int* lda, blas_int* info, blas_len uplo_len)
       {
-      arma_fortran_sans_prefix(arma_dpotrf)(uplo, n, a, lda, info, uplo_len);
+      return arma_fortran_sans_prefix(arma_dpotrf)(uplo, n, a, lda, info, uplo_len);
       }
     
     void arma_fortran_with_prefix(arma_cpotrf)(const char* uplo, const blas_int* n, blas_cxf* a, const blas_int* lda, blas_int* info, blas_len uplo_len)

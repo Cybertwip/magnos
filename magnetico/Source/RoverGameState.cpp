@@ -126,7 +126,7 @@ private:
 CuriosityMagnosDriver::CuriosityMagnosDriver(Curiosity& vehicle, msr::airlib::Vector3r position) : rover(vehicle) {
 	engine_ = std::make_shared<EVEngine>(120);
 	engine_->setPosition3D(position);
-	engine_->init();
+	engine_->init(ax::FileUtils::getInstance()->getWritablePath());
 	
 	for(int i = 0; i<6; ++i){
 		wheelMotors_.push_back(WheelMotor(10, 0.5f));

@@ -6,9 +6,9 @@
 float EVEngine::max_voltage = 400;
 
 namespace {
-std::shared_ptr<Magnos> createGimbal(int id, std::shared_ptr<msr::airlib::Node> parent, msr::airlib::Vector3r position){
+std::shared_ptr<Magnos> createGimbal(const std::string& writablePath, int id, std::shared_ptr<msr::airlib::Node> parent, msr::airlib::Vector3r position){
 	auto gimbal = std::make_shared<Magnos>();
-	gimbal->loadData(id);
+	gimbal->loadData(writablePath, id);
 	gimbal->init();
 	gimbal->attachPinball();
 	gimbal->setPosition3D(position);
@@ -45,10 +45,10 @@ EVEngine::EVEngine(float max_engine_voltage) : max_engine_voltage_(max_engine_vo
 	engine_consumption_ = 0.0f;
 }
 
-void EVEngine::init(){
+void EVEngine::init(const std::string& writablePath){
 	
 	for(int i = 0; i<Settings::number_of_gimbals; ++i){
-		gimbals_.push_back(createGimbal(i + 1, shared_from_this(), msr::airlib::Vector3r(0, 0, 0)));
+		gimbals_.push_back(createGimbal(writablePath, i + 1, shared_from_this(), msr::airlib::Vector3r(0, 0, 0)));
 	}
 	battery_ = std::make_shared<RechargeableBattery>(Settings::battery_voltage, 
 													 Settings::battery_voltage + 1, 
