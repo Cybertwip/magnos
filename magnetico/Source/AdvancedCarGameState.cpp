@@ -222,7 +222,7 @@ bool AdvancedCarGameState::init() {
 	double target_speed = 420.0;
 	
 	// JSON files for terrain
-	std::string rigidterrain_file("terrain/RigidObstacle1.json");
+	std::string rigidterrain_file("terrain/RigidMeshFrisco.json");
 	
 	GetLog() << "\n"
 	<< "Speed       = " << target_speed << " m/s\n"
@@ -249,17 +249,38 @@ bool AdvancedCarGameState::init() {
 	vehicle->SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle->SetWheelVisualizationType(VisualizationType::PRIMITIVES);
 	
-//	terrain = std::make_unique<RigidTerrain>(vehicle->GetSystem(), vehicle::GetDataFile(rigidterrain_file));
+	auto terrainImpl = std::make_unique<RigidTerrain>(vehicle->GetSystem(), vehicle::GetDataFile(rigidterrain_file));
 
-	auto terrainImpl = std::make_unique<RandomSurfaceTerrain>(vehicle->GetSystem(), xend);
 	
-	terrainImpl->Initialize(RandomSurfaceTerrain::SurfaceType::FLAT, vehicle->GetWheeltrack(0));
+	terrainImpl->Initialize();
+	
+//	auto friscoDataFile = GetChronoDataFile("cities/frisco/frisco.obj");
+	
+//	ChVector<> terrainLoc(0, 0, 0);
+//	ChCoordsys<> terainCoord(terrainLoc, QUNIT);
+
+//	auto materialSurface = std::make_shared<ChMaterialSurfaceNSC>();
+//	terrainImpl->AddPatch(materialSurface, terainCoord, friscoDataFile);
+	
+	terrain = std::move(terrainImpl);
+
+//	auto floor =
+//	std::make_shared<ChBodyEasyMesh>(friscoDataFile, 1.0f);
+//
+//	floor->SetBodyFixed(true);
+//
+//	vehicle->GetSystem()->Add(floor);
+
+	
+//	auto terrainImpl = std::make_unique<RandomSurfaceTerrain>(vehicle->GetSystem(), xend);
+//
+//	terrainImpl->Initialize(RandomSurfaceTerrain::SurfaceType::FLAT, vehicle->GetWheeltrack(0));
 	
 //	auto ground_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
 
 //	terrainImpl->EnableCollisionMesh(ground_mat, std::abs(initLoc.x()) + 5);
 
-	terrain = std::move(terrainImpl);
+//	terrain = std::move(terrainImpl);
 
 	//CreateGround(*vehicle->GetSystem());
 	
@@ -323,6 +344,29 @@ bool AdvancedCarGameState::init() {
 	carMesh_ = ax::MeshRenderer::create("polestar/polestar.obj");
 		
 	this->addChild(carMesh_);
+	
+	auto frisco = ax::MeshRenderer::create("frisco/frisco.c3b");
+
+	auto material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false);
+
+	for(auto mesh : frisco->getMeshes()){
+		auto friscoRenderer = ax::MeshRenderer::create();
+		
+		if(mesh->getMaterial() == nullptr){
+			mesh->setMaterial(material);
+			mesh->setTexture("gray.jpg");
+		} else {
+			
+		}
+		
+		friscoRenderer->addMesh(mesh);
+		
+		friscoRenderer->setMaterial(mesh->getMaterial());
+		
+		this->addChild(friscoRenderer);
+
+	}
+
 	
 	auto rotation = vehicle->GetChassis()->GetRot();
 	
@@ -594,7 +638,7 @@ void AdvancedCarGameState::renderUI() {
 	
 	counter += Settings::fixed_delta;
 	
-	if(counter >= 1.0f / (float)cycles_per_collection){
+	if(counter >= Settings::fixed_delta * 60.0f){
 		counter = 0;
 		battery = 0;
 		laser = 0;

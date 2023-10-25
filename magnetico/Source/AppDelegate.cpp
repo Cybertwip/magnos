@@ -124,8 +124,6 @@ bool AppDelegate::applicationDidFinishLaunching()
 #if !defined(__EMSCRIPTEN__)
 	//Director::getInstance()->getOpenGLView()->setCursorVisible(false);
 #endif
-
-	
 	// run
     director->runWithScene(scene);
 

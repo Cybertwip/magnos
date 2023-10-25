@@ -113,7 +113,11 @@ void RigidTerrain::LoadPatch(const rapidjson::Value& d) {
         if (d["Geometry"].HasMember("Connected Mesh")) {
             connected_mesh = d["Geometry"]["Connected Mesh"].GetBool();
         }
-        patch = AddPatch(material, ChCoordsys<>(loc, rot), vehicle::GetDataFile(mesh_file), connected_mesh);
+		bool visible_mesh = true;
+		if (d["Geometry"].HasMember("Mesh Visibility")) {
+			visible_mesh = d["Geometry"]["Mesh Visibility"].GetBool();
+		}
+        patch = AddPatch(material, ChCoordsys<>(loc, rot), vehicle::GetDataFile(mesh_file), connected_mesh, 0, visible_mesh);
     } else if (d["Geometry"].HasMember("Height Map Filename")) {
         std::string bmp_file = d["Geometry"]["Height Map Filename"].GetString();
         double sx = d["Geometry"]["Size"][0u].GetDouble();

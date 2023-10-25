@@ -48,7 +48,7 @@ namespace axmol {
 
 
 void PopulateWithAxmolMaterial(ax::MeshRenderer* renderer, std::shared_ptr<ChVisualMaterial> mat) {
-	ax::Material* material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE, false);
+	ax::Material* material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false);
 	
 	renderer->setOpacity(mat->GetOpacity() * 255.0f);
 	
@@ -65,6 +65,9 @@ void PopulateWithAxmolMaterial(ax::MeshRenderer* renderer, std::shared_ptr<ChVis
 	auto kd_texture_name = mat->GetKdTexture();
 	if (!kd_texture_name.empty()) {
 		renderer->setTexture(kd_texture_name);
+		renderer->setColor(ax::Color3B::WHITE);
+	} else {
+		renderer->setTexture("white.jpg");
 		renderer->setColor(ax::Color3B::WHITE);
 	}
 }
@@ -469,10 +472,14 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 				indexArray.emplace_back(static_cast<unsigned short>(index.y()));
 				indexArray.emplace_back(static_cast<unsigned short>(index.z()));
 				
-				texs.push_back(0);
-				texs.push_back(1);
 			}
 			
+			auto uvs = trimesh->GetMesh()->getCoordsUV();
+			
+			for(auto uv : uvs){
+				texs.push_back((float)uv.x());
+				texs.push_back((float)uv.y());
+			}
 			
 			auto mesh = ax::Mesh::create(positions, normals, texs, indexArray);
 
