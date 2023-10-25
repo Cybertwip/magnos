@@ -31,6 +31,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES arm64)
+    
+    set(OpenMP_CXX_INCLUDE_DIRS "/opt/homebrew/opt/libomp/include")
+    set(OpenMP_CXX_LIBRARIES "/opt/homebrew/opt/libomp/lib/libomp.a")
+
 endif()
 
 set(USE_OPENMP OFF CACHE STRING "USE_OPENMP")
@@ -226,6 +230,10 @@ target_link_libraries(${APP_NAME} MavLinkCom)
 target_link_libraries(${APP_NAME} ${RPC_LIB})
 target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
 
+if(APPLE)
+    target_link_libraries(${APP_NAME} ${OpenMP_CXX_LIBRARIES})  
+endif()
+
 target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
 
 if(EMSCRIPTEN)
@@ -266,6 +274,10 @@ if (AX_WITH_YAML_CPP)
     list(APPEND GAME_INC_DIRS "${_AX_ROOT}/thirdparty/yaml-cpp/include")
 endif()
 
+
+if(APPLE)
+    target_include_directories(${APP_NAME} PRIVATE ${OpenMP_CXX_INCLUDE_DIRS})
+endif()
 
 target_include_directories(${APP_NAME} PRIVATE ${GAME_INC_DIRS})
 target_include_directories(${APP_NAME} PRIVATE ${CHRONO_INCLUDE_DIRS})

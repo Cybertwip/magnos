@@ -176,7 +176,22 @@ set(CH_C_FLAGS "${CH_C_FLAGS} ${CMAKE_THREAD_LIBS_INIT}")
 # main ChronoEngine library, regardless on whether or not OpenMP is found.
 
 message(STATUS "Searching for OpenMP...")
+
+if(APPLE)
+
+set(OpenMP_CXX_FLAGS "")
+set(OpenMP_C_FLAGS "")
+set(OpenMP_CXX_INCLUDE_DIRS "")
+set(OpenMP_CXX_LIBRARY "")
+set(OpenMP_CXX_LIBRARIES "")
+
+set(OpenMP_CXX_INCLUDE_DIRS "/opt/homebrew/opt/libomp/include")
+set(OpenMP_CXX_LIBRARIES "/opt/homebrew/opt/libomp/lib/libomp.a")
+set(ENABLE_OPENMP ON)
+set(OPENMP_FOUND ON)
+else()
 find_package(OpenMP)
+endif()
 
 # Determine OpenMP version. Prepare substitution variables that can be used in
 # generating configuration header files.
@@ -209,10 +224,11 @@ endif()
 # support in the Chrono libraries (note that some modules may override this).
 
 cmake_dependent_option(ENABLE_OPENMP "Enable OpenMP support in Chrono::Engine" ON
-                       "OPENMP_FOUND" OFF)
+"OPENMP_FOUND" OFF)
 
 set(OPENMP_INCLUDE_DIR "")
 set(OPENMP_LIBRARIES "")
+
 if(ENABLE_OPENMP)
   message(STATUS "  OpenMP CXX flags: ${OpenMP_CXX_FLAGS}")
   message(STATUS "  OpenMP C flags:   ${OpenMP_C_FLAGS}")
