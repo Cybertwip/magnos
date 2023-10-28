@@ -21,3 +21,4 @@ mlpack_model_generator
 *.pt
 *.pth
 *.onnx
+*.xml
