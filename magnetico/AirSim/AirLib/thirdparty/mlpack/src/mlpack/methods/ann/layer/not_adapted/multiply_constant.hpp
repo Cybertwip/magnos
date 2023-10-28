@@ -43,6 +43,18 @@ class MultiplyConstantType : public Layer<InputType>
     return new MultiplyConstantType(*this);
   }
 
+  //! Copy Constructor.
+	MultiplyConstantType(const MultiplyConstantType& layer);
+
+  //! Move Constructor.
+	MultiplyConstantType(MultiplyConstantType&& layer);
+
+  //! Copy assignment operator.
+	MultiplyConstantType& operator=(const MultiplyConstantType& layer);
+
+  //! Move assignment operator.
+	MultiplyConstantType& operator=(MultiplyConstantType&& layer);
+
   /**
    * Ordinary feed forward pass of a neural network. Multiply the input with the
    * specified constant scalar value.

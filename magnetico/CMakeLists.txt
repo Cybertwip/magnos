@@ -403,6 +403,6 @@ add_subdirectory(onnx)
 target_compile_definitions(onnx PRIVATE NDEBUG=1)
 target_compile_definitions(onnx_proto PRIVATE NDEBUG=1)
 
-target_compile_definitions(translator PRIVATE MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+target_compile_definitions(translator PRIVATE NDEBUG=1 MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
 
 target_link_libraries(translator PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx)
