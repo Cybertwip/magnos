@@ -696,7 +696,7 @@ Layer<>* getNetworkReference(std::string& layerType,
                                  std::map<std::string, double>& layerParams)
 {
   std::map<std::string, double> origParams;
-  Layer<>* layer;
+  Layer<>* layer  = nullptr;
 
   if (layerType == "atrousconvolution")
   {

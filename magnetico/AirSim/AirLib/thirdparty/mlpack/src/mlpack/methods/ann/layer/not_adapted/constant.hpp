@@ -81,7 +81,7 @@ class ConstantType : public Layer<InputType>
                 OutputType& g);
 
   //! Get the output size.
-  const std::vector<size_t>& OutputDimensions() const
+  const std::vector<size_t> OutputDimensions() const
   {
     std::vector<size_t> result(this->inputDimensions.size(), 0);
     result[0] = outSize;
