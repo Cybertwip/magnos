@@ -35,6 +35,10 @@ if(APPLE)
     set(OpenMP_CXX_INCLUDE_DIRS "/opt/homebrew/opt/libomp/include")
     set(OpenMP_CXX_LIBRARIES "/opt/homebrew/opt/libomp/lib/libomp.a")
 
+    set(protobuf_DIR " /opt/homebrew/Cellar/protobuf@3/3.20.3")
+
+    LIST(APPEND CMAKE_PREFIX_PATH "${protobuf_DIR}") 
+
 endif()
 
 set(USE_OPENMP OFF CACHE STRING "USE_OPENMP")
@@ -336,3 +340,69 @@ endif()
 
 
 ax_setup_app_props(${APP_NAME})
+
+
+#Translator
+
+
+# Define the "translator" executable
+add_executable(translator
+    translator/src/main.cpp
+    translator/src/layer_details.hpp
+    translator/src/mlpack_to_torch.hpp
+    translator/src/model_parser_impl.hpp
+    translator/src/model_parser.hpp
+    translator/src/onnx_pb.h
+    translator/src/onnx_to_mlpack.hpp
+)
+
+# Set C++ standard and other compiler options if necessary
+set_target_properties(translator PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
+
+# Add any include directories if required
+
+find_package(Boost REQUIRED)
+
+if(Boost_FOUND)
+    message(STATUS "Boost found: ${Boost_INCLUDE_DIRS}")
+else()
+    message(FATAL_ERROR "Boost not found. Please install Boost or provide the Boost path.")
+endif()
+
+
+find_package(onnxruntime REQUIRED)
+
+if(onnxruntime_FOUND)
+    message(STATUS "onnxruntime found")
+else()
+    message(FATAL_ERROR "onnxruntime not found. Please install onnxruntime or provide the onnxruntime path.")
+endif()
+
+# Find required protobuf package
+find_package(protobuf REQUIRED)
+
+# Check if protobuf was found
+if(TARGET protobuf::libprotobuf)
+    message(STATUS "protobuf found: ${PROTOBUF_LIBRARIES}")
+else()
+    message(FATAL_ERROR "Protobuf not found. Please install it or specify its location.")
+endif()
+
+
+target_include_directories(translator PRIVATE
+   translator/src
+   ${Boost_INCLUDE_DIRS}
+)
+
+add_subdirectory(onnx)
+
+target_compile_definitions(onnx PRIVATE NDEBUG=1)
+target_compile_definitions(onnx_proto PRIVATE NDEBUG=1)
+
+target_compile_definitions(translator PRIVATE MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+
+target_link_libraries(translator PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx)

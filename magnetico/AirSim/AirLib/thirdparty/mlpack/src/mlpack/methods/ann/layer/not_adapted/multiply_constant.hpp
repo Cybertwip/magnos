@@ -40,10 +40,10 @@ class MultiplyConstantType : public Layer<InputType>
   //! correctly.
   MultiplyConstantType* Clone() const
   {
-    return nullptr;
+    return new MultiplyConstantType(*this);
   }
 
-   /**
+  /**
    * Ordinary feed forward pass of a neural network. Multiply the input with the
    * specified constant scalar value.
    *
