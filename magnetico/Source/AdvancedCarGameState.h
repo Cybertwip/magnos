@@ -62,16 +62,17 @@ using namespace chrono::vsg3d;
 #include "chrono_models/vehicle/artcar/ARTcar.h"
 
 class StellaMagnosDriver;
+class CustomViewportCamera;
 
 using namespace chrono;
 using namespace chrono::curiosity;
 
-
 class AdvancedCarGameState : public GameState {
 private:
 	
-	ax::Camera* _defaultCamera;
-	
+	CustomViewportCamera* _primaryCamera;
+	CustomViewportCamera* _secondaryCamera;
+
 	std::string emf;
 	std::string current;
 	
@@ -103,9 +104,19 @@ private:
 	// Keyboard
 	void onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* event) override;
 	void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event) override;
-
+	
+	void onEnter() override;
+	
+	ax::Layer* _mainLayer;
+	ax::Layer* _secondaryLayer;
+	ax::Layer* _2dLayer;
+	
+	ax::RenderTexture* _renderTarget;
+	
+	std::shared_ptr<ChBodyEasyMesh> _carMeshCollision;
 public:
 	AdvancedCarGameState();
+	~AdvancedCarGameState();
 	
 	virtual bool init() override;
 	virtual void update(float delta) override;

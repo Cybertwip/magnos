@@ -74,8 +74,7 @@ bool HelloWorld::init()
 	this->currentGameState = AdvancedCarGameState::create();
 	
 	this->addChild(currentGameState);
-	
-	
+
 	currentGameState->setup(_defaultCamera);
 	
 	scheduleUpdate();
@@ -131,8 +130,6 @@ void HelloWorld::onImGuiDraw()
 		this->currentGameState->setup(_defaultCamera);
 		this->addChild(currentGameState);
 	}
-	
-	
 	
 	
 	ImGui::End();

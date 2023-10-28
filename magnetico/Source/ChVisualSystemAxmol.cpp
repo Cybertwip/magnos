@@ -48,12 +48,7 @@ namespace axmol {
 
 
 void PopulateWithAxmolMaterial(ax::MeshRenderer* renderer, std::shared_ptr<ChVisualMaterial> mat) {
-	ax::Material* material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false);
-	
-	renderer->setOpacity(mat->GetOpacity() * 255.0f);
-	
-	renderer->setColor(ax::Color3B(mat->GetDiffuseColor().R * 255.0f,  mat->GetDiffuseColor().G * 255.0f,
-	    mat->GetDiffuseColor().B * 255.0f));
+	ax::Material* material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::DIFFUSE_NOTEX, false);
 	
 	renderer->setMaterial(material);
 
@@ -68,8 +63,14 @@ void PopulateWithAxmolMaterial(ax::MeshRenderer* renderer, std::shared_ptr<ChVis
 		renderer->setColor(ax::Color3B::WHITE);
 	} else {
 		renderer->setTexture("white.jpg");
-		renderer->setColor(ax::Color3B::WHITE);
 	}
+	
+	renderer->setColor(ax::Color3B(
+								   mat->GetDiffuseColor().G * 255.0f,
+								   mat->GetDiffuseColor().R * 255.0f,
+								   mat->GetDiffuseColor().B * 255.0f));
+
+	//renderer->setOpacity(mat->GetOpacity() * 255.0f);
 }
 
 static void SetVisualMaterial(
@@ -300,6 +301,9 @@ void ChVisualSystemAxmol::BindAll() {
 }
 
 int ChVisualSystemAxmol::AddVisualModel(std::shared_ptr<ChVisualModel> model, const ChFrame<>& frame) {
+	
+	
+	
 //    // Create an Irrlicht scene node for a visualization-only model and populate it
 //    auto node = chrono_types::make_shared<ChIrrNodeVisual>(m_container, GetSceneManager());
 //    PopulateIrrNode(node.get(), model, frame);
@@ -447,42 +451,84 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 
 			std::vector<float> positions;
 			std::vector<float> normals;
+			ax::IndexArray indexArray(ax::backend::IndexFormat::U_INT);
 			
-			for(auto position : trimesh->GetMesh()->getCoordsVertices()){
-				positions.push_back(static_cast<float>(position.x()));
-				positions.push_back(static_cast<float>(position.y()));
-				positions.push_back(static_cast<float>(position.z()));
-			}
-
-			for(auto normal : trimesh->GetMesh()->getCoordsNormals()){
-				normals.push_back(static_cast<float>(normal.x()));
-				normals.push_back(static_cast<float>(normal.y()));
-				normals.push_back(static_cast<float>(normal.z()));
-			}
-
-			ax::IndexArray indexArray;
-			
-			auto indices = trimesh->GetMesh()->getIndicesVertexes();
 
 			// Texture coordinates for the plane
 			std::vector<float> texs;
-
-			for(auto index : indices){
-				indexArray.emplace_back(static_cast<unsigned short>(index.x()));
-				indexArray.emplace_back(static_cast<unsigned short>(index.y()));
-				indexArray.emplace_back(static_cast<unsigned short>(index.z()));
+			
+			// Function to add a vertex to the map and return its index
+			auto addVertex = [&](const ChVector<>& vertex) -> unsigned int {
+				positions.push_back(static_cast<float>(vertex.x()));
+				positions.push_back(static_cast<float>(vertex.y()));
+				positions.push_back(static_cast<float>(vertex.z()));
 				
-			}
+				return static_cast<unsigned int>(positions.size() / 3);
+			};
 			
-			auto uvs = trimesh->GetMesh()->getCoordsUV();
 			
-			for(auto uv : uvs){
-				texs.push_back((float)uv.x());
-				texs.push_back((float)uv.y());
+			unsigned int n_faces = trimesh->GetMesh()->getNumTriangles();
+			
+			// Assuming you have a function addVertex that adds a vertex to your positions vector
+			// with coordinates and returns its index
+			for (unsigned int it = 0; it < n_faces; it++) {
+				auto triangle = trimesh->GetMesh()->getTriangle(it);
+				
+				// Triangle vertices
+				const ChVector<>& p1 = triangle.p1;
+				const ChVector<>& p2 = triangle.p2;
+				const ChVector<>& p3 = triangle.p3;
+				
+				// Create a triangle using the triangle vertices
+				addVertex(p1);
+				addVertex(p2);
+				addVertex(p3);
+				
+				// Add indices for the vertices in the triangle
+				indexArray.emplace_back(static_cast<unsigned int>(it * 3));
+				indexArray.emplace_back(static_cast<unsigned int>(it * 3 + 1));
+				indexArray.emplace_back(static_cast<unsigned int>(it * 3 + 2));
+
+				auto normal1 = trimesh->GetMesh()->getCoordsNormals()[it];
+
+				auto normal2 = trimesh->GetMesh()->getCoordsNormals()[it + 1];
+
+				auto normal3 = trimesh->GetMesh()->getCoordsNormals()[it + 2];
+
+				// Modify this part to add normals to your normal data structure
+				normals.push_back(normal1.x());
+				normals.push_back(normal1.y());
+				normals.push_back(normal1.z());
+
+				
+				normals.push_back(normal2.x());
+				normals.push_back(normal2.y());
+				normals.push_back(normal2.z());
+
+				
+				normals.push_back(normal3.x());
+				normals.push_back(normal3.y());
+				normals.push_back(normal3.z());
+
+				// Access UV coordinates from the mesh, not from trimesh
+				auto uv0 = trimesh->GetMesh()->getCoordsUV()[trimesh->GetMesh()->getIndicesUV()[it][0]];
+				auto uv1 = trimesh->GetMesh()->getCoordsUV()[trimesh->GetMesh()->getIndicesUV()[it][1]];
+				auto uv2 = trimesh->GetMesh()->getCoordsUV()[trimesh->GetMesh()->getIndicesUV()[it][2]];
+				
+				// Modify this part to add UV coordinates to your UV data structure
+				texs.push_back(static_cast<float>(uv0.x()));
+				texs.push_back(static_cast<float>(uv0.y()));
+				texs.push_back(static_cast<float>(uv1.x()));
+				texs.push_back(static_cast<float>(uv1.y()));
+				texs.push_back(static_cast<float>(uv2.x()));
+				texs.push_back(static_cast<float>(uv2.y()));
 			}
+
 			
 			auto mesh = ax::Mesh::create(positions, normals, texs, indexArray);
-
+			
+			mesh->getMeshIndexData()->setPrimitiveType(ax::MeshCommand::PrimitiveType::TRIANGLE_STRIP);
+			
 			auto renderer = ax::MeshRenderer::create();
 			
 			renderer->addMesh(mesh);
@@ -504,7 +550,7 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 
 			renderer->setPosition3D(position);
 			renderer->setRotationQuat(rotation);
-			//renderer->setCullFace(trimesh->IsBackfaceCull() ? ax::CullFaceSide::BACK : ax::CullFaceSide::FRONT);
+//			renderer->setCullFace(trimesh->IsBackfaceCull() ? ax::CullFaceSide::FRONT : ax::CullFaceSide::BACK);
 
 //            SetVisualMaterial(mchildnode, shape);
 //            mchildnode->setMaterialFlag(video::EMF_WIREFRAME, trimesh->IsWireframe());
