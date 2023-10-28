@@ -146,6 +146,133 @@ AtrousConvolution<
       padHBottom);
 }
 
+// Copy Constructor.
+template <
+typename ForwardConvolutionRule,
+typename BackwardConvolutionRule,
+typename GradientConvolutionRule,
+typename InputType,
+typename OutputType
+>
+AtrousConvolution<ForwardConvolutionRule, BackwardConvolutionRule,
+GradientConvolutionRule, InputType, OutputType>::AtrousConvolution(
+																   const AtrousConvolution& layer) :
+inSize(layer.inSize),
+outSize(layer.outSize),
+kernelWidth(layer.kernelWidth),
+kernelHeight(layer.kernelHeight),
+strideWidth(layer.strideWidth),
+strideHeight(layer.strideHeight),
+inputWidth(layer.inputWidth),
+inputHeight(layer.inputHeight),
+outputWidth(layer.outputWidth),
+outputHeight(layer.outputHeight),
+dilationWidth(layer.dilationWidth),
+dilationHeight(layer.dilationHeight)
+{
+	// Implement the copy constructor to create a deep copy of the layer.
+	// You may need to copy all relevant member variables and allocate memory
+	// for new objects.
+}
+
+// Move Constructor.
+template <
+typename ForwardConvolutionRule,
+typename BackwardConvolutionRule,
+typename GradientConvolutionRule,
+typename InputType,
+typename OutputType
+>
+AtrousConvolution<ForwardConvolutionRule, BackwardConvolutionRule,
+GradientConvolutionRule, InputType, OutputType>::AtrousConvolution(
+																   AtrousConvolution&& layer) :
+inSize(std::move(layer.inSize)),
+outSize(std::move(layer.outSize)),
+kernelWidth(std::move(layer.kernelWidth)),
+kernelHeight(std::move(layer.kernelHeight)),
+strideWidth(std::move(layer.strideWidth)),
+strideHeight(std::move(layer.strideHeight)),
+inputWidth(std::move(layer.inputWidth)),
+inputHeight(std::move(layer.inputHeight)),
+outputWidth(std::move(layer.outputWidth)),
+outputHeight(std::move(layer.outputHeight)),
+dilationWidth(std::move(layer.dilationWidth)),
+dilationHeight(std::move(layer.dilationHeight))
+{
+	// Implement the move constructor to transfer ownership of resources.
+	// You may need to transfer member variables and reset the source object.
+}
+
+// Copy assignment operator.
+template <
+typename ForwardConvolutionRule,
+typename BackwardConvolutionRule,
+typename GradientConvolutionRule,
+typename InputType,
+typename OutputType
+>
+AtrousConvolution<ForwardConvolutionRule, BackwardConvolutionRule,
+GradientConvolutionRule, InputType, OutputType>&
+AtrousConvolution<ForwardConvolutionRule, BackwardConvolutionRule,
+GradientConvolutionRule, InputType, OutputType>::operator=(
+														   const AtrousConvolution& layer)
+{
+	if (this != &layer)
+	{
+		// Implement the copy assignment operator to copy the layer.
+		// You may need to release any resources held by the current object,
+		// copy member variables, and allocate new resources if needed.
+		inSize = layer.inSize;
+		outSize = layer.outSize;
+		kernelWidth = layer.kernelWidth;
+		kernelHeight = layer.kernelHeight;
+		strideWidth = layer.strideWidth;
+		strideHeight = layer.strideHeight;
+		inputWidth = layer.inputWidth;
+		inputHeight = layer.inputHeight;
+		outputWidth = layer.outputWidth;
+		outputHeight = layer.outputHeight;
+		dilationWidth = layer.dilationWidth;
+		dilationHeight = layer.dilationHeight;
+	}
+	return *this;
+}
+
+// Move assignment operator.
+template <
+typename ForwardConvolutionRule,
+typename BackwardConvolutionRule,
+typename GradientConvolutionRule,
+typename InputType,
+typename OutputType
+>
+AtrousConvolution<ForwardConvolutionRule, BackwardConvolutionRule,
+GradientConvolutionRule, InputType, OutputType>&
+AtrousConvolution<ForwardConvolutionRule, BackwardConvolutionRule,
+GradientConvolutionRule, InputType, OutputType>::operator=(
+														   AtrousConvolution&& layer)
+{
+	if (this != &layer)
+	{
+		// Implement the move assignment operator to transfer ownership of resources.
+		// You may need to transfer member variables and reset the source object.
+		inSize = std::move(layer.inSize);
+		outSize = std::move(layer.outSize);
+		kernelWidth = std::move(layer.kernelWidth);
+		kernelHeight = std::move(layer.kernelHeight);
+		strideWidth = std::move(layer.strideWidth);
+		strideHeight = std::move(layer.strideHeight);
+		inputWidth = std::move(layer.inputWidth);
+		inputHeight = stdmove(layer.inputHeight);
+		outputWidth = std::move(layer.outputWidth);
+		outputHeight = std::move(layer.outputHeight);
+		dilationWidth = std::move(layer.dilationWidth);
+		dilationHeight = std::move(layer.dilationHeight);
+	}
+	return *this;
+}
+
+
 template<
     typename ForwardConvolutionRule,
     typename BackwardConvolutionRule,

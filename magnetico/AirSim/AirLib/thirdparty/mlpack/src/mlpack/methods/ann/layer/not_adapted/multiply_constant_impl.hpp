@@ -25,6 +25,52 @@ MultiplyConstantType<InputType, OutputType>::MultiplyConstantType(
   // Nothing to do here.
 }
 
+// Copy Constructor.
+template<typename InputType, typename OutputType>
+MultiplyConstantType<InputType, OutputType>::MultiplyConstantType(
+																  const MultiplyConstantType& layer)
+: scalar(layer.scalar)
+{
+	// Copy any other member variables if needed.
+}
+
+// Move Constructor.
+template<typename InputType, typename OutputType>
+MultiplyConstantType<InputType, OutputType>::MultiplyConstantType(
+																  MultiplyConstantType&& layer)
+: scalar(std::move(layer.scalar))
+{
+	// Move any other member variables if needed.
+}
+
+// Copy assignment operator.
+template<typename InputType, typename OutputType>
+MultiplyConstantType<InputType, OutputType>&
+MultiplyConstantType<InputType, OutputType>::operator=(
+													   const MultiplyConstantType& layer)
+{
+	if (this != &layer)
+	{
+		// Copy member variables and settings here.
+		scalar = layer.scalar;
+	}
+	return *this;
+}
+
+// Move assignment operator.
+template<typename InputType, typename OutputType>
+MultiplyConstantType<InputType, OutputType>&
+MultiplyConstantType<InputType, OutputType>::operator=(
+													   MultiplyConstantType&& layer)
+{
+	if (this != &layer)
+	{
+		// Move member variables and settings here.
+		scalar = std::move(layer.scalar);
+	}
+	return *this;
+}
+
 template<typename InputType, typename OutputType>
 void MultiplyConstantType<InputType, OutputType>::Forward(
     const InputType& input, OutputType& output)

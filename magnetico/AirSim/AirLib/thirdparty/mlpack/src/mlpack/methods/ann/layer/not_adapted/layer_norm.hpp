@@ -58,120 +58,131 @@ namespace mlpack {
  *         arma::sp_mat or arma::cube).
  */
 template <
-  typename InputType = arma::mat,
-  typename OutputType = arma::mat
+typename InputType = arma::mat,
+typename OutputType = arma::mat
 >
 class LayerNormType : public Layer<InputType>
 {
- public:
-  //! Create the LayerNormType object.
-  LayerNormType();
-
-  /**
-   * Create the LayerNorm object for a specified number of input units.
-   *
-   * @param size The number of input units.
-   * @param eps The epsilon added to variance to ensure numerical stability.
-   */
-  LayerNormType(const size_t size, const double eps = 1e-8);
-
-  //! Clone the LayerNormType object. This handles polymorphism correctly.
-  LayerNormType* Clone() const { return new LayerNormType(*this); }
-
-  /**
-   * Reset the layer parameters.
-   */
-  void Reset();
-
-  /**
-   * Forward pass of Layer Normalization. Transforms the input data
-   * into zero mean and unit variance, scales the data by a factor gamma and
-   * shifts it by beta.
-   *
-   * @param input Input data for the layer.
-   * @param output Resulting output activations.
-   */
-  void Forward(const InputType& input, OutputType& output);
-
-  void SetWeights(
-			   typename OutputType::elem_type* weightsPtr);
-  /**
-   * Backward pass through the layer.
-   *
-   * @param input The input activations.
-   * @param gy The backpropagated error.
-   * @param g The calculated gradient.
-   */
-  void Backward(const InputType& input,
-                const OutputType& gy,
-                OutputType& g);
-
-  /**
-   * Calculate the gradient using the output delta and the input activations.
-   *
-   * @param input The input activations.
-   * @param error The calculated error.
-   * @param gradient The calculated gradient.
-   */
-  void Gradient(const InputType& input,
-                const OutputType& error,
-                OutputType& gradient);
-
-  //! Get the parameters.
-  OutputType const& Parameters() const { return weights; }
-  //! Modify the parameters.
-  OutputType& Parameters() { return weights; }
-
-  //! Get the mean across single training data.
-  OutputType Mean() { return mean; }
-
-  //! Get the variance across single training data.
-  OutputType Variance() { return variance; }
-
-  //! Get the number of input units.
-  size_t InSize() const { return size; }
-
-  //! Get the value of epsilon.
-  double Epsilon() const { return eps; }
-
-  size_t WeightSize() const { return 2 * size; }
-
-  /**
-   * Serialize the layer.
-   */
-  template<typename Archive>
-  void serialize(Archive& ar, const uint32_t /* version */);
-
- private:
-  //! Locally-stored number of input units.
-  size_t size;
-
-  //! Locally-stored epsilon value.
-  double eps;
-
-  //! Variable to keep track of whether we are in loading or saving mode.
-  bool loading;
-
-  //! Locally-stored scale parameter.
-  OutputType gamma;
-
-  //! Locally-stored shift parameter.
-  OutputType beta;
-
-  //! Locally-stored parameters.
-  OutputType weights;
-
-  //! Locally-stored mean object.
-  OutputType mean;
-
-  //! Locally-stored variance object.
-  OutputType variance;
-
-  //! Locally-stored normalized input.
-  OutputType normalized;
-
-  //! Locally-stored zero mean input.
-  OutputType inputMean;
+public:
+	//! Create the LayerNormType object.
+	LayerNormType();
+	
+	/**
+	 * Create the LayerNorm object for a specified number of input units.
+	 *
+	 * @param size The number of input units.
+	 * @param eps The epsilon added to variance to ensure numerical stability.
+	 */
+	LayerNormType(const size_t size, const double eps = 1e-8);
+	
+	//! Clone the LayerNormType object. This handles polymorphism correctly.
+	LayerNormType* Clone() const { return new LayerNormType(*this); }
+	
+	
+	//! Copy another LayerNormType.
+	LayerNormType(const LayerNormType& layer);
+	//! Take ownership of another LayerNormType.
+	LayerNormType(LayerNormType&& layer);
+	//! Copy another LayerNormType.
+	LayerNormType& operator=(const LayerNormType& layer);
+	//! Take ownership of another LayerNormType.
+	LayerNormType& operator=(LayerNormType&& layer);
+	
+	
+	/**
+	 * Reset the layer parameters.
+	 */
+	void Reset();
+	
+	/**
+	 * Forward pass of Layer Normalization. Transforms the input data
+	 * into zero mean and unit variance, scales the data by a factor gamma and
+	 * shifts it by beta.
+	 *
+	 * @param input Input data for the layer.
+	 * @param output Resulting output activations.
+	 */
+	void Forward(const InputType& input, OutputType& output);
+	
+	void SetWeights(
+					typename OutputType::elem_type* weightsPtr);
+	/**
+	 * Backward pass through the layer.
+	 *
+	 * @param input The input activations.
+	 * @param gy The backpropagated error.
+	 * @param g The calculated gradient.
+	 */
+	void Backward(const InputType& input,
+				  const OutputType& gy,
+				  OutputType& g);
+	
+	/**
+	 * Calculate the gradient using the output delta and the input activations.
+	 *
+	 * @param input The input activations.
+	 * @param error The calculated error.
+	 * @param gradient The calculated gradient.
+	 */
+	void Gradient(const InputType& input,
+				  const OutputType& error,
+				  OutputType& gradient);
+	
+	//! Get the parameters.
+	OutputType const& Parameters() const { return weights; }
+	//! Modify the parameters.
+	OutputType& Parameters() { return weights; }
+	
+	//! Get the mean across single training data.
+	OutputType Mean() { return mean; }
+	
+	//! Get the variance across single training data.
+	OutputType Variance() { return variance; }
+	
+	//! Get the number of input units.
+	size_t InSize() const { return size; }
+	
+	//! Get the value of epsilon.
+	double Epsilon() const { return eps; }
+	
+	size_t WeightSize() const { return 2 * size; }
+	
+	/**
+	 * Serialize the layer.
+	 */
+	template<typename Archive>
+	void serialize(Archive& ar, const uint32_t /* version */);
+	
+private:
+	//! Locally-stored number of input units.
+	size_t size;
+	
+	//! Locally-stored epsilon value.
+	double eps;
+	
+	//! Variable to keep track of whether we are in loading or saving mode.
+	bool loading;
+	
+	//! Locally-stored scale parameter.
+	OutputType gamma;
+	
+	//! Locally-stored shift parameter.
+	OutputType beta;
+	
+	//! Locally-stored parameters.
+	OutputType weights;
+	
+	//! Locally-stored mean object.
+	OutputType mean;
+	
+	//! Locally-stored variance object.
+	OutputType variance;
+	
+	//! Locally-stored normalized input.
+	OutputType normalized;
+	
+	//! Locally-stored zero mean input.
+	OutputType inputMean;
 }; // class LayerNormType
 
 // Standard LayerNorm type
@@ -183,3 +194,4 @@ typedef LayerNormType<arma::mat, arma::mat> LayerNorm;
 #include "layer_norm_impl.hpp"
 
 #endif
+

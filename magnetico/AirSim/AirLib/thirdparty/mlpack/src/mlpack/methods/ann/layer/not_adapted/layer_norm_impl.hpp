@@ -54,6 +54,93 @@ void LayerNormType<InputType, OutputType>::SetWeights(
   loading = false;
 }
 
+// Copy Constructor.
+template <typename InputType, typename OutputType>
+LayerNormType<InputType, OutputType>::LayerNormType(
+													const LayerNormType& layer) :
+size(layer.size),
+eps(layer.eps),
+loading(false),
+gamma(layer.gamma),
+beta(layer.beta),
+weights(layer.weights),
+mean(layer.mean),
+variance(layer.variance),
+normalized(layer.normalized),
+inputMean(layer.inputMean)
+{
+	// Implement the copy constructor to create a deep copy of the layer.
+	// You may need to copy all relevant member variables and allocate memory
+	// for new objects.
+}
+
+// Move Constructor.
+template <typename InputType, typename OutputType>
+LayerNormType<InputType, OutputType>::LayerNormType(
+													LayerNormType&& layer) :
+size(std::move(layer.size)),
+eps(std::move(layer.eps)),
+loading(false),
+gamma(std::move(layer.gamma)),
+beta(std::move(layer.beta)),
+weights(std::move(layer.weights)),
+mean(std::move(layer.mean)),
+variance(std::move(layer.variance)),
+normalized(std::move(layer.normalized)),
+inputMean(std::move(layer.inputMean))
+{
+	// Implement the move constructor to transfer ownership of resources.
+	// You may need to transfer member variables and reset the source object.
+}
+
+// Copy assignment operator.
+template <typename InputType, typename OutputType>
+LayerNormType<InputType, OutputType>& LayerNormType<InputType, OutputType>::operator=(
+																					  const LayerNormType& layer)
+{
+	if (this != &layer)
+	{
+		// Implement the copy assignment operator to copy the layer.
+		// You may need to release any resources held by the current object,
+		// copy member variables, and allocate new resources if needed.
+		size = layer.size;
+		eps = layer.eps;
+		loading = false;
+		gamma = layer.gamma;
+		beta = layer.beta;
+		weights = layer.weights;
+		mean = layer.mean;
+		variance = layer.variance;
+		normalized = layer.normalized;
+		inputMean = layer.inputMean;
+	}
+	return *this;
+}
+
+// Move assignment operator.
+template <typename InputType, typename OutputType>
+LayerNormType<InputType, OutputType>& LayerNormType<InputType, OutputType>::operator=(
+																					  LayerNormType&& layer)
+{
+	if (this != &layer)
+	{
+		// Implement the move assignment operator to transfer ownership of resources.
+		// You may need to transfer member variables and reset the source object.
+		size = std::move(layer.size);
+		eps = std::move(layer.eps);
+		loading = false;
+		gamma = std::move(layer.gamma);
+		beta = std::move(layer.beta);
+		weights = std::move(layer.weights);
+		mean = std::move(layer.mean);
+		variance = std::move(layer.variance);
+		normalized = std::move(layer.normalized);
+		inputMean = std::move(layer.inputMean);
+	}
+	return *this;
+}
+
+
 template<typename InputType, typename OutputType>
 void LayerNormType<InputType, OutputType>::Forward(
     const InputType& input, OutputType& output)

@@ -32,51 +32,62 @@ namespace mlpack {
 template<typename InputType = arma::mat, typename OutputType = arma::mat>
 class MultiplyConstantType : public Layer<InputType>
 {
- public:
-  //! Create the MultiplyConstant object.
-  MultiplyConstantType(const double scalar = 1.0);
-
-  //! Clone the MultiplyConstantType object. This handles polymorphism
-  //! correctly.
-  MultiplyConstantType* Clone() const
-  {
-    return new MultiplyConstantType(this->scalar);
-  }
-
-
-  /**
-   * Ordinary feed forward pass of a neural network. Multiply the input with the
-   * specified constant scalar value.
-   *
-   * @param input Input data used for evaluating the specified function.
-   * @param output Resulting output activation.
-   */
-  void Forward(const InputType& input, OutputType& output);
-
-  /**
-   * Ordinary feed backward pass of a neural network. The backward pass
-   * multiplies the error with the specified constant scalar value.
-   *
-   * @param * (input) The propagated input activation.
-   * @param gy The backpropagated error.
-   * @param g The calculated gradient.
-   */
-  void Backward(const InputType& /* input */,
-                const OutputType& gy,
-                OutputType& g);
-
-  //! Get the scalar multiplier.
-  double Scalar() const { return scalar; }
-  //! Modify the scalar multiplier.
-  double& Scalar() { return scalar; }
-
-  //! Serialize the layer.
-  template<typename Archive>
-  void serialize(Archive& ar, const uint32_t /* version */);
-
- private:
-  //! Locally-stored constant scalar value.
-  double scalar;
+public:
+	//! Create the MultiplyConstant object.
+	MultiplyConstantType(const double scalar = 1.0);
+	
+	//! Clone the MultiplyConstantType object. This handles polymorphism
+	//! correctly.
+	MultiplyConstantType* Clone() const
+	{
+		return new MultiplyConstantType(*this);
+	}
+	
+	//! Copy Constructor.
+	MultiplyConstantType(const MultiplyConstantType& layer);
+	
+	//! Move Constructor.
+	MultiplyConstantType(MultiplyConstantType&& layer);
+	
+	//! Copy assignment operator.
+	MultiplyConstantType& operator=(const MultiplyConstantType& layer);
+	
+	//! Move assignment operator.
+	MultiplyConstantType& operator=(MultiplyConstantType&& layer);
+	
+	/**
+	 * Ordinary feed forward pass of a neural network. Multiply the input with the
+	 * specified constant scalar value.
+	 *
+	 * @param input Input data used for evaluating the specified function.
+	 * @param output Resulting output activation.
+	 */
+	void Forward(const InputType& input, OutputType& output);
+	
+	/**
+	 * Ordinary feed backward pass of a neural network. The backward pass
+	 * multiplies the error with the specified constant scalar value.
+	 *
+	 * @param * (input) The propagated input activation.
+	 * @param gy The backpropagated error.
+	 * @param g The calculated gradient.
+	 */
+	void Backward(const InputType& /* input */,
+				  const OutputType& gy,
+				  OutputType& g);
+	
+	//! Get the scalar multiplier.
+	double Scalar() const { return scalar; }
+	//! Modify the scalar multiplier.
+	double& Scalar() { return scalar; }
+	
+	//! Serialize the layer.
+	template<typename Archive>
+	void serialize(Archive& ar, const uint32_t /* version */);
+	
+private:
+	//! Locally-stored constant scalar value.
+	double scalar;
 }; // class MultiplyConstantType
 
 // Convenience typedefs.
@@ -90,3 +101,4 @@ typedef MultiplyConstantType<arma::mat, arma::mat> MultiplyConstant;
 #include "multiply_constant_impl.hpp"
 
 #endif
+

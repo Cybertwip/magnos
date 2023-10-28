@@ -140,6 +140,20 @@ class TransposedConvolutionType : public Layer<InputType>
 
   TransposedConvolutionType* Clone() const { return new TransposedConvolutionType(*this); }
 
+	
+	
+	//! Copy Constructor.
+	TransposedConvolutionType(const TransposedConvolutionType& layer);
+	
+	//! Move Constructor.
+	TransposedConvolutionType(TransposedConvolutionType&& layer);
+	
+	//! Copy assignment operator.
+	TransposedConvolutionType& operator=(const TransposedConvolutionType& layer);
+	
+	//! Move assignment operator.
+	TransposedConvolutionType& operator=(TransposedConvolutionType&& layer);
+	
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
    * f(x) by propagating the activity forward through f.
