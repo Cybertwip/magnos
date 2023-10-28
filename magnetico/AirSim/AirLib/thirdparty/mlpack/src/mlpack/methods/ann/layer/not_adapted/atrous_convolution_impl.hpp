@@ -142,7 +142,7 @@ AtrousConvolution<
     InitializeSamePadding(padWLeft, padWRight, padHTop, padHBottom);
   }
 
-  padding = PaddingType<InputType, OutputType>(padWLeft, padWRight, padHTop,
+  padding = PaddingType<InputType>(padWLeft, padWRight, padHTop,
       padHBottom);
 }
 
@@ -415,7 +415,7 @@ void AtrousConvolution<
     OutputType
 >::serialize(Archive& ar, const uint32_t /* version */)
 {
-  ar(cereal::base_class<Layer<InputType, OutputType>>(this));
+  ar(cereal::base_class<Layer<InputType>>(this));
 
   ar(CEREAL_NVP(inSize));
   ar(CEREAL_NVP(outSize));

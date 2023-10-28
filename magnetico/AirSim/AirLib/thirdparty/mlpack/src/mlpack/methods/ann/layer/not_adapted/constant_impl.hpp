@@ -104,7 +104,7 @@ template<typename Archive>
 void ConstantType<InputType, OutputType>::serialize(
     Archive& ar, const uint32_t /* version */)
 {
-  ar(cereal::base_class<Layer<InputType, OutputType>>(this));
+  ar(cereal::base_class<Layer<InputType>>(this));
 
   ar(CEREAL_NVP(constantOutput));
   if (Archive::is_loading::value)

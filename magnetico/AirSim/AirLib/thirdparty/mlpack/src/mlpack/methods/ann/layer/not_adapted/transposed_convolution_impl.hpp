@@ -186,7 +186,7 @@ void TransposedConvolutionType<
 {
   weight = arma::Cube<typename OutputType::elem_type>(weightPtr,
       kernelWidth, kernelHeight, outSize * inSize, false, false);
-  bias = arma::Mat<typename OutputType::elem_type>(weightsPtr +
+	bias = arma::Mat<typename OutputType::elem_type>(weightPtr +
       weight.n_elem, outSize, 1, false, false);
 }
 
@@ -449,7 +449,7 @@ void TransposedConvolutionType<
     OutputType
 >::serialize(Archive& ar, const uint32_t /* version */)
 {
-  ar(cereal::base_class<Layer<InputType, OutputType>>(this));
+  ar(cereal::base_class<Layer<InputType>>(this));
 
   ar(CEREAL_NVP(inSize));
   ar(CEREAL_NVP(outSize));

@@ -15,7 +15,7 @@
 
 #include <mlpack/prereqs.hpp>
 
-#include "layer.hpp"
+#include "mlpack/methods/ann/layer/layer.hpp"
 
 namespace mlpack {
 
@@ -30,7 +30,7 @@ namespace mlpack {
  *     type to differ from the input type (Default: arma::mat).
  */
 template<typename InputType = arma::mat, typename OutputType = arma::mat>
-class ConstantType : public Layer<InputType, OutputType>
+class ConstantType : public Layer<InputType>
 {
  public:
   /**

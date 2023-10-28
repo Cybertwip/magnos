@@ -22,8 +22,8 @@
 #include <mlpack/methods/ann/convolution_rules/svd_convolution.hpp>
 #include <mlpack/core/util/to_lower.hpp>
 
-#include "layer_types.hpp"
-#include "padding.hpp"
+#include "mlpack/methods/ann/layer/layer_types.hpp"
+#include "mlpack/methods/ann/layer/padding.hpp"
 
 namespace mlpack{
 
@@ -49,7 +49,7 @@ template <
     typename InputType = arma::mat,
     typename OutputType = arma::mat
 >
-class AtrousConvolution : public Layer<InputType, OutputType>
+class AtrousConvolution : public Layer<InputType>
 {
  public:
   //! Create the AtrousConvolution object.
@@ -141,6 +141,7 @@ class AtrousConvolution : public Layer<InputType, OutputType>
    */
   void Forward(const InputType& input, OutputType& output);
 
+  void ResetWeights(typename OutputType::elem_type* weightsPtr);
   /**
    * Ordinary feed backward pass of a neural network, calculating the function
    * f(x) by propagating x backwards through f. Using the results from the feed
@@ -178,13 +179,16 @@ class AtrousConvolution : public Layer<InputType, OutputType>
   //! Modify the weight of the layer.
   arma::Cube<typename OutputType::elem_type>& Weight() { return weight; }
 
-  const std::vector<size_t>& OutputDimensions() const
+  const std::vector<size_t> OutputDimensions() const
   {
-    std::vector<size_t> result(inputDimensions.size(), 0);
+    std::vector<size_t> result(this->inputDimensions.size(), 0);
     result[0] = outputWidth;
     result[1] = outputHeight;
     return result;
   }
+
+	
+  AtrousConvolution* Clone() const { return new AtrousConvolution(*this); }
 
   //! Get the bias of the layer.
   const OutputType& Bias() const { return bias; }
@@ -242,9 +246,9 @@ class AtrousConvolution : public Layer<InputType, OutputType>
   size_t& DilationHeight() { return dilationHeight; }
 
   //! Get the internal Padding layer.
-  PaddingType<InputType, OutputType> const& Padding() const { return padding; }
+  PaddingType<InputType> const& Padding() const { return padding; }
   //! Modify the internal Padding layer.
-  PaddingType<InputType, OutputType>& Padding() { return padding; }
+  PaddingType<InputType>& Padding() { return padding; }
 
   //! Get size of the weight matrix.
   size_t WeightSize() const
@@ -384,7 +388,7 @@ class AtrousConvolution : public Layer<InputType, OutputType>
   arma::Cube<typename OutputType::elem_type> gradientTemp;
 
   //! Locally-stored padding layer.
-  PaddingType<InputType, OutputType> padding;
+  PaddingType<InputType> padding;
 }; // class AtrousConvolution
 
 } // namespace mlpack

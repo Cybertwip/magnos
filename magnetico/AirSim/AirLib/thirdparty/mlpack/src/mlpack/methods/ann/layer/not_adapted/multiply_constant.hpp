@@ -15,7 +15,7 @@
 
 #include <mlpack/prereqs.hpp>
 
-#include "layer.hpp"
+#include "mlpack/methods/ann/layer/layer.hpp"
 
 namespace mlpack {
 
@@ -30,7 +30,7 @@ namespace mlpack {
  *     type to differ from the input type (Default: arma::mat).
  */
 template<typename InputType = arma::mat, typename OutputType = arma::mat>
-class MultiplyConstantType : public Layer<InputType, OutputType>
+class MultiplyConstantType : public Layer<InputType>
 {
  public:
   //! Create the MultiplyConstant object.
@@ -40,22 +40,10 @@ class MultiplyConstantType : public Layer<InputType, OutputType>
   //! correctly.
   MultiplyConstantType* Clone() const
   {
-    return new MultiplyConstantType(*this);
+    return nullptr;
   }
 
-  //! Copy Constructor.
-  MultiplyConstant(const MultiplyConstant& layer);
-
-  //! Move Constructor.
-  MultiplyConstant(MultiplyConstant&& layer);
-
-  //! Copy assignment operator.
-  MultiplyConstant& operator=(const MultiplyConstant& layer);
-
-  //! Move assignment operator.
-  MultiplyConstant& operator=(MultiplyConstant&& layer);
-
-  /**
+   /**
    * Ordinary feed forward pass of a neural network. Multiply the input with the
    * specified constant scalar value.
    *

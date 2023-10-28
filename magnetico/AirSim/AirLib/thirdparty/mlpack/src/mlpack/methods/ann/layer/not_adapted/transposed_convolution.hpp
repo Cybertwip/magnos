@@ -22,8 +22,8 @@
 #include <mlpack/methods/ann/convolution_rules/svd_convolution.hpp>
 #include <mlpack/core/util/to_lower.hpp>
 
-#include "layer.hpp"
-#include "padding.hpp"
+#include "mlpack/methods/ann/layer/layer.hpp"
+#include "mlpack/methods/ann/layer/padding.hpp"
 
 namespace mlpack {
 
@@ -46,7 +46,7 @@ template <
     typename InputType = arma::mat,
     typename OutputType = arma::mat
 >
-class TransposedConvolutionType : public Layer<InputType, OutputType>
+class TransposedConvolutionType : public Layer<InputType>
 {
  public:
   //! Create the Transposed Convolution object.
@@ -136,7 +136,9 @@ class TransposedConvolutionType : public Layer<InputType, OutputType>
   /*
    * Set the weight and bias term.
    */
-  void SetWeights(const typename OutputType::elem_type* weightsPtr);
+  void SetWeights(typename OutputType::elem_type* weightsPtr);
+
+  TransposedConvolutionType* Clone() const { return new TransposedConvolutionType(*this); }
 
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
@@ -213,7 +215,7 @@ class TransposedConvolutionType : public Layer<InputType, OutputType>
   size_t const& InputSize() const { return inSize; }
 
   //! Get the output size.
-  size_t const& OutputSize() const { return outSize; }
+  size_t OutputSize() { return outSize; }
 
   //! Get the kernel width.
   size_t const& KernelWidth() const { return kernelWidth; }
@@ -261,14 +263,14 @@ class TransposedConvolutionType : public Layer<InputType, OutputType>
     return (outSize * inSize * kernelWidth * kernelHeight) + outSize;
   }
 
-  const std::vector<size_t>& OutputDimensions() const
+  const std::vector<size_t> OutputDimensions() const
   {
-    std::vector<size_t> result(inputDimensions.size(), 0);
+    std::vector<size_t> result(this->inputDimensions.size(), 0);
     result[0] = outputWidth;
     result[1] = outputHeight;
     // Higher dimensions are unmodified.
-    for (size_t i = 2; i < inputDimensions.size(); ++i)
-      result[i] = inputDimensions[i];
+    for (size_t i = 2; i < this->inputDimensions.size(); ++i)
+      result[i] = this->inputDimensions[i];
     return result;
   }
 

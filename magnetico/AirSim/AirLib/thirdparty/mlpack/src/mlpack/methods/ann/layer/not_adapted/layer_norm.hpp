@@ -61,7 +61,7 @@ template <
   typename InputType = arma::mat,
   typename OutputType = arma::mat
 >
-class LayerNormType : public Layer<InputType, OutputType>
+class LayerNormType : public Layer<InputType>
 {
  public:
   //! Create the LayerNormType object.
@@ -93,6 +93,8 @@ class LayerNormType : public Layer<InputType, OutputType>
    */
   void Forward(const InputType& input, OutputType& output);
 
+  void SetWeights(
+			   typename OutputType::elem_type* weightsPtr);
   /**
    * Backward pass through the layer.
    *
@@ -132,7 +134,7 @@ class LayerNormType : public Layer<InputType, OutputType>
   //! Get the value of epsilon.
   double Epsilon() const { return eps; }
 
-  const size_t WeightSize() const { return 2 * size; }
+  size_t WeightSize() const { return 2 * size; }
 
   /**
    * Serialize the layer.
