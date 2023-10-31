@@ -321,7 +321,7 @@ public:
 		this->_height = 720;
 		this->_dataLen = this->_width * this->_height * 4;
 		this->_data = (uint8_t*)malloc(this->_dataLen);
-		
+		this->_pixelFormat = ax::PixelFormat::RGBA8;
 		memset(this->_data, 0, this->_dataLen);
 	}
 	
