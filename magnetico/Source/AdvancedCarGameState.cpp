@@ -777,26 +777,20 @@ void AdvancedCarGameState::update(float delta) {
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
 	
-	static int counter = 0;
 	
-	if(counter++ % 2 == 0){ // 60fps
-		counter = 0;
-		
-			_secondaryCamera->getSnapshot([this](Image& image){
-				ax::AsyncTaskPool::getInstance()->enqueue(ax::AsyncTaskPool::TaskType::TASK_OTHER, [=]() {
-
-				memcpy(_inputInferenceBuffer->data.data(), image.data.data(), image.data.size());
-				
-				auto processedImage = _inferenceEngine->detectLanes(*_inputInferenceBuffer);
-				
-				memcpy(_snapshotBuffer->getData(), processedImage.data.data(), processedImage.data.size());
-				
-				_visionRenderer->getTexture()->updateWithImage(_snapshotBuffer, ax::PixelFormat::RGBA8);
-				
-			});
+	_secondaryCamera->getSnapshot([this](Image& image){
+		ax::AsyncTaskPool::getInstance()->enqueue(ax::AsyncTaskPool::TaskType::TASK_NETWORK, [=]() {
+			
+			memcpy(_inputInferenceBuffer->data.data(), image.data.data(), image.data.size());
+			
+			auto processedImage = _inferenceEngine->detectLanes(*_inputInferenceBuffer);
+			
+			memcpy(_snapshotBuffer->getData(), processedImage.data.data(), processedImage.data.size());
+			
+			_visionRenderer->getTexture()->updateWithImage(_snapshotBuffer, ax::PixelFormat::RGBA8);
+			
 		});
-
-	}
+	});
 
 	_visionRenderer->visit(ax::Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
 
