@@ -1,19 +1,8 @@
-#include <algorithm>  // std::generate
-#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <numeric>
-
-#include "MLUtils.h"
-#include "OnnxUtils.h"
 #include "StbUtils.h"
-
-#include "OnnxEngine.h"
 #include "TusimpleEngine.h"
+
+#include <string>
+#include <iostream>
 
 int main() {
 	std::string workPath = MODELS_PATH; // You need to define MODELS_PATH

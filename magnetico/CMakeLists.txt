@@ -389,32 +389,52 @@ get_target_property(ONNXRUNTIME_INCLUDE_DIRS onnxruntime::onnxruntime INTERFACE_
 # You can print or use them as needed.
 message("ONNX Runtime Include Directories: ${ONNXRUNTIME_INCLUDE_DIRS}")
 
-# Define the "translator" executable
-add_executable(detector
-translator/test/main.cpp
-translator/test/MLUtils.cpp
-translator/test/StbUtils.cpp
-translator/test/OnnxEngine.cpp
-translator/test/TusimpleEngine.cpp
+add_library(detective
+translator/detective/MLUtils.cpp
+translator/detective/StbUtils.cpp
+translator/detective/OnnxEngine.cpp
+translator/detective/TusimpleEngine.cpp
 )
 
-target_include_directories(detector PRIVATE
-   translator/src
-   translator/test
+target_include_directories(detective PUBLIC
+   translator/detective
    ${Boost_INCLUDE_DIRS}
    ${_AX_ROOT}/thirdparty/stb
    ${ONNXRUNTIME_INCLUDE_DIRS}
 )
 
 # Set C++ standard and other compiler options if necessary
-set_target_properties(detector PROPERTIES
+set_target_properties(detective PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
 
 
-target_compile_definitions(detector PRIVATE MLPACK_HAS_STB=1 MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+target_compile_definitions(detective PRIVATE MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
 
-target_link_libraries(detector PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB})
+target_link_libraries(detective PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB})
 
+
+# Define the "translator" executable
+add_executable(detective_test
+translator/test/main.cpp
+)
+
+target_include_directories(detective_test PRIVATE
+   translator/test
+)
+
+# Set C++ standard and other compiler options if necessary
+set_target_properties(detective_test PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
+
+target_compile_definitions(detective_test PRIVATE MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+
+
+target_link_libraries(detective_test PRIVATE detective)
+
+target_link_libraries(${PROJECT_NAME} detective)
