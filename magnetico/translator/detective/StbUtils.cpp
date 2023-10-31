@@ -1,6 +1,5 @@
 #include "StbUtils.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -18,23 +17,15 @@ Image resizeImage(Image& image, int new_width, int new_height) {
 	int channels = image.channels;
 	auto& input_image = image.data;
 	
-	std::vector<unsigned char> output_buffer(new_width * new_height * channels, 0.0f);
+	std::vector<uint8_t> output_buffer(new_width * new_height * channels, 0.0f);
+	
+	stbir_resize_uint8_linear(input_image.data(), width, height, 0, output_buffer.data(), new_width, new_height, 0, (stbir_pixel_layout) channels);
 	
 	
-	std::vector<unsigned char> input_buffer;
-	
-	for(auto color : input_image){
-		input_buffer.push_back(static_cast<int8_t>(color));
-	}
-	
-	stbir_resize_uint8_linear(input_buffer.data(), width, height, 0, output_buffer.data(), new_width, new_height, 0, (stbir_pixel_layout) channels);
-	
-	
-	std::vector<float> resized_image;
-	
+	std::vector<uint8_t> resized_image;
 	
 	for(auto color : output_buffer){
-		resized_image.push_back(static_cast<float>(color));
+		resized_image.push_back((color));
 	}
 	
 	return Image { new_width, new_height, channels, resized_image };
@@ -51,7 +42,7 @@ Image load_image_data(const std::string& image_path) {
 	}
 	
 	// Create a vector to hold image data
-	std::vector<float> input_data(image_data, image_data + width * height * channels);
+	std::vector<uint8_t> input_data(image_data, image_data + width * height * channels);
 	
 	// Ensure proper memory deallocation
 	stbi_image_free(image_data);
@@ -60,13 +51,7 @@ Image load_image_data(const std::string& image_path) {
 }
 
 void saveImage(Image& image, const std::string& path){
-	std::vector<std::uint8_t> uint8Vector;
-	
-	for (float value : image.data) {
-		std::uint8_t uint8Value = static_cast<std::uint8_t>(value);
-		uint8Vector.push_back(uint8Value);
-	}
-	
+	std::vector<std::uint8_t>& uint8Vector = image.data;
 
 	stbi_write_png(path.c_str(), image.width, image.height, image.channels, uint8Vector.data(), 0);
 }

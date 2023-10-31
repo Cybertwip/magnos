@@ -44,9 +44,16 @@ private:
 	
 private:
 	
-	void drawFilledCircle(std::vector<std::uint8_t>& image_data, int image_width, int image_height, int center_x, int center_y, int radius, const std::vector<uint8_t>& color);
+	void drawFilledCircle(std::vector<std::uint8_t>& image_data, int image_width, int image_height, int channels, int center_x, int center_y, int radius, const std::vector<uint8_t>& color);
 	
 	Image drawLanes(Image& image, const std::vector<std::vector<std::vector<int>>>& lanes_points, const std::vector<bool>& lanes_detected, const Config& cfg, bool saveToFile);
 	
 	std::pair<std::vector<std::vector<std::vector<int>>>, std::vector<bool>> process_output(const Ort::Value& tensor, const Config& cfg);
+	
+private:
+	std::vector<std::vector<std::vector<float>>> shaped_data = std::vector<std::vector<std::vector<float>>> (101, std::vector<std::vector<float>>(56, std::vector<float>(4)));
+	
+	std::vector<std::vector<std::vector<float>>> softmax_buffer = std::vector<std::vector<std::vector<float>>> (100, std::vector<std::vector<float>>(56, std::vector<float>(4)));
+
+
 };

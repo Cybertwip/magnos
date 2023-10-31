@@ -194,7 +194,7 @@ void Scene::render(Renderer* renderer, const Mat4& eyeTransform, const Mat4* eye
         {
             defaultCamera = Camera::_visitingCamera;
         }
-
+		
         // There are two ways to modify the "default camera" with the eye Transform:
         // a) modify the "nodeToParentTransform" matrix
         // b) modify the "additional transform" matrix
@@ -223,7 +223,7 @@ void Scene::render(Renderer* renderer, const Mat4& eyeTransform, const Mat4* eye
 #endif
 
         renderer->render();
-
+		
         _director->popMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
 
         // we shouldn't restore the transform matrix since it could be used

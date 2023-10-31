@@ -25,17 +25,6 @@
 #undef CHRONO_IRRLICHT
 #endif
 
-#ifdef CHRONO_IRRLICHT
-#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
-using namespace chrono::irrlicht;
-#endif
-#ifdef CHRONO_VSG
-#include "chrono_vsg/ChVisualSystemVSG.h"
-using namespace chrono::vsg3d;
-#endif
-
-
-
 #include "chrono/core/ChStream.h"
 #include "chrono/utils/ChFilters.h"
 
@@ -52,17 +41,13 @@ using namespace chrono::vsg3d;
 #include "chrono_vehicle/wheeled_vehicle/tire/FialaTire.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/TMeasyTire.h"
 
-#ifdef CHRONO_IRRLICHT
-#include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
-// specify whether the demo should actually use Irrlicht
-#define USE_IRRLICHT
-#endif
-
 
 #include "chrono_models/vehicle/artcar/ARTcar.h"
 
 class StellaMagnosDriver;
 class CustomViewportCamera;
+class TusimpleEngine;
+class Image;
 
 using namespace chrono;
 using namespace chrono::curiosity;
@@ -144,4 +129,9 @@ public:
 	float stallTorque = 300;
 
 	ax::MeshRenderer* carMesh_;
+	
+	ax::Sprite* _visionRenderer;
+
+	std::unique_ptr<TusimpleEngine> _inferenceEngine;
+	std::unique_ptr<Image> _inputInferenceBuffer;
 };

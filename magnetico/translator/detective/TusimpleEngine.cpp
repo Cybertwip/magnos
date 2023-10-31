@@ -17,22 +17,26 @@ TusimpleEngine::TusimpleEngine() : OnnxEngine(std::string{MODELS_PATH} + "fast_r
 
 std::vector<float> TusimpleEngine::prepareInputImage(Image& image, const std::vector<float>& mean, const std::vector<float>& std) {
 	
-	std::vector<unsigned char> data;
-	
-	for(auto color : image.data){
-		data.push_back(static_cast<int>(color));
-	}
-	
+	std::vector<uint8_t>& data = image.data;
+		
 	// Apply preprocessing and flatten the original image into a 1D vector
 	std::vector<float> processed_tensor;
 	
 	size_t counter = 0;
+	size_t skipper = 0;
 	for(size_t i = 0; i<data.size(); ++i){
+		
+		if(skipper == 3 && image.channels == 4){
+			skipper = 0;
+			continue;
+		}
+		
 		int color = data[i];
 		float pixel_value = (static_cast<float>(color) / 255.0 - mean[counter % 3]) / std[counter%3];
 		
 		processed_tensor.push_back(pixel_value);
 		counter++;
+		skipper++;
 	}
 	
 	
@@ -43,8 +47,7 @@ std::vector<float> TusimpleEngine::prepareInputImage(Image& image, const std::ve
 		channeledData[counter % 3].push_back(processed_tensor[i]);
 		counter++;
 	}
-	std::vector<std::vector<std::vector<float>>> channeledDataWithNewDim(1, channeledData);
-	
+		
 	// Flatten the data
 	std::vector<float> flattenedData;
 	for (int channel = 0; channel < 3; ++channel) {
@@ -55,6 +58,7 @@ std::vector<float> TusimpleEngine::prepareInputImage(Image& image, const std::ve
 	
 	return flattenedData;
 }
+
 Image TusimpleEngine::detectLanes(Image& image){
 	// Create the input tensor
 	std::vector<int64_t> input_shape = {1, 3, cfg.in_h, cfg.in_w};
@@ -70,14 +74,11 @@ Image TusimpleEngine::detectLanes(Image& image){
 	auto output = inference({inputTensor}, {input_shape});
 	
 	auto [lanes_points, lanes_detected] = process_output(output[0], cfg);
-	
-	auto scaled_image =
-	resizeImage(image, cfg.img_w, cfg.img_h);
-	
-	return drawLanes(scaled_image, lanes_points, lanes_detected, cfg, true);
+		
+	return drawLanes(image, lanes_points, lanes_detected, cfg, false);
 	
 }
-void TusimpleEngine::drawFilledCircle(std::vector<std::uint8_t>& image_data, int image_width, int image_height, int center_x, int center_y, int radius, const std::vector<uint8_t>& color) {
+void TusimpleEngine::drawFilledCircle(std::vector<std::uint8_t>& image_data, int image_width, int image_height, int channels, int center_x, int center_y, int radius, const std::vector<uint8_t>& color) {
 	for (int y = -radius; y <= radius; y++) {
 		for (int x = -radius; x <= radius; x++) {
 			if (x * x + y * y <= radius * radius) {
@@ -85,10 +86,14 @@ void TusimpleEngine::drawFilledCircle(std::vector<std::uint8_t>& image_data, int
 				int col = center_x + x;
 				
 				if (row >= 0 && row < image_height && col >= 0 && col < image_width) {
-					int index = 3 * (row * image_width + col);
+					int index = channels * (row * image_width + col);
 					image_data[index] = color[0];
 					image_data[index + 1] = color[1];
 					image_data[index + 2] = color[2];
+					
+					if(channels == 4){
+						image_data[index + 3] = color[3];
+					}
 				}
 			}
 		}
@@ -96,17 +101,12 @@ void TusimpleEngine::drawFilledCircle(std::vector<std::uint8_t>& image_data, int
 }
 
 Image TusimpleEngine::drawLanes(Image& image, const std::vector<std::vector<std::vector<int>>>& lanes_points, const std::vector<bool>& lanes_detected, const Config& cfg, bool saveToFile) {
-	
-	std::vector<std::uint8_t> uint8Vector;
-	
-	for (float value : image.data) {
-		std::uint8_t uint8Value = static_cast<std::uint8_t>(value);
-		uint8Vector.push_back(uint8Value);
-	}
-	
+		
 	int image_width = cfg.img_w;
 	int image_height = cfg.img_h;
-	std::vector<std::uint8_t>& image_data = uint8Vector;
+	int image_channels = image.channels;
+	
+	std::vector<std::uint8_t>& image_data = image.data;
 	
 	for (size_t lane_num = 0; lane_num < lanes_detected.size(); ++lane_num) {
 		if (lanes_detected[lane_num]) {
@@ -115,15 +115,9 @@ Image TusimpleEngine::drawLanes(Image& image, const std::vector<std::vector<std:
 				int row = lane_point[1];
 				
 				// Draw a larger dot at the lane point
-				drawFilledCircle(image_data, image_width, image_height, col, row, 10, laneColors[lane_num]);
+				drawFilledCircle(image_data, image_width, image_height, image_channels, col, row, 10, laneColors[lane_num]);
 			}
 		}
-	}
-	
-	image.data.clear();
-	
-	for(auto color : image_data){
-		image.data.push_back(static_cast<float>(color));
 	}
 	
 	std::string workPath = MODELS_PATH;
@@ -140,16 +134,16 @@ Image TusimpleEngine::drawLanes(Image& image, const std::vector<std::vector<std:
 std::pair<std::vector<std::vector<std::vector<int>>>, std::vector<bool>> TusimpleEngine::process_output(const Ort::Value& tensor, const Config& cfg) {
 	
 	auto data = tensor_to_vec<float>(tensor);
-	
-	std::vector<std::vector<std::vector<float>>> shaped_data(101, std::vector<std::vector<float>>(56, std::vector<float>(4)));
-	
+		
 	// Copy the data into the vector with the desired shape
 	size_t index = 0;
 	for (int i = 0; i < 101; ++i) {
 		for (int j = 0; j < 56; ++j) {
 			for (int k = 0; k < 4; ++k) {
 				shaped_data[i][j][k] = data[index];
-				
+				if(i != 100){
+					softmax_buffer[i][j][k] = data[index];
+				}
 				index++;
 			}
 		}
@@ -157,10 +151,31 @@ std::pair<std::vector<std::vector<std::vector<int>>>, std::vector<bool>> Tusimpl
 	
 	reverseAlongAxis(shaped_data, 1);
 	
-	auto processed_output = shaped_data;
-	shaped_data.pop_back();
 	
-	auto softmaxed_data = applySoftmaxToAxis0(shaped_data);
+	auto& processed_output = shaped_data;
+	
+	
+	std::vector<std::vector<std::vector<float>>>& output = processed_output; // 3D vector
+	std::vector<int> max_indices(output[0].size()); // vector to store max indices
+	
+	for (size_t i = 0; i < output[0].size(); ++i) {
+		int max_val = output[0][i][0];
+		int max_idx = 0;
+		for (size_t j = 1; j < output.size(); ++j) {
+			if (output[j][i][0] > max_val) {
+				max_val = output[j][i][0];
+				max_idx = j;
+			}
+		}
+		max_indices[i] = max_idx;
+	}
+	
+	
+	auto argmax = applyArgmaxToAxis0(processed_output);
+	
+	auto mask = createBooleanMask(argmax, cfg.griding_num);
+	
+	auto softmaxed_data = applySoftmaxToAxis0(softmax_buffer);
 	
 	auto& processed_prob = softmaxed_data;
 	
@@ -185,26 +200,6 @@ std::pair<std::vector<std::vector<std::vector<int>>>, std::vector<bool>> Tusimpl
 		}
 	}
 	
-	
-	std::vector<std::vector<std::vector<float>>> output = processed_output; // 3D vector
-	std::vector<int> max_indices(output[0].size()); // vector to store max indices
-	
-	for (size_t i = 0; i < output[0].size(); ++i) {
-		int max_val = output[0][i][0];
-		int max_idx = 0;
-		for (size_t j = 1; j < output.size(); ++j) {
-			if (output[j][i][0] > max_val) {
-				max_val = output[j][i][0];
-				max_idx = j;
-			}
-		}
-		max_indices[i] = max_idx;
-	}
-	
-	
-	auto argmax = applyArgmaxToAxis0(processed_output);
-	
-	auto mask = createBooleanMask(argmax, cfg.griding_num);
 	
 	applyBooleanMask(loc, mask, 0);
 	
@@ -240,7 +235,6 @@ std::pair<std::vector<std::vector<std::vector<int>>>, std::vector<bool>> Tusimpl
 					nonZeroCount++;
 				}
 			}
-			
 		}
 		
 		if(nonZeroCount > 2){
@@ -258,4 +252,4 @@ std::pair<std::vector<std::vector<std::vector<int>>>, std::vector<bool>> Tusimpl
 		lanes_points.push_back(lane_points);
 	}
 	return {lanes_points, lanes_detected};
-	}
+}

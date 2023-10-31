@@ -20,13 +20,18 @@
 #include "components/Battery.hpp"
 #include "components/Laser.hpp"
 
+#include "TusimpleEngine.h"
+
 #include <memory>
+
+
 
 class CustomViewportCamera : public ax::Camera {
 public:
 	
 	CustomViewportCamera() : ax::Camera() {
 		_viewport = Camera::getDefaultViewport();
+		updateBuffers();
 	}
 	
 	~CustomViewportCamera(){
@@ -40,7 +45,7 @@ public:
 		return ret;
 	}
 	
-	CustomViewportCamera* createOrthographic(float zoomX, float zoomY, float nearPlane, float farPlane)
+	static CustomViewportCamera* createOrthographic(float zoomX, float zoomY, float nearPlane, float farPlane)
 	{
 		auto ret = new CustomViewportCamera();
 		ret->initOrthographic(zoomX, zoomY, nearPlane, farPlane);
@@ -56,17 +61,20 @@ public:
 	}
 	
 	void clearBackground() override {
+
 		if (_clearBrush)
 		{
 			_clearBrush->drawBackground(this);
 		}
 		
-		_director->getRenderer()->clear(ax::ClearFlag::DEPTH_AND_STENCIL, ax::Color4F::WHITE, 1, 0, getGlobalZOrder());
 
+		_director->getRenderer()->clear(ax::ClearFlag::DEPTH_AND_STENCIL, ax::Color4F::WHITE, 1, 0, getGlobalZOrder());
+		
 	}
 	
 	void setCustomViewport(ax::Viewport viewport){
 		_viewport = viewport;
+		clippedBuffer.resize(_viewport.width * _viewport.height * 4);
 	}
 	
 	void setDepthTest(bool depthTest){
@@ -76,12 +84,61 @@ public:
 	void setDepthWrite(bool depthWrite){
 		_depthWrite = depthWrite;
 	}
+	
+	void getSnapshot(std::function<void(ax::RefPtr<ax::Image>)> imageCallback){
+		ax::utils::captureScreen([imageCallback, this](ax::RefPtr<ax::Image> image){
+			memcpy(buffer.data(), image->getData(), image->getDataLen());
+			
+			// Define the dimensions of the original image
+			int originalWidth = image->getWidth();
+			int originalHeight = image->getHeight();
+			
+			// Define the clipping rectangle parameters
+			int clipX = _viewport.x;      // X-coordinate of the top-left corner of the clipping region
+			int clipY = _viewport.y;      // Y-coordinate of the top-left corner of the clipping region
+			int clipWidth = _viewport.width;  // Width of the clipped region
+			int clipHeight = _viewport.height; // Height of the clipped region
+			
+			for (int y = 0; y < clipHeight; y++) {
+				for (int x = 0; x < clipWidth; x++) {
+					int srcX = clipX + x;
+					int srcY = originalHeight - (clipY + y) - 1; // Flip Y-coordinate
+					if (srcX >= 0 && srcX < originalWidth && srcY >= 0 && srcY < originalHeight) {
+						// Calculate the source and destination buffer offsets
+						int srcOffset = (srcY * originalWidth + srcX) * 4;
+						int destOffset = ((clipHeight - 1 - y) * clipWidth + x) * 4; // Vertical flip
+						
+						// Copy the pixel data (assuming RGBA format, 4 bytes per pixel)
+						for (int i = 0; i < 4; i++) {
+							clippedBuffer[destOffset + i] = buffer[srcOffset + i];
+						}
+					}
+				}
+			}
+			
+			image->initWithRawData(clippedBuffer.data(), 0, clipWidth, clipHeight, 0, true);
+			
+			imageCallback(image);
+		});
+		
+//		_renderTarget->saveToFile("/Users/victor.lopez1/Projects/magnos/magnetico/build/image.png");
+		
+	}
 
 private:
+	void updateBuffers(){
+		buffer = std::vector<uint8_t>(_viewport.width * _viewport.height * 4);
+		
+		clippedBuffer = std::vector<uint8_t>(_viewport.width * _viewport.height * 4);
+	}
 	ax::Viewport _viewport;
-	
+
 	bool _depthTest = true;
 	bool _depthWrite = true;
+	
+	std::vector<uint8_t> buffer;;
+	std::vector<uint8_t> clippedBuffer;
+
 };
 
 namespace{
@@ -222,9 +279,6 @@ void StellaMagnosDriver::Update(double time) {
 }
 #include "chrono_models/vehicle/duro/Duro_Vehicle.h"
 
-USING_NS_AX;
-
-
 // =============================================================================
 
 using namespace chrono;
@@ -265,7 +319,6 @@ AdvancedCarGameState::AdvancedCarGameState() {
 	_mainLayer->retain();
 	_secondaryLayer = ax::Layer::create();
 	_secondaryLayer->retain();
-
 	_2dLayer = ax::Layer::create();
 	_2dLayer->retain();
 
@@ -275,6 +328,7 @@ AdvancedCarGameState::~AdvancedCarGameState(){
 	_mainLayer->release();
 	_secondaryLayer->release();
 	_2dLayer->release();
+	_visionRenderer->release();
 }
 
 bool AdvancedCarGameState::init() {
@@ -331,36 +385,8 @@ bool AdvancedCarGameState::init() {
 
 	
 //	terrainImpl->Initialize();
-	
-//	auto friscoDataFile = GetChronoDataFile("cities/frisco/frisco.obj");
-	
-//	ChVector<> terrainLoc(0, 0, 0);
-//	ChCoordsys<> terainCoord(terrainLoc, QUNIT);
-
-//	auto materialSurface = std::make_shared<ChMaterialSurfaceNSC>();
-//	terrainImpl->AddPatch(materialSurface, terainCoord, friscoDataFile);
-	
+		
 	terrain = std::move(terrainImpl);
-
-//	auto floor =
-//	std::make_shared<ChBodyEasyMesh>(friscoDataFile, 1.0f);
-//
-//	floor->SetBodyFixed(true);
-//
-//	vehicle->GetSystem()->Add(floor);
-
-	
-//	auto terrainImpl = std::make_unique<RandomSurfaceTerrain>(vehicle->GetSystem(), xend);
-//
-//	terrainImpl->Initialize(RandomSurfaceTerrain::SurfaceType::FLAT, vehicle->GetWheeltrack(0));
-	
-//	auto ground_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
-
-//	terrainImpl->EnableCollisionMesh(ground_mat, std::abs(initLoc.x()) + 5);
-
-//	terrain = std::move(terrainImpl);
-
-	//CreateGround(*vehicle->GetSystem());
 	
 	// Create and initialize the powertrain system
 	auto engine = ReadEngineJSON(vehicle::GetDataFile(engine_file));
@@ -369,17 +395,9 @@ bool AdvancedCarGameState::init() {
 	auto powertrain = chrono_types::make_shared<ChPowertrainAssembly>(engine, transmission);
 	vehicle->InitializePowertrain(powertrain);
 	
-//	_carMeshCollision = chrono_types::make_shared<ChBodyEasyMesh>("polestar/polestar.obj", 1.0f);
-	
-//	_carMeshCollision->SetPos(vehicle->GetPos());
-	
-//	_carMeshCollision->SetBodyFixed(true);
 	
 	vehicle->SetChassisCollide(true);
 	vehicle->SetChassisVehicleCollide(true);
-	//vehicle->GetSystem()->Add(_carMeshCollision);
-	
-	//vehicle->EnableBrakeLocking(true);
 
 	// Create and initialize the tires
 	for (auto& axle : vehicle->GetAxles()) {
@@ -459,12 +477,29 @@ bool AdvancedCarGameState::init() {
 					   rotation.e3(),
 					   rotation.e0());
 	
-//	carMesh_->setPosition3D(Vec3(vehiclePosition.x(), vehiclePosition.y(), vehiclePosition.z()));
-
-//	carMesh_->setRotationQuat(quaternion);
 	
-//	_carMeshCollision->SetPos(vehicle->GetPos());
-//	_carMeshCollision->SetRot(vehicle->GetRot());
+	_inferenceEngine = std::make_unique<TusimpleEngine>();
+
+	
+	_visionRenderer = ax::Sprite::create("dummy.png");
+	
+	_visionRenderer->retain();
+	
+	_visionRenderer->setContentSize(ax::Vec2(_visionRenderer->getTextureRect().size.width / 2 * ax::Director::getInstance()->getContentScaleFactor(), _visionRenderer->getTextureRect().size.height / 2 * ax::Director::getInstance()->getContentScaleFactor()));
+	_visionRenderer->setAnchorPoint(ax::Vec2(0, 0));
+
+	_visionRenderer->setPosition(ax::Vec2(0, 0));
+
+//	this->addChild(_visionRenderer);
+	
+	_inputInferenceBuffer = std::make_unique<Image>();
+	
+	_inputInferenceBuffer->width = 1280;
+	_inputInferenceBuffer->height = 720;
+	_inputInferenceBuffer->channels = 4;
+	
+	_inputInferenceBuffer->data.resize(_inputInferenceBuffer->width * _inputInferenceBuffer->height * _inputInferenceBuffer->channels);
+
 	return true;
 }
 
@@ -475,27 +510,18 @@ void AdvancedCarGameState::onEnter(){
 void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	
 	// Create a directional light
-	auto directionalLight = DirectionLight::create(Vec3(0, 0, -1), Color3B::WHITE);
+	auto directionalLight = ax::DirectionLight::create(ax::Vec3(0, 0, -1), ax::Color3B::WHITE);
 	_mainLayer->addChild(directionalLight);
-	auto directionalLight2 = DirectionLight::create(Vec3(0, 0, 1), Color3B::WHITE);
+	auto directionalLight2 = ax::DirectionLight::create(ax::Vec3(0, 0, 1), ax::Color3B::WHITE);
 	
 	_mainLayer->addChild(directionalLight2);
 
 	// Create a point light
-	auto pointLight = PointLight::create(Vec3(0, 5, 5), Color3B::WHITE, 1000.0f);
+	auto pointLight = ax::PointLight::create(ax::Vec3(0, 5, 5), ax::Color3B::WHITE, 1000.0f);
 	_mainLayer->addChild(pointLight);
 	
-	// Create a spot light
-	auto spotLight = SpotLight::create(Vec3(0, 0, 0), Vec3(0, 0, 1), Color3B::WHITE, 30, 45, 1000.0f);
-
-//	carMesh_->addChild(spotLight);
-
-//	auto skybox = ax::Skybox::create("white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg", "white.jpg");
 	
-	//this->addChild(skybox);
-	// Create the main camera
-	
-	auto winSize = Camera::getDefaultViewport();
+	auto winSize = ax::Camera::getDefaultViewport();
 	
 	ax::Viewport viewport;
 	viewport.set((float)winSize.width * 0.5f, 0, (float)winSize.width * 0.5f, (float)winSize.height * 0.5f);
@@ -507,7 +533,7 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	defaultCamera->setVisible(false);
 	defaultCamera->setDepth(-1);
 	
-	_primaryCamera->setCustomViewport(Camera::getDefaultViewport());
+	_primaryCamera->setCustomViewport(ax::Camera::getDefaultViewport());
 	
 	_secondaryCamera->setCustomViewport(viewport);
 //	_secondaryCamera->setCustomViewport(Camera::getDefaultViewport());
@@ -517,66 +543,42 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	_primaryCamera->setFOV(90);
 	_primaryCamera->setZoom(1);
 	
-	_primaryCamera->setPosition3D(Vec3(5, 5, 5));
-	_primaryCamera->setRotation3D(Vec3(0, 0, 0));
-	_primaryCamera->lookAt(Vec3(0, 0, 0), Vec3(0, 0, 1));
+	_primaryCamera->setPosition3D(ax::Vec3(5, 5, 5));
+	_primaryCamera->setRotation3D(ax::Vec3(0, 0, 0));
+	_primaryCamera->lookAt(ax::Vec3(0, 0, 0), ax::Vec3(0, 0, 1));
 	
 	_secondaryCamera->setNearPlane(0.01f);
 	_secondaryCamera->setFarPlane(10000);
 	_secondaryCamera->setFOV(90);
 	_secondaryCamera->setZoom(1);
 
-	_secondaryCamera->setPosition3D(Vec3(5, 5, 5));
-	_secondaryCamera->setRotation3D(Vec3(0, 0, 0));
-	_secondaryCamera->lookAt(Vec3(0, 0, 0), Vec3(0, 0, 1));
+	_secondaryCamera->setPosition3D(ax::Vec3(5, 5, 5));
+	_secondaryCamera->setRotation3D(ax::Vec3(0, 0, 0));
+	_secondaryCamera->lookAt(ax::Vec3(0, 0, 0), ax::Vec3(0, 0, 1));
 
 	_primaryCamera->setDepth(0);
-	_primaryCamera->setCameraFlag(CameraFlag::DEFAULT);
+	_primaryCamera->setCameraFlag(ax::CameraFlag::DEFAULT);
 
 	_secondaryCamera->setDepth(4);
-	_secondaryCamera->setCameraFlag(CameraFlag::USER1);
+	_secondaryCamera->setCameraFlag(ax::CameraFlag::USER1);
 	
 	auto blue = ax::Color4F::BLUE;
 	
-	_secondaryCamera->setBackgroundBrush(CameraBackgroundBrush::createColorBrush(blue, 1));
+	_secondaryCamera->setBackgroundBrush(ax::CameraBackgroundBrush::createColorBrush(blue, 1));
 	
-//	_primaryCamera->setBackgroundBrush(CameraBackgroundBrush::createColorBrush(blue, 1));
-
 	this->addChild(_mainLayer);
 	
-	_mainLayer->setCameraMask((unsigned short)CameraFlag::DEFAULT | (unsigned short)CameraFlag::USER1);
-	_secondaryLayer->setCameraMask((unsigned short)CameraFlag::DEFAULT | (unsigned short)CameraFlag::USER1);
-	_2dLayer->setCameraMask((unsigned short)CameraFlag::DEFAULT | (unsigned short)CameraFlag::USER1);
+	_mainLayer->setCameraMask((unsigned short)ax::CameraFlag::DEFAULT | (unsigned short)ax::CameraFlag::USER1);
+	_secondaryLayer->setCameraMask((unsigned short)ax::CameraFlag::DEFAULT | (unsigned short)ax::CameraFlag::USER1);
+	_2dLayer->setCameraMask((unsigned short)ax::CameraFlag::DEFAULT | (unsigned short)ax::CameraFlag::USER1);
 
-	auto renderTarget = ax::RenderTexture::create(winSize.width, winSize.height, false);
-	auto renderTarget2 = ax::RenderTexture::create(winSize.width, winSize.height, false);
-
-//	renderTarget->addChild(ax::Sprite::create("kitty.jpg"));
-
-	// Set the secondary camera's depth test and depth write to false
-//	_secondaryCamera->setDepthTest(true);
-//	_secondaryCamera->setDepthWrite(true);
-
-	// Add the secondary camera to the render target
-//	renderTarget->addChild(_secondaryCamera);
-//	_secondaryCamera->addChild(_primaryCamera);
-//	renderTarget->setAutoDraw(false);
-//	renderTarget2->setAutoDraw(true);
-//	_renderTarget = renderTarget;
-//	renderTarget->setClearFlags(ClearFlag::DEPTH);
-//	renderTarget2->setClearFlags(ClearFlag::NONE);
-
-//	getScene()->addChild(_primaryCamera);
-	//_mainLayer->addChild(_primaryCamera);
-//	_secondaryLayer->addChild(_secondaryCamera);
 	getScene()->addChild(_primaryCamera);
 	getScene()->addChild(_secondaryCamera);
-
 }
 
-void AdvancedCarGameState::onMouseMove(Event* event)
+void AdvancedCarGameState::onMouseMove(ax::Event* event)
 {
-	EventMouse* e = static_cast<EventMouse*>(event);
+	ax::EventMouse* e = static_cast<ax::EventMouse*>(event);
 	// Get the cursor delta since the last frame
 	
 	prevCursorX = cursorX;
@@ -591,54 +593,52 @@ void AdvancedCarGameState::onMouseMove(Event* event)
 }
 
 
-void AdvancedCarGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
+void AdvancedCarGameState::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event*)
 {
 	if(driver->getEngine()->isCalibrating()){
 		return;
 	}
 
-	if(code == EventKeyboard::KeyCode::KEY_SPACE){
+	if(code == ax::EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = true;
 	}
 	
-	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
+	if(code == ax::EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
 		steer = true;
 		steerAngle = -6;
 	}
 	
-	if(code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
+	if(code ==  ax::EventKeyboard::KeyCode::KEY_LEFT_ARROW){
 		steer = true;
 		steerAngle = 6;
 	}
 	
 	
-	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
+	if(code == ax::EventKeyboard::KeyCode::KEY_DOWN_ARROW){
 		brake = true;
 	}
 	
 }
 
-void AdvancedCarGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
+void AdvancedCarGameState::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event*)
 {
 
 	if(driver->getEngine()->isCalibrating()){
 		return;
 	}
 
-	if(code == EventKeyboard::KeyCode::KEY_SPACE){
+	if(code == ax::EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = false;
 	}
 	
-	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
+	if(code == ax::EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code == ax::EventKeyboard::KeyCode::KEY_LEFT_ARROW){
 		steer = false;
 		steerAngle = 0;
 	}
 	
-	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
+	if(code == ax::EventKeyboard::KeyCode::KEY_DOWN_ARROW){
 		brake = false;
 	}
-	
-
 }
 
 void AdvancedCarGameState::update(float delta) {
@@ -713,7 +713,7 @@ void AdvancedCarGameState::update(float delta) {
 	// Set the final quaternion for the carMesh_
 //	carMesh_->setRotationQuat(finalQuaternion);
 
-	Vec3 carPosition = Vec3(vehiclePosition.x(), vehiclePosition.y(), vehiclePosition.z());
+	ax::Vec3 carPosition = ax::Vec3(vehiclePosition.x(), vehiclePosition.y(), vehiclePosition.z());
 
 	// Calculate new camera rotation angles based on normalized cursor deltas
 	horizontalAngle += cursorDeltaX * sensitivity;
@@ -735,38 +735,54 @@ void AdvancedCarGameState::update(float delta) {
 	float verticalOffset = distanceFromCar * cosf(horizontalAngle) * sinf(verticalAngle);
 	float depthOffset = distanceFromCar * cosf(horizontalAngle) * cosf(verticalAngle);
 
-	Vec3 cameraOffset(horizontalOffset, depthOffset, cameraHeight + verticalOffset);
+	ax::Vec3 cameraOffset(horizontalOffset, depthOffset, cameraHeight + verticalOffset);
 
 	// Calculate the new camera position
-	Vec3 newPosition = carPosition + cameraOffset;
+	ax::Vec3 newPosition = carPosition + cameraOffset;
 	
 	// Set the camera's new position and look-at point
 	_primaryCamera->setPosition3D(newPosition);
-	_primaryCamera->lookAt(carPosition, Vec3(0, 0, 1));
+	_primaryCamera->lookAt(carPosition, ax::Vec3(0, 0, 1));
 	
-	
-	// Look at a point relative to the camera's position (if needed)
-	Vec3 target = carPosition + originalQuaternion * Vec3(4, 0, 4); // Adjust the target location as needed
-	
-	Vec3 cameraPosition = carPosition + originalQuaternion * Vec3(0, 0, 4); // Adjust the target location as needed
-	
-	// Use the finalQuaternion to set the camera's orientation
+	ax::Vec3 target = carPosition + originalQuaternion * ax::Vec3(4, 0, 4);
+	ax::Vec3 cameraPosition = carPosition + originalQuaternion * ax::Vec3(0, 0, 4);
 	_secondaryCamera->setRotationQuat(originalQuaternion);
-
-	_secondaryCamera->setPosition3D(cameraPosition); // Set the desired camera position
-	_secondaryCamera->lookAt(target, Vec3(0, 0, 1));
+	_secondaryCamera->setPosition3D(cameraPosition);
+	_secondaryCamera->lookAt(target, ax::Vec3(0, 0, 1));
 
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
 	
+	_secondaryCamera->getSnapshot([this](ax::RefPtr<ax::Image> snapshot){
+				
+		memcpy(_inputInferenceBuffer->data.data(), snapshot->getData(), snapshot->getDataLen());
+		
+		auto processedImage = _inferenceEngine->detectLanes(*_inputInferenceBuffer);
+		
+//		auto scaledImage = resizeImage(processedImage, snapshot->getWidth(), snapshot->getHeight());
+		
+		memcpy(snapshot->getData(), processedImage.data.data(), processedImage.data.size());
+//		snapshot->initWithRawData(processedImage.data.data(), 0, snapshot->getWidth(), snapshot->getHeight(), 0);
+		
+		_visionRenderer->getTexture()->updateWithImage(snapshot, snapshot->getPixelFormat());
+		
+		_visionRenderer->visit(ax::Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
+
+	});
+		
+
+//		_visionRendererTarget->beginWithClear(0, 0, 0, 0);
+//		_director->getRenderer()->clear(_visionRendererTarget->getClearFlags(), _visionRendererTarget->getClearColor(), _visionRendererTarget->getClearDepth(), _visionRendererTarget->getClearStencil(), _visionRendererTarget->getGlobalZOrder());
+//
+		// End rendering to the RenderTexture
+//		_visionRendererTarget->end();
+
+//
+//	});
 	
-	
-//	_mainLayer->visit(ax::Director::getInstance()->getRenderer(), Mat4::IDENTITY, 0);
+//	_visionRendererTarget->visit(Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
 	
 
-//	_secondaryLayer->visit(ax::Director::getInstance()->getRenderer(), Mat4::IDENTITY, 0);
-
-//	_2dLayer->visit(ax::Director::getInstance()->getRenderer(), Mat4::IDENTITY, 0);
 }
 
 void AdvancedCarGameState::renderUI() {

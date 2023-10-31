@@ -6,5 +6,5 @@ struct Image {
 	int width;
 	int height;
 	int channels;
-	std::vector<float> data;
+	std::vector<uint8_t> data;
 };
