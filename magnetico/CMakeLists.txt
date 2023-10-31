@@ -396,6 +396,7 @@ endif()
 target_include_directories(translator PRIVATE
    translator/src
    ${Boost_INCLUDE_DIRS}
+   ${_AX_ROOT}/thirdparty/stb
 )
 
 add_subdirectory(onnx)
@@ -403,6 +404,41 @@ add_subdirectory(onnx)
 target_compile_definitions(onnx PRIVATE NDEBUG=1)
 target_compile_definitions(onnx_proto PRIVATE NDEBUG=1)
 
-target_compile_definitions(translator PRIVATE  MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+target_compile_definitions(translator PRIVATE MLPACK_HAS_STB=1 MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
 
-target_link_libraries(translator PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx)
+target_link_libraries(translator PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB})
+
+
+# Extract include directories from the imported target.
+get_target_property(ONNXRUNTIME_INCLUDE_DIRS onnxruntime::onnxruntime INTERFACE_INCLUDE_DIRECTORIES)
+
+# Now ONNXRUNTIME_INCLUDE_DIRS contains the include directories.
+# You can print or use them as needed.
+message("ONNX Runtime Include Directories: ${ONNXRUNTIME_INCLUDE_DIRS}")
+
+# Define the "translator" executable
+add_executable(detector
+translator/test/main.cpp
+translator/test/MLUtils.cpp
+)
+
+target_include_directories(detector PRIVATE
+   translator/src
+   translator/test
+   ${Boost_INCLUDE_DIRS}
+   ${_AX_ROOT}/thirdparty/stb
+   ${ONNXRUNTIME_INCLUDE_DIRS}
+)
+
+# Set C++ standard and other compiler options if necessary
+set_target_properties(detector PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
+
+
+target_compile_definitions(detector PRIVATE MLPACK_HAS_STB=1 MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+
+target_link_libraries(detector PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB})
+

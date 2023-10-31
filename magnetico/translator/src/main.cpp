@@ -4,7 +4,7 @@ int main()
 {
 	std::string workPath = MODELS_PATH;
 	
-	convertModel(workPath + "roadseg.onnx", workPath + "roadseg.xml", 384, 1248);
+	convertModel(workPath + "roadseg.onnx", workPath + "roadseg.bin", 640, 360);
 	
 	return 0;
 }
