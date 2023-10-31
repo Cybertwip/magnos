@@ -325,8 +325,10 @@ public:
 		memset(this->_data, 0, this->_dataLen);
 	}
 	
-	virtual ~InferenceImageBuffer(){
+	virtual ~InferenceImageBuffer() override {
 		free(this->_data);
+		
+		this->_data = nullptr;
 	}
 };
 
@@ -345,6 +347,7 @@ AdvancedCarGameState::AdvancedCarGameState() {
 	_2dLayer->retain();
 
 	_snapshotBuffer = new InferenceImageBuffer();
+	
 
 }
 
@@ -523,12 +526,30 @@ bool AdvancedCarGameState::init() {
 	_inputInferenceBuffer->channels = 4;
 		
 	_inputInferenceBuffer->data.resize(_inputInferenceBuffer->width * _inputInferenceBuffer->height * _inputInferenceBuffer->channels);
+		
 	
+	_backgroundTask = std::thread([this](){
+		
+		while(this->running){
+			processedImage = _inferenceEngine->detectLanes(*_inputInferenceBuffer);
+		}
+
+	});
+		
 	return true;
 }
 
 void AdvancedCarGameState::onEnter(){
-	Node::onEnter();
+	GameState::onEnter();
+}
+
+void AdvancedCarGameState::onExit(){
+	GameState::onExit();
+
+	this->running = false;
+	
+	_backgroundTask.join();
+	
 }
 
 void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
@@ -779,19 +800,16 @@ void AdvancedCarGameState::update(float delta) {
 	
 	
 	_secondaryCamera->getSnapshot([this](Image& image){
-		ax::AsyncTaskPool::getInstance()->enqueue(ax::AsyncTaskPool::TaskType::TASK_NETWORK, [=]() {
-			
-			memcpy(_inputInferenceBuffer->data.data(), image.data.data(), image.data.size());
-			
-			auto processedImage = _inferenceEngine->detectLanes(*_inputInferenceBuffer);
-			
-			memcpy(_snapshotBuffer->getData(), processedImage.data.data(), processedImage.data.size());
-			
-			_visionRenderer->getTexture()->updateWithImage(_snapshotBuffer, ax::PixelFormat::RGBA8);
-			
-		});
+		
+		memcpy(_inputInferenceBuffer->data.data(), image.data.data(), image.data.size());
+
+		memcpy(_snapshotBuffer->getData(), processedImage.data.data(), processedImage.data.size());
+		
+		_visionRenderer->getTexture()->updateWithImage(_snapshotBuffer, ax::PixelFormat::RGBA8);
+
 	});
 
+	
 	_visionRenderer->visit(ax::Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
 
 }

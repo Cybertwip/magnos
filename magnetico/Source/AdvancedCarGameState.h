@@ -1,5 +1,6 @@
 #pragma once
 #include "GameState.h"
+#include "StbUtils.h"
 #include "components/MovingAverageFilter.hpp"
 
 #include "chrono_models/robot/curiosity/Curiosity.h"
@@ -91,7 +92,8 @@ private:
 	void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event) override;
 	
 	void onEnter() override;
-	
+	void onExit() override;
+
 	ax::Layer* _mainLayer;
 	ax::Layer* _secondaryLayer;
 	ax::Layer* _2dLayer;
@@ -136,4 +138,10 @@ public:
 
 	std::unique_ptr<TusimpleEngine> _inferenceEngine;
 	std::unique_ptr<Image> _inputInferenceBuffer;
+	
+	Image processedImage;
+	
+	bool running = true;
+	
+	std::thread _backgroundTask;
 };
