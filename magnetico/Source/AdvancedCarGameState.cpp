@@ -122,9 +122,7 @@ public:
 						
 			imageCallback(clippedBuffer);
 		});
-		
-//		_renderTarget->saveToFile("/Users/victor.lopez1/Projects/magnos/magnetico/build/image.png");
-		
+			
 	}
 
 private:
