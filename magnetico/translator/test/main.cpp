@@ -5,14 +5,9 @@
 #include <iostream>
 
 int main() {
-	std::string workPath = MODELS_PATH; // You need to define MODELS_PATH
+	TusimpleEngine engine;
 	
-	std::string model_file = workPath + "fast_roadseg-tusimple.onnx";
-	
-	TusimpleEngine engine(model_file);
-	
-	// Load an input image
-	std::string image_path = workPath + "input.jpg";
+	 std::string image_path = std::string{MODELS_PATH} + "input.jpg";
 	
 	auto input_data = load_image_data(image_path);
 	

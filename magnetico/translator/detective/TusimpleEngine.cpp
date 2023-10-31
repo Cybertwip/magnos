@@ -1,6 +1,6 @@
 #include "TusimpleEngine.h"
 
-TusimpleEngine::TusimpleEngine(const std::string& model_file) : OnnxEngine(model_file) {
+TusimpleEngine::TusimpleEngine() : OnnxEngine(std::string{MODELS_PATH} + "fast_roadseg-tusimple.onnx") {
 	
 	cfg.in_w = 800;
 	cfg.in_h = 288;

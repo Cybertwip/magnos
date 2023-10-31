@@ -7,7 +7,7 @@
 
 class TusimpleEngine : public OnnxEngine {
 public:
-	TusimpleEngine(const std::string& model_file);
+	TusimpleEngine();
 		
 	Image detectLanes(Image& image);
 	
