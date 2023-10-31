@@ -131,6 +131,8 @@ public:
 	ax::MeshRenderer* carMesh_;
 	
 	ax::Sprite* _visionRenderer;
+	
+	ax::Image* _snapshotBuffer;
 
 	std::unique_ptr<TusimpleEngine> _inferenceEngine;
 	std::unique_ptr<Image> _inputInferenceBuffer;

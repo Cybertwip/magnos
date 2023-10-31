@@ -74,7 +74,11 @@ public:
 	
 	void setCustomViewport(ax::Viewport viewport){
 		_viewport = viewport;
-		clippedBuffer.resize(_viewport.width * _viewport.height * 4);
+		clippedBuffer.width = _viewport.width;
+		clippedBuffer.height = _viewport.height;
+		clippedBuffer.channels = 4;
+		
+		clippedBuffer.data.resize(clippedBuffer.width * clippedBuffer.height * clippedBuffer.channels);
 	}
 	
 	void setDepthTest(bool depthTest){
@@ -85,7 +89,7 @@ public:
 		_depthWrite = depthWrite;
 	}
 	
-	void getSnapshot(std::function<void(ax::RefPtr<ax::Image>)> imageCallback){
+	void getSnapshot(std::function<void(Image&)> imageCallback){
 		ax::utils::captureScreen([imageCallback, this](ax::RefPtr<ax::Image> image){
 			memcpy(buffer.data(), image->getData(), image->getDataLen());
 			
@@ -110,15 +114,13 @@ public:
 						
 						// Copy the pixel data (assuming RGBA format, 4 bytes per pixel)
 						for (int i = 0; i < 4; i++) {
-							clippedBuffer[destOffset + i] = buffer[srcOffset + i];
+							clippedBuffer.data[destOffset + i] = buffer[srcOffset + i];
 						}
 					}
 				}
 			}
-			
-			image->initWithRawData(clippedBuffer.data(), 0, clipWidth, clipHeight, 0, true);
-			
-			imageCallback(image);
+						
+			imageCallback(clippedBuffer);
 		});
 		
 //		_renderTarget->saveToFile("/Users/victor.lopez1/Projects/magnos/magnetico/build/image.png");
@@ -129,15 +131,19 @@ private:
 	void updateBuffers(){
 		buffer = std::vector<uint8_t>(_viewport.width * _viewport.height * 4);
 		
-		clippedBuffer = std::vector<uint8_t>(_viewport.width * _viewport.height * 4);
+		clippedBuffer.width = _viewport.width;
+		clippedBuffer.height = _viewport.height;
+		clippedBuffer.channels = 4;
+		
+		clippedBuffer.data.resize(clippedBuffer.width * clippedBuffer.height * clippedBuffer.channels);
 	}
 	ax::Viewport _viewport;
 
 	bool _depthTest = true;
 	bool _depthWrite = true;
 	
-	std::vector<uint8_t> buffer;;
-	std::vector<uint8_t> clippedBuffer;
+	std::vector<uint8_t> buffer;
+	Image clippedBuffer;
 
 };
 
@@ -308,6 +314,22 @@ ChVector<> initLoc(32, 0, 0.725);
 
 // Logging of seat acceleration data on flat road surface is useless and would lead to distorted results
 
+class InferenceImageBuffer : public ax::Image {
+public:
+	InferenceImageBuffer(){
+		this->_width  = 1280;
+		this->_height = 720;
+		this->_dataLen = this->_width * this->_height * 4;
+		this->_data = (uint8_t*)malloc(this->_dataLen);
+		
+		memset(this->_data, 0, this->_dataLen);
+	}
+	
+	virtual ~InferenceImageBuffer(){
+		free(this->_data);
+	}
+};
+
 using namespace chrono;
 using namespace chrono::utils;
 using namespace chrono::vehicle;
@@ -322,6 +344,8 @@ AdvancedCarGameState::AdvancedCarGameState() {
 	_2dLayer = ax::Layer::create();
 	_2dLayer->retain();
 
+	_snapshotBuffer = new InferenceImageBuffer();
+
 }
 
 AdvancedCarGameState::~AdvancedCarGameState(){
@@ -329,6 +353,9 @@ AdvancedCarGameState::~AdvancedCarGameState(){
 	_secondaryLayer->release();
 	_2dLayer->release();
 	_visionRenderer->release();
+	
+	delete(_snapshotBuffer);
+
 }
 
 bool AdvancedCarGameState::init() {
@@ -480,7 +507,6 @@ bool AdvancedCarGameState::init() {
 	
 	_inferenceEngine = std::make_unique<TusimpleEngine>();
 
-	
 	_visionRenderer = ax::Sprite::create("dummy.png");
 	
 	_visionRenderer->retain();
@@ -489,17 +515,15 @@ bool AdvancedCarGameState::init() {
 	_visionRenderer->setAnchorPoint(ax::Vec2(0, 0));
 
 	_visionRenderer->setPosition(ax::Vec2(0, 0));
-
-//	this->addChild(_visionRenderer);
-	
+		
 	_inputInferenceBuffer = std::make_unique<Image>();
 	
 	_inputInferenceBuffer->width = 1280;
 	_inputInferenceBuffer->height = 720;
 	_inputInferenceBuffer->channels = 4;
-	
+		
 	_inputInferenceBuffer->data.resize(_inputInferenceBuffer->width * _inputInferenceBuffer->height * _inputInferenceBuffer->channels);
-
+	
 	return true;
 }
 
@@ -753,23 +777,20 @@ void AdvancedCarGameState::update(float delta) {
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
 	
-	_secondaryCamera->getSnapshot([this](ax::RefPtr<ax::Image> snapshot){
+	_secondaryCamera->getSnapshot([this](Image& image){
 				
-		memcpy(_inputInferenceBuffer->data.data(), snapshot->getData(), snapshot->getDataLen());
+		memcpy(_inputInferenceBuffer->data.data(), image.data.data(), image.data.size());
 		
 		auto processedImage = _inferenceEngine->detectLanes(*_inputInferenceBuffer);
+				
+		memcpy(_snapshotBuffer->getData(), processedImage.data.data(), processedImage.data.size());
 		
-//		auto scaledImage = resizeImage(processedImage, snapshot->getWidth(), snapshot->getHeight());
+		_visionRenderer->getTexture()->updateWithImage(_snapshotBuffer, ax::PixelFormat::RGBA8);
 		
-		memcpy(snapshot->getData(), processedImage.data.data(), processedImage.data.size());
-//		snapshot->initWithRawData(processedImage.data.data(), 0, snapshot->getWidth(), snapshot->getHeight(), 0);
-		
-		_visionRenderer->getTexture()->updateWithImage(snapshot, snapshot->getPixelFormat());
-		
-		_visionRenderer->visit(ax::Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
-
 	});
 		
+	_visionRenderer->visit(ax::Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
+
 
 //		_visionRendererTarget->beginWithClear(0, 0, 0, 0);
 //		_director->getRenderer()->clear(_visionRendererTarget->getClearFlags(), _visionRendererTarget->getClearColor(), _visionRendererTarget->getClearDepth(), _visionRendererTarget->getClearStencil(), _visionRendererTarget->getGlobalZOrder());
