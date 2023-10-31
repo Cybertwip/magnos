@@ -144,4 +144,6 @@ public:
 	bool running = true;
 	
 	std::thread _backgroundTask;
+	
+	int _snapshotCounter = 0;
 };

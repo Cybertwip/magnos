@@ -499,7 +499,6 @@ bool AdvancedCarGameState::init() {
 
 	}
 
-	
 	auto rotation = vehicle->GetChassis()->GetRot();
 	
 	ax::Quaternion quaternion = ax::Quaternion(rotation.e1(),
@@ -507,16 +506,15 @@ bool AdvancedCarGameState::init() {
 					   rotation.e3(),
 					   rotation.e0());
 	
-	
 	_inferenceEngine = std::make_unique<TusimpleEngine>();
 
 	_visionRenderer = ax::Sprite::create("dummy.png");
 	
 	_visionRenderer->retain();
 	
-	_visionRenderer->setContentSize(ax::Vec2(_visionRenderer->getTextureRect().size.width / 2 * ax::Director::getInstance()->getContentScaleFactor(), _visionRenderer->getTextureRect().size.height / 2 * ax::Director::getInstance()->getContentScaleFactor()));
+	_visionRenderer->setContentSize(ax::Vec2(_visionRenderer->getTextureRect().size.width / 4 * ax::Director::getInstance()->getContentScaleFactor(), _visionRenderer->getTextureRect().size.height / 4 * ax::Director::getInstance()->getContentScaleFactor()));
+	
 	_visionRenderer->setAnchorPoint(ax::Vec2(0, 0));
-
 	_visionRenderer->setPosition(ax::Vec2(0, 0));
 		
 	_inputInferenceBuffer = std::make_unique<Image>();
@@ -798,16 +796,20 @@ void AdvancedCarGameState::update(float delta) {
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
 	
+
+	if(_snapshotCounter++ % 16 == 0){ // 15 fps
+		_snapshotCounter = 0;
+		_secondaryCamera->getSnapshot([this](Image& image){
+			
+			memcpy(_inputInferenceBuffer->data.data(), image.data.data(), image.data.size());
+			
+			memcpy(_snapshotBuffer->getData(), processedImage.data.data(), processedImage.data.size());
+			
+			_visionRenderer->getTexture()->updateWithImage(_snapshotBuffer, ax::PixelFormat::RGBA8);
+			
+		});
+	}
 	
-	_secondaryCamera->getSnapshot([this](Image& image){
-		
-		memcpy(_inputInferenceBuffer->data.data(), image.data.data(), image.data.size());
-
-		memcpy(_snapshotBuffer->getData(), processedImage.data.data(), processedImage.data.size());
-		
-		_visionRenderer->getTexture()->updateWithImage(_snapshotBuffer, ax::PixelFormat::RGBA8);
-
-	});
 
 	
 	_visionRenderer->visit(ax::Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
