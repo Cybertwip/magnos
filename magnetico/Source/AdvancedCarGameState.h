@@ -48,6 +48,7 @@
 class StellaMagnosDriver;
 class CustomViewportCamera;
 class TusimpleEngine;
+class HybridnetsEngine;
 class Image;
 
 using namespace chrono;
@@ -136,7 +137,8 @@ public:
 	
 	ax::Image* _snapshotBuffer;
 	
-	std::unique_ptr<TusimpleEngine> _inferenceEngine;
+	std::unique_ptr<TusimpleEngine> _trackInferenceEngine;
+	std::unique_ptr<HybridnetsEngine> _roadInferenceEngine;
 	std::unique_ptr<Image> _inputInferenceBuffer;
 	
 	bool running = true;

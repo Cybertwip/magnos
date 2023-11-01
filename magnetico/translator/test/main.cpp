@@ -5,19 +5,18 @@
 #include <iostream>
 
 int main() {
-	HybridnetsEngine engine;
-	
-	std::string input_path = std::string{MODELS_PATH} + "input.jpg";
+	HybridnetsEngine engine(3);
+		
+	std::string input_path = std::string{MODELS_PATH} + "input.png";
 	std::string output_path = std::string{MODELS_PATH} + "output.png";
 
 	auto input_data = load_image_data(input_path);
 	
 	try {
-		auto processedImage = engine.detectLanes(input_data);
+		auto [processedImage] = engine.detectLanes(input_data);
 		
 		saveImage(processedImage, output_path);
 
-		
 		std::cout << "Done!" << std::endl;
 		
 	} catch (const Ort::Exception& exception) {

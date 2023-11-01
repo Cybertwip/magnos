@@ -21,16 +21,18 @@
 #include "components/Laser.hpp"
 
 #include "TusimpleEngine.h"
+#include "HybridnetsEngine.h"
 
 #include <memory>
-
 
 
 class CustomViewportCamera : public ax::Camera {
 public:
 	
-	CustomViewportCamera() : ax::Camera() {
-		_viewport = Camera::getDefaultViewport();
+	CustomViewportCamera() : ax::Camera(),
+	_viewport(Camera::getDefaultViewport()),
+	clippedBuffer(_viewport.width, _viewport.height, 4, std::vector<uint8_t>(_viewport.width * _viewport.height * 4)){
+
 		updateBuffers();
 	}
 	
@@ -504,8 +506,9 @@ bool AdvancedCarGameState::init() {
 					   rotation.e3(),
 					   rotation.e0());
 	
-	_inferenceEngine = std::make_unique<TusimpleEngine>();
-
+	_trackInferenceEngine = std::make_unique<TusimpleEngine>();
+	_roadInferenceEngine = std::make_unique<HybridnetsEngine>(4);
+	
 	_visionRenderer = ax::Sprite::create("dummy.png");
 	
 	_visionRenderer->retain();
@@ -515,26 +518,21 @@ bool AdvancedCarGameState::init() {
 	_visionRenderer->setAnchorPoint(ax::Vec2(0, 0));
 	_visionRenderer->setPosition(ax::Vec2(0, 0));
 		
-	_inputInferenceBuffer = std::make_unique<Image>();
-	
-	_inputInferenceBuffer->width = 1280;
-	_inputInferenceBuffer->height = 720;
-	_inputInferenceBuffer->channels = 4;
-		
-	_inputInferenceBuffer->data.resize(_inputInferenceBuffer->width * _inputInferenceBuffer->height * _inputInferenceBuffer->channels);
-		
+	_inputInferenceBuffer = std::make_unique<Image>(1280, 720, 4, std::vector<uint8_t>(1280 * 720 * 4));
+			
 	_backgroundTask = std::thread([this](){
 		while(this->running){
-			
 			
 			_inferenceMutex.lock();
 			Image inferenceDataCopy = *_inputInferenceBuffer;
 			_inferenceMutex.unlock();
 
-			auto [processed, points, lanes] = _inferenceEngine->detectLanes(inferenceDataCopy);
-						
+			auto [processed, points, lanes] = _trackInferenceEngine->detectLanes(inferenceDataCopy);
+			
+			auto [finalInference] = _roadInferenceEngine->detectLanes(processed);
+			
 			_snapshotMutex.lock();
-			memcpy(_snapshotBuffer->getData(), processed.data.data(), processed.data.size());
+			memcpy(_snapshotBuffer->getData(), finalInference.data.data(), finalInference.data.size());
 			_snapshotMutex.unlock();
 			
 			// Signal that new data is available

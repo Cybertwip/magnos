@@ -2,13 +2,14 @@
 
 TusimpleEngine::TusimpleEngine() : OnnxEngine(std::string{MODELS_PATH} + "fast_roadseg-tusimple.onnx") {
 	
-	cfg.in_w = 800;
-	cfg.in_h = 288;
-	
 	std::vector<float> row_anchor(tusimple_row_anchor, tusimple_row_anchor + sizeof(tusimple_row_anchor) / sizeof(tusimple_row_anchor[0]));
 	
 	cfg.img_w = 1280;
 	cfg.img_h = 720;
+	
+	cfg.in_w = 800;
+	cfg.in_h = 288;
+
 	
 	cfg.row_anchor = row_anchor;
 	cfg.griding_num = 100;
@@ -164,7 +165,7 @@ std::pair<std::vector<std::vector<std::vector<int>>>, std::vector<bool>> Tusimpl
 	
 	auto argmax = applyArgmaxToAxis0(processed_output);
 	
-	auto mask = createBooleanMask(argmax, cfg.griding_num);
+	auto mask = createBooleanMask(argmax, cfg.griding_num, ComparisonType::EQUAL);
 	
 	auto softmaxed_data = applySoftmaxToAxis0(softmax_buffer);
 	

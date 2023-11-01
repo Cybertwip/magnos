@@ -63,13 +63,17 @@ applySoftmaxToAxis0(std::vector<std::vector<std::vector<float>>>& data) {
 
 std::vector<std::vector<bool>> createBooleanMask(
     const std::vector<std::vector<std::size_t>>& argmax,
-    std::size_t griding_num) {
+    std::size_t value, ComparisonType comparisonType) {
     std::vector<std::vector<bool>> mask;
 
     for (const auto& row : argmax) {
         std::vector<bool> rowMask;
         for (std::size_t val : row) {
-            rowMask.push_back(val == griding_num);
+			if(comparisonType == ComparisonType::EQUAL){
+				rowMask.push_back(val == value);
+			} if(comparisonType == ComparisonType::GREATER){
+				rowMask.push_back(val > value);
+			}
         }
         mask.push_back(rowMask);
     }
@@ -77,19 +81,26 @@ std::vector<std::vector<bool>> createBooleanMask(
     return mask;
 }
 
-void applyBooleanMask(
-    std::vector<std::vector<float>>& vectorToModify,
-    const std::vector<std::vector<bool>>& mask,
-    int valueToSet) {
-    for (std::size_t i = 0; i < vectorToModify.size(); ++i) {
-        for (std::size_t j = 0; j < vectorToModify[i].size(); ++j) {
-            if (mask[j][i]) {
-                // If mask value is true, set the corresponding element to the specified value
-                vectorToModify[i][j] = valueToSet;
-            }
-        }
-    }
+std::vector<std::vector<bool>> createBooleanMaskAxis1(
+													  const std::vector<std::vector<std::size_t>>& argmax,
+													  std::size_t value,
+													  ComparisonType comparisonType) {
+	std::vector<std::vector<bool>> mask(argmax[0].size(), std::vector<bool>(argmax.size()));
+	
+	for (size_t j = 0; j < argmax[0].size(); ++j) {
+		for (size_t i = 0; i < argmax.size(); ++i) {
+			if (comparisonType == ComparisonType::EQUAL) {
+				mask[j][i] = (argmax[i][j] == value);
+			} else if (comparisonType == ComparisonType::GREATER) {
+				mask[j][i] = (argmax[i][j] > value);
+			}
+			// Add more conditions for other comparison types if needed
+		}
+	}
+	
+	return mask;
 }
+
 
 std::vector<std::vector<std::size_t>> applyArgmaxToAxis0(std::vector<std::vector<std::vector<float>>>& data) {
 	// Ensure the input data is not empty
@@ -123,4 +134,62 @@ std::vector<std::vector<std::size_t>> applyArgmaxToAxis0(std::vector<std::vector
 	return argmaxed_data;
 }
 
+std::vector<std::vector<std::size_t>> applyArgmaxToAxis1(std::vector<std::vector<std::vector<float>>>& data) {
+	// Ensure the input data is not empty
+	if (data.empty()) {
+		return {};
+	}
+	
+	// Get the dimensions of the input data
+	const size_t num_i = data.size();
+	const size_t num_j = data[0].size();
+	const size_t num_k = data[0][0].size();
+	
+	// Initialize the output vector with zeros
+	std::vector<std::vector<std::size_t>> argmaxed_data(std::vector<std::vector<std::size_t>>(num_k, std::vector<std::size_t>(num_j, 0)));
+	
+	// Apply argmax to the values along axis 1
+	for (size_t k = 0; k < num_k; ++k) {
+		for (size_t j = 0; j < num_j; ++j) {
+			// Collect the values to apply argmax to
+			std::vector<float> values_to_argmax(num_j);
+			for (size_t i = 0; i < num_i; ++i) {
+				values_to_argmax[j] = data[i][j][k];
+			}
+			
+			argmaxed_data[k][j] = argmax(values_to_argmax);
+		}
+	}
+	
+	return argmaxed_data;
+}
 
+std::vector<std::vector<std::size_t>> applyArgmaxToAxis2(std::vector<std::vector<std::vector<float>>>& data) {
+	// Ensure the input data is not empty
+	if (data.empty()) {
+		return {};
+	}
+	
+	// Get the dimensions of the input data
+	const size_t num_i = data.size();
+	const size_t num_j = data[0].size();
+	const size_t num_k = data[0][0].size();
+	
+	// Initialize the output vector with zeros
+	std::vector<std::vector<std::size_t>> argmaxed_data(std::vector<std::vector<std::size_t>>(num_i, std::vector<std::size_t>(num_j, 0)));
+	
+	// Apply argmax to the values along axis 2
+	for (size_t i = 0; i < num_i; ++i) {
+		for (size_t j = 0; j < num_j; ++j) {
+			// Collect the values to apply argmax to
+			std::vector<float> values_to_argmax(num_k);
+			for (size_t k = 0; k < num_k; ++k) {
+				values_to_argmax[k] = data[i][j][k];
+			}
+			
+			argmaxed_data[i][j] = argmax(values_to_argmax);
+		}
+	}
+	
+	return argmaxed_data;
+}

@@ -5,57 +5,44 @@
 #include "StbUtils.h"
 #include "MLUtils.h"
 
+#include <memory>
+
 class HybridnetsEngine : public OnnxEngine {
 public:
-	HybridnetsEngine();
+	HybridnetsEngine(int channels);
 	
-	std::tuple<Image, std::vector<std::vector<std::vector<int>>>, std::vector<bool>> detectLanes(Image& image);
+	std::tuple<Image> detectLanes(Image& image);
 private:
 	std::vector<float> prepareInputImage(Image& image, const std::vector<float>& mean, const std::vector<float>& std);
 	
 	struct Config {
-		unsigned int griding_num;
 		int in_w;
 		int in_h;
 		int img_w;
 		int img_h;
-		int cls_num_per_lane;
-		std::vector<float> row_anchor;
+		float conf_thres;
+		float iou_thres;
+		std::vector<float> anchors;
 	};
 	
+	std::vector<std::vector<uint8_t>> segmentationColors = {
+		{0,    	0,     0, 255},
+		{0,  	0,   191, 255},
+		{192,   0,   0, 255}
+	};
 	
 	Config cfg;
 	
-	// Define the lane colors
-	std::vector<std::vector<uint8_t>> laneColors = {
-		{0,0,255},
-		{0,255,0},
-		{255,0,0},
-		{0,255,255}
-	};
-	
-	static constexpr float tusimple_row_anchor[] = {64,  68,  72,  76,  80,  84,  88,  92,  96, 100, 104, 108, 112,
-		116, 120, 124, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164,
-		168, 172, 176, 180, 184, 188, 192, 196, 200, 204, 208, 212, 216,
-		220, 224, 228, 232, 236, 240, 244, 248, 252, 256, 260, 264, 268,
-		272, 276, 280, 284};
-	
+private:
+	std::tuple<std::vector<std::vector<std::size_t>>> process_output(const Ort::Value& tensor, const Config& cfg);
 	
 private:
-	
-	void drawFilledCircle(std::vector<std::uint8_t>& image_data, int image_width, int image_height, int channels, int center_x, int center_y, int radius, const std::vector<uint8_t>& color);
-	
-	Image drawLanes(Image& image, const std::vector<std::vector<std::vector<int>>>& lanes_points, const std::vector<bool>& lanes_detected, const Config& cfg);
-	
-	std::pair<std::vector<std::vector<std::vector<int>>>, std::vector<bool>> process_output(const Ort::Value& tensor, const Config& cfg);
-	
-private:
-	std::vector<std::vector<std::vector<float>>> shaped_data = std::vector<std::vector<std::vector<float>>> (101, std::vector<std::vector<float>>(56, std::vector<float>(4)));
-	
-	std::vector<std::vector<std::vector<float>>> softmax_buffer = std::vector<std::vector<std::vector<float>>> (100, std::vector<std::vector<float>>(56, std::vector<float>(4)));
-	
+	std::vector<std::vector<std::vector<float>>> shaped_data;
+		
 	std::vector<std::vector<float>> channeledDataBuffer = std::vector<std::vector<float>>(3);
 	
+	std::unique_ptr<Image> outputDataBuffer;
+
 	std::vector<float> processedTensorBuffer;
 	
 };

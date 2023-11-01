@@ -16,18 +16,84 @@ std::vector<float> softmax(const std::vector<float>& values);
 std::vector<std::vector<std::vector<float>>>
 applySoftmaxToAxis0(std::vector<std::vector<std::vector<float>>>& data);
 
-std::vector<std::vector<bool>> createBooleanMask(
-    const std::vector<std::vector<std::size_t>>& argmax,
-    std::size_t griding_num);
+enum class ComparisonType {
+	EQUAL,
+	GREATER
+};
 
+std::vector<std::vector<bool>> createBooleanMask(
+												 const std::vector<std::vector<std::size_t>>& argmax,
+												 std::size_t value, ComparisonType comparisonType);
+std::vector<std::vector<bool>> createBooleanMaskAxis1(
+												 const std::vector<std::vector<std::size_t>>& argmax,
+												 std::size_t value, ComparisonType comparisonType);
+
+
+template<typename T>
 void applyBooleanMask(
-    std::vector<std::vector<float>>& vectorToModify,
-    const std::vector<std::vector<bool>>& mask,
-    int valueToSet);
+					  std::vector<std::vector<T>>& vectorToModify,
+					  const std::vector<std::vector<bool>>& mask,
+					  int valueToSet) {
+	for (std::size_t i = 0; i < vectorToModify.size(); ++i) {
+		for (std::size_t j = 0; j < vectorToModify[i].size(); ++j) {
+			if (mask[j][i]) {
+				// If mask value is true, set the corresponding element to the specified value
+				vectorToModify[i][j] = valueToSet;
+			}
+		}
+	}
+}
+
+template <typename T>
+std::vector<T> getAppliedBooleanMask(const std::vector<std::vector<T>>& vectorToModify, const std::vector<std::vector<bool>>& mask) {
+	std::vector<T> result;
+	
+	for (std::size_t i = 0; i < vectorToModify.size(); ++i) {
+		for (std::size_t j = 0; j < vectorToModify[i].size(); ++j) {
+			if (mask[j][i]) {
+				result.push_back(vectorToModify[i][j]);
+			}
+		}
+	}
+	
+	return result;
+}
+
+template <typename T>
+std::vector<T> getAppliedBooleanMaskAxis1(const std::vector<std::vector<T>>& vectorToModify, const std::vector<std::vector<bool>>& mask) {
+	std::vector<T> result;
+	
+	for (std::size_t i = 0; i < vectorToModify.size(); ++i) {
+		for (std::size_t j = 0; j < vectorToModify[i].size(); ++j) {
+			if (mask[i][j]) {
+				result.push_back(vectorToModify[i][j]);
+			}
+		}
+	}
+	
+	return result;
+}
+
+
+template <typename T>
+std::vector<std::tuple<std::size_t, std::size_t>> getAppliedBooleanMaskIndicesAxis1(const std::vector<std::vector<T>>& vectorToModify, const std::vector<std::vector<bool>>& mask) {
+	std::vector<std::tuple<std::size_t, std::size_t>> result;
+	
+	for (std::size_t i = 0; i < vectorToModify.size(); ++i) {
+		for (std::size_t j = 0; j < vectorToModify[i].size(); ++j) {
+			if (mask[i][j]) {
+				result.push_back(std::make_tuple(i, j));
+			}
+		}
+	}
+	
+	return result;
+}
 
 std::vector<std::vector<std::size_t>> applyArgmaxToAxis0(
     std::vector<std::vector<std::vector<float>>>& data);
-
+std::vector<std::vector<std::size_t>> applyArgmaxToAxis1(std::vector<std::vector<std::vector<float>>>& data);
+std::vector<std::vector<std::size_t>> applyArgmaxToAxis2(std::vector<std::vector<std::vector<float>>>& data);
 
 template <typename T>
 void reverseAlongAxis(std::vector<std::vector<std::vector<T>>>& arr, int axis) {
