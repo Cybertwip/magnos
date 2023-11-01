@@ -1,18 +1,22 @@
 #include "StbUtils.h"
-#include "TusimpleEngine.h"
+#include "HybridnetsEngine.h"
 
 #include <string>
 #include <iostream>
 
 int main() {
-	TusimpleEngine engine;
+	HybridnetsEngine engine;
 	
-	 std::string image_path = std::string{MODELS_PATH} + "input.jpg";
-	
-	auto input_data = load_image_data(image_path);
+	std::string input_path = std::string{MODELS_PATH} + "input.jpg";
+	std::string output_path = std::string{MODELS_PATH} + "output.png";
+
+	auto input_data = load_image_data(input_path);
 	
 	try {
-		auto _ = engine.detectLanes(input_data);
+		auto processedImage = engine.detectLanes(input_data);
+		
+		saveImage(processedImage, output_path);
+
 		
 		std::cout << "Done!" << std::endl;
 		

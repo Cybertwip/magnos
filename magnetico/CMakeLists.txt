@@ -394,6 +394,7 @@ translator/detective/MLUtils.cpp
 translator/detective/StbUtils.cpp
 translator/detective/OnnxEngine.cpp
 translator/detective/TusimpleEngine.cpp
+translator/detective/HybridnetsEngine.cpp
 )
 
 target_include_directories(detective PUBLIC

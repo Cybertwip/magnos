@@ -523,15 +523,30 @@ bool AdvancedCarGameState::init() {
 		
 	_inputInferenceBuffer->data.resize(_inputInferenceBuffer->width * _inputInferenceBuffer->height * _inputInferenceBuffer->channels);
 		
-	
 	_backgroundTask = std::thread([this](){
-		
 		while(this->running){
-			processedImage = _inferenceEngine->detectLanes(*_inputInferenceBuffer);
-		}
+			
+			
+			_inferenceMutex.lock();
+			Image inferenceDataCopy = *_inputInferenceBuffer;
+			_inferenceMutex.unlock();
 
+			auto [processed, points, lanes] = _inferenceEngine->detectLanes(inferenceDataCopy);
+						
+			_snapshotMutex.lock();
+			memcpy(_snapshotBuffer->getData(), processed.data.data(), processed.data.size());
+			_snapshotMutex.unlock();
+			
+			// Signal that new data is available
+//			newDataAvailable = true;
+//			dataCondition.notify_all();
+			
+			
+			std::this_thread::sleep_for(std::chrono::milliseconds(100)); // 10 fps
+
+		}
 	});
-		
+
 	return true;
 }
 
@@ -795,22 +810,18 @@ void AdvancedCarGameState::update(float delta) {
 	cursorDeltaY = 0;
 	
 
-	if(_snapshotCounter++ % 16 == 0){ // 15 fps
-		_snapshotCounter = 0;
-		_secondaryCamera->getSnapshot([this](Image& image){
-			
-			memcpy(_inputInferenceBuffer->data.data(), image.data.data(), image.data.size());
-			
-			memcpy(_snapshotBuffer->getData(), processedImage.data.data(), processedImage.data.size());
-			
-			_visionRenderer->getTexture()->updateWithImage(_snapshotBuffer, ax::PixelFormat::RGBA8);
-			
-		});
-	}
-	
+	_secondaryCamera->getSnapshot([this](Image& image){
+		
+		_inferenceMutex.lock();
+		memcpy(_inputInferenceBuffer->data.data(), image.data.data(), image.data.size());
+		_inferenceMutex.unlock();
+		
+		_visionRenderer->getTexture()->updateWithImage(_snapshotBuffer, ax::PixelFormat::RGBA8);
+		
+		_visionRenderer->visit(ax::Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
 
-	
-	_visionRenderer->visit(ax::Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
+	});
+
 
 }
 

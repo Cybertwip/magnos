@@ -5,11 +5,12 @@
 #include "StbUtils.h"
 #include "MLUtils.h"
 
-class TusimpleEngine : public OnnxEngine {
+class HybridnetsEngine : public OnnxEngine {
 public:
-	TusimpleEngine();
+	HybridnetsEngine();
 		
-	std::tuple<Image, std::vector<std::vector<std::vector<int>>>, std::vector<bool>> detectLanes(Image& image);
+	Image detectLanes(Image& image);
+	
 private:
 	std::vector<float> prepareInputImage(Image& image, const std::vector<float>& mean, const std::vector<float>& std);
 
@@ -54,8 +55,6 @@ private:
 	
 	std::vector<std::vector<std::vector<float>>> softmax_buffer = std::vector<std::vector<std::vector<float>>> (100, std::vector<std::vector<float>>(56, std::vector<float>(4)));
 
-	std::vector<std::vector<float>> channeledDataBuffer = std::vector<std::vector<float>>(3);
-
-	std::vector<float> processedTensorBuffer;
+	std::vector<float> flattenedDataBuffer;
 
 };

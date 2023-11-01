@@ -58,7 +58,7 @@ private:
 	
 	CustomViewportCamera* _primaryCamera;
 	CustomViewportCamera* _secondaryCamera;
-
+	
 	std::string emf;
 	std::string current;
 	
@@ -86,14 +86,14 @@ private:
 	
 	// mouse
 	void onMouseMove(ax::Event* event) override;
-
+	
 	// Keyboard
 	void onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* event) override;
 	void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event) override;
 	
 	void onEnter() override;
 	void onExit() override;
-
+	
 	ax::Layer* _mainLayer;
 	ax::Layer* _secondaryLayer;
 	ax::Layer* _2dLayer;
@@ -108,14 +108,14 @@ public:
 	virtual bool init() override;
 	virtual void update(float delta) override;
 	virtual void renderUI() override;
-
+	
 	CREATE_FUNC(AdvancedCarGameState);
-
+	
 	MovingAverageFilter inputAverageFilter = MovingAverageFilter(240);
 	MovingAverageFilter outputAverageFilter = MovingAverageFilter(240);
 	
 	MovingAverageFilter engineAverageFilter = MovingAverageFilter(240);
-
+	
 	// The options are Scarecrow and FullRover
 	CuriosityChassisType chassis_type = CuriosityChassisType::FullRover;
 	
@@ -129,21 +129,22 @@ public:
 	std::shared_ptr<ChVisualSystem> vis;
 	
 	float stallTorque = 300;
-
+	
 	ax::MeshRenderer* carMesh_;
 	
 	ax::Sprite* _visionRenderer;
 	
 	ax::Image* _snapshotBuffer;
-
+	
 	std::unique_ptr<TusimpleEngine> _inferenceEngine;
 	std::unique_ptr<Image> _inputInferenceBuffer;
-	
-	Image processedImage;
 	
 	bool running = true;
 	
 	std::thread _backgroundTask;
 	
 	int _snapshotCounter = 0;
+		
+	std::mutex _snapshotMutex;
+	std::mutex _inferenceMutex;
 };
