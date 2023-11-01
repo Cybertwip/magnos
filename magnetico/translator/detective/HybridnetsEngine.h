@@ -8,12 +8,11 @@
 class HybridnetsEngine : public OnnxEngine {
 public:
 	HybridnetsEngine();
-		
-	Image detectLanes(Image& image);
 	
+	std::tuple<Image, std::vector<std::vector<std::vector<int>>>, std::vector<bool>> detectLanes(Image& image);
 private:
 	std::vector<float> prepareInputImage(Image& image, const std::vector<float>& mean, const std::vector<float>& std);
-
+	
 	struct Config {
 		unsigned int griding_num;
 		int in_w;
@@ -54,7 +53,9 @@ private:
 	std::vector<std::vector<std::vector<float>>> shaped_data = std::vector<std::vector<std::vector<float>>> (101, std::vector<std::vector<float>>(56, std::vector<float>(4)));
 	
 	std::vector<std::vector<std::vector<float>>> softmax_buffer = std::vector<std::vector<std::vector<float>>> (100, std::vector<std::vector<float>>(56, std::vector<float>(4)));
-
-	std::vector<float> flattenedDataBuffer;
-
+	
+	std::vector<std::vector<float>> channeledDataBuffer = std::vector<std::vector<float>>(3);
+	
+	std::vector<float> processedTensorBuffer;
+	
 };
