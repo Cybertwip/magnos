@@ -443,8 +443,6 @@ void RoverGameState::update(float) {
 	
 	rover->Update();
 	
-	sys.DoStepDynamics(Settings::fixed_delta);
-
 	if(steer){
 		driver->SetSteering(steerAngle);
 	} else {
@@ -487,6 +485,10 @@ void RoverGameState::update(float) {
 	
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
+}
+
+void RoverGameState::updatePhysics(float delta){
+	sys.DoStepDynamics(delta);
 }
 
 void RoverGameState::renderUI() {

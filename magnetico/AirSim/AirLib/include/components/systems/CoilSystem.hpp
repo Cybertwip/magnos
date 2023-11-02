@@ -11,9 +11,14 @@ namespace mlpack{
 
 namespace Settings {
 	const float fps = 60;
-	const float fixed_update = 120;
-	const long global_delta = 1.0f / fixed_update * 1000;
+	const float fixed_update = 60;
+	const long  global_delta = 1.0f / fixed_update * 1000;
 	const float fixed_delta = 1.0f / fixed_update;
+
+	const float physics_fixed_update = fixed_update * 2;
+
+	const long  global_physics_delta = 1.0f / physics_fixed_update * 1000;
+	const float fixed_physics_delta = 1.0f / physics_fixed_update;
 
 	const float battery_voltage = 600;
 

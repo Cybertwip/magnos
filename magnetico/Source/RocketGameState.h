@@ -22,7 +22,7 @@ private:
 
 	
 	void setup(ax::Camera* defaultCamera) override;
-	
+	void updatePhysics(float dt) override {}
 	// mouse
 	void onMouseMove(ax::Event* event) override;
 	

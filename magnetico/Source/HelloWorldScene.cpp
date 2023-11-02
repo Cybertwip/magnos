@@ -154,13 +154,14 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event)
 
 void HelloWorld::update(float delta)
 {
-	int cycles_per_collection = Settings::fixed_update / Settings::fps;
+	this->currentGameState->update(Settings::fixed_delta);
+	
+	int cycles_per_collection = Settings::physics_fixed_update / Settings::fps;
 	
 	int updates = 0;
 	
 	do{
-		this->currentGameState->update(Settings::fixed_delta);
-		
+		this->currentGameState->updatePhysics(Settings::fixed_physics_delta);
 		updates++;
 	} while(updates < cycles_per_collection);
 

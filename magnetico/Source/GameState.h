@@ -8,9 +8,10 @@ public:
 	virtual ~GameState() {}
 	
 	virtual void setup(ax::Camera* defaultCamera) = 0;
-
 	
 	virtual void renderUI() = 0;
+	
+	virtual void updatePhysics(float dt) = 0;
 	
 	// mouse
 	virtual void onMouseMove(ax::Event* event) = 0;

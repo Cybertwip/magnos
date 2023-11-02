@@ -720,26 +720,6 @@ void AdvancedCarGameState::update(float delta) {
 	}
 
 	driver->Update(delta);
-
-	// Get driver inputs
-	DriverInputs driver_inputs = driver->GetInputs();
-	
-	// Update modules (process inputs from other modules)
-	
-	static long time = 0;
-	time += Settings::global_delta;
-	
-	driver->Synchronize(time);
-	vehicle->Synchronize(time, driver_inputs, *terrain);
-	terrain->Synchronize(time);
-	
-//	vis->Synchronize(time, driver_inputs);
-	
-	// Advance simulation for one timestep for all modules
-	driver->Advance(delta);
-	vehicle->Advance(delta);
-	terrain->Advance(delta);
-//	vis->Advance(step_size);
 	
 	// Get the car's position
 	auto vehiclePosition = vehicle->GetPos();
@@ -889,4 +869,25 @@ void AdvancedCarGameState::renderUI() {
 	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
 	ImGui::Text("Laser v/s=%.2f", laser);
 	ImGui::End();
+}
+
+void AdvancedCarGameState::updatePhysics(float dt){
+	
+	// Get driver inputs
+	DriverInputs driver_inputs = driver->GetInputs();
+	
+	// Update modules (process inputs from other modules)
+	
+	static long time = 0;
+	time += Settings::global_delta;
+	
+	driver->Synchronize(time);
+	vehicle->Synchronize(time, driver_inputs, *terrain);
+	terrain->Synchronize(time);
+	
+	// Advance simulation for one timestep for all modules
+	driver->Advance(dt);
+	vehicle->Advance(dt);
+	terrain->Advance(dt);
+
 }

@@ -48,6 +48,7 @@ public:
 	
 	virtual bool init() override;
 	virtual void update(float delta) override;
+	virtual void updatePhysics(float delta) override {}
 	virtual void renderUI() override;
 
 	CREATE_FUNC(BasicCarGameState);
