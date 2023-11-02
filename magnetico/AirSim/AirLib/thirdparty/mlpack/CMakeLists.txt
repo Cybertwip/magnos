@@ -16,7 +16,8 @@ option(TEST_VERBOSE "Run test cases with verbose output." OFF)
 option(BUILD_TESTS "Build tests. (Note: time consuming!)" OFF)
 option(BUILD_CLI_EXECUTABLES "Build command-line executables." OFF)
 
-set(DOWNLOAD_DEPENDENCIES  OFF)
+set(DOWNLOAD_DEPENDENCIES OFF)
+
 set(CMAKE_HAS_WORKING_STATIC_STB TRUE)
 
 option(BUILD_GO_SHLIB "Build Go shared library." OFF)

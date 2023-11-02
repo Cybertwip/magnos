@@ -2,6 +2,9 @@
 
 #include "OnnxUtils.h"
 
+#include "DataUtils.h"
+
+
 class OnnxEngine {
 public:
 	OnnxEngine(const std::string& model_path);
@@ -14,6 +17,7 @@ private:
 	Ort::Env env_;
 	Ort::AllocatorWithDefaultOptions allocator_;
 	Ort::SessionOptions session_options_;
+	DataDecompressor decompressor;
 	
 protected:
 	Ort::Session session_;

@@ -1,6 +1,6 @@
 #include "TusimpleEngine.h"
 
-TusimpleEngine::TusimpleEngine() : OnnxEngine(std::string{MODELS_PATH} + "fast_roadseg-tusimple.onnx") {
+TusimpleEngine::TusimpleEngine() : OnnxEngine(std::string{MODELS_PATH} + "fastroad/288x800/roadseg.onnx") {
 	
 	std::vector<float> row_anchor(tusimple_row_anchor, tusimple_row_anchor + sizeof(tusimple_row_anchor) / sizeof(tusimple_row_anchor[0]));
 	
@@ -10,7 +10,6 @@ TusimpleEngine::TusimpleEngine() : OnnxEngine(std::string{MODELS_PATH} + "fast_r
 	cfg.in_w = 800;
 	cfg.in_h = 288;
 
-	
 	cfg.row_anchor = row_anchor;
 	cfg.griding_num = 100;
 	cfg.cls_num_per_lane = 56;

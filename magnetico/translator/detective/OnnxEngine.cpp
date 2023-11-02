@@ -4,8 +4,8 @@
 
 OnnxEngine::OnnxEngine(const std::string& model_path):
 env_(Ort::Env(ORT_LOGGING_LEVEL_WARNING, "ONNXRuntimeEnv")),
+decompressor(model_path),
 session_(Ort::Session(env_, model_path.c_str(), session_options_)){
-	
 }
 
 std::vector<Ort::Value> OnnxEngine::inference(const std::vector<std::vector<float>>& input_data, const std::vector<std::vector<int64_t>>& input_shape) {

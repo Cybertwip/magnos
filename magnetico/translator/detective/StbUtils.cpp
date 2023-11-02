@@ -1,12 +1,19 @@
 #include "StbUtils.h"
 
-
 #include "stb_image.h"
 
+#ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#else
+#undef STB_IMAGE_WRITE_IMPLEMENTATION
+#endif
 #include "stb_image_write.h"
 
+#ifndef STB_IMAGE_RESIZE_IMPLEMENTATION
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
+#else
+#undef STB_IMAGE_RESIZE_IMPLEMENTATION
+#endif
 #include "stb_image_resize2.h"
 
 #include <iostream>

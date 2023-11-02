@@ -2,8 +2,9 @@
 
 cmake_policy(SET CMP0079 NEW)
 
+set(PROJECT_NAME AirLib)
 
-project(AirLib)
+project(${PROJECT_NAME})
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake-modules") 
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../cmake-modules/CommonSetup.cmake")
@@ -39,7 +40,6 @@ ${AIRSIM_ROOT}/AirLib/include
 ${AIRSIM_ROOT}/AirLib/thirdparty/eigen3
 ${AIRSIM_ROOT}/AirLib/thirdparty/mlpack/src
 ${AIRSIM_ROOT}/MavLinkCom/include
-${AIRSIM_ROOT}/MavLinkCom/include
 ${RPC_LIB_INCLUDES}
 )
 
@@ -49,12 +49,12 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${MAGNOS_RUNTIME_OUTPUT_DIRECTORY}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MAGNOS_RUNTIME_OUTPUT_DIRECTORY}/bin)
 
 # Find Armadillo and link it.
+target_link_libraries(ensmallen INTERFACE cereal)
 target_link_libraries(ensmallen INTERFACE armadillo)
 
 target_link_libraries(${PROJECT_NAME} ${RPC_LIB})
 target_link_libraries(${PROJECT_NAME} MavLinkCom)
 target_link_libraries(${PROJECT_NAME} ensmallen)
-target_link_libraries(${PROJECT_NAME} cereal)
 target_link_libraries(${PROJECT_NAME} openblas_static)
 
 

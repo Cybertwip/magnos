@@ -31,9 +31,9 @@
 #include "cereal/cereal.hpp"
 #include "cereal/details/util.hpp"
 
-#include "cereal/external/rapidxml/rapidxml.hpp"
-#include "cereal/external/rapidxml/rapidxml_print.hpp"
-#include "cereal/external/base64.hpp"
+#include "cereal/thirdparty/rapidxml/rapidxml.hpp"
+#include "cereal/thirdparty/rapidxml/rapidxml_print.hpp"
+#include "cereal/thirdparty/base64.hpp"
 
 #include <sstream>
 #include <stack>

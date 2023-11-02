@@ -17,6 +17,10 @@ include(GNUInstallDirs)
 
 include(CMakePackageConfigHelpers)
 
+if(APPLE)
+  set(NO_LAPACKE True)
+endif()
+
 #######
 option(BUILD_WITHOUT_LAPACK "Do not build LAPACK and LAPACKE (Only BLAS or CBLAS)" OFF)
 
