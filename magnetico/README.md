@@ -5,5 +5,7 @@ Please first compile and install the custom version of chrono, you can just:
 	cd chrono && mkdir build && cd build && cmake .. && make install
 
 Then: 
+	
 	./setup.sh
+	
 	cd magnetico && mkdir build && cd build && cmake .. -GXcode  
