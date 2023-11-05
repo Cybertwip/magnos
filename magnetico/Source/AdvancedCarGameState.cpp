@@ -581,9 +581,15 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	viewport.set((float)winSize.width * 0.5f, 0, (float)winSize.width * 0.5f, (float)winSize.height * 0.5f);
 
 	_secondaryCamera = CustomViewportCamera::createPerspective(90, (float)viewport.width / viewport.height, 1, 1000);
-
+	
+	
 	_primaryCamera = CustomViewportCamera::createPerspective(90, (float)ax::Director::getInstance()->getWinSize().width / ax::Director::getInstance()->getWinSize().height, 1, 1000);
 
+	
+	_visionRenderer->setGlobalZOrder(120);
+	_primaryCamera->setGlobalZOrder(110);
+	_secondaryCamera->setGlobalZOrder(100);
+	
 	defaultCamera->setVisible(false);
 	defaultCamera->setDepth(-1);
 	
@@ -799,6 +805,7 @@ void AdvancedCarGameState::update(float delta) {
 		_visionRenderer->visit(ax::Director::getInstance()->getRenderer(), ax::Mat4::IDENTITY, 0);
 
 	});
+
 
 
 }

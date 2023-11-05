@@ -146,7 +146,6 @@ project.properties
 /v*-deps-*.zip
 /v*-lua-runtime-*.zip
 /v*-console-*.zip
-/tools/fbx-conv/
 /templates/lua-template-default/src/core/
 /tests/lua-tests/src/core/
 /tests/js-tests/res/
