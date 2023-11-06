@@ -919,28 +919,33 @@ void AdvancedCarGameState::update(float delta) {
 
 	// Define the vertical angle constraints (adjust as needed)
 	float minVerticalAngle = AX_DEGREES_TO_RADIANS(0); // Minimum vertical angle (degrees)
-	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(60.0f); // Maximum vertical angle (degrees)
+	float maxVerticalAngle = AX_DEGREES_TO_RADIANS(0); // Maximum vertical angle (degrees)
+
+	float minHorizontalAngle = AX_DEGREES_TO_RADIANS(-120); // Minimum vertical angle (degrees)
+	float maxHorizontalAngle = AX_DEGREES_TO_RADIANS(120); // Maximum vertical angle (degrees)
 
 	// Clamp the vertical angle within the specified range
 	verticalAngle = std::min(std::max(verticalAngle, minVerticalAngle), maxVerticalAngle);
+	horizontalAngle = std::min(std::max(horizontalAngle, minHorizontalAngle), maxHorizontalAngle);
+
 
 	// Calculate the new camera position relative to the car
 	float distanceFromCar = 3.0f; // Adjust the distance as needed
 	float cameraHeight = 2.0f;   // Adjust the height as needed
 
-	// Calculate the camera's offset from the car based on angles
-	float horizontalOffset = distanceFromCar * sinf(horizontalAngle);
-	float verticalOffset = distanceFromCar * cosf(horizontalAngle) * sinf(verticalAngle);
-	float depthOffset = distanceFromCar * cosf(horizontalAngle) * cosf(verticalAngle);
-
-	ax::Vec3 cameraOffset(horizontalOffset, depthOffset, cameraHeight + verticalOffset);
-
-	// Calculate the new camera position
-	ax::Vec3 newPosition = carPosition + cameraOffset;
 	
 	// Set the camera's new position and look-at point
-	_primaryCamera->setPosition3D(newPosition);
-	_primaryCamera->lookAt(carPosition, ax::Vec3(0, 0, 1));
+	
+	ax::Vec3 mainCameraTarget = carPosition + originalQuaternion * ax::Vec3(4, 0, 2);
+
+	ax::Vec3 mainCameraPosition = carPosition + originalQuaternion * ax::Vec3(-4, 0, 2);
+	
+	mainCameraTarget.x += 4 * cos(-horizontalAngle); // Adjust the x-coordinate for -60 degrees
+	mainCameraTarget.y += 4 * sin(-horizontalAngle); // Adjust the y-coordinate for -60 degrees
+
+	_primaryCamera->setRotationQuat(originalQuaternion);
+	_primaryCamera->setPosition3D(mainCameraPosition);
+	_primaryCamera->lookAt(mainCameraTarget, ax::Vec3(0, 0, 1));
 	
 	ax::Vec3 target = carPosition + originalQuaternion * ax::Vec3(4, 0, 4);
 	ax::Vec3 cameraPosition = carPosition + originalQuaternion * ax::Vec3(0, 0, 4);
