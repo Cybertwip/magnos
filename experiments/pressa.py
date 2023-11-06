@@ -25,7 +25,7 @@ H_total = H_field + H_left_iron + H_right_iron
 psi0 = fock(N, n_photons)
 
 # Time evolution
-times = np.linspace(0, 10, 1000000)
+times = np.linspace(0, 1000, 100000)
 result_left = mesolve(H_left_iron, psi0, times, [], [a.dag() * a])
 result_right = mesolve(H_right_iron, psi0, times, [], [a.dag() * a])
 
