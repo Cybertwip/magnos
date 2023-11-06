@@ -59,6 +59,8 @@ private:
 	
 	CustomViewportCamera* _primaryCamera;
 	CustomViewportCamera* _secondaryCamera;
+	CustomViewportCamera* _chevronCameraLeft;
+	CustomViewportCamera* _chevronCameraRight;
 	
 	std::string emf;
 	std::string current;
@@ -133,6 +135,8 @@ public:
 	float stallTorque = 300;
 	
 	ax::MeshRenderer* carMesh_;
+	ax::MeshRenderer* _chevronLeft;
+	ax::MeshRenderer* _chevronRight;
 	
 	ax::Sprite* _visionRenderer;
 	
@@ -150,4 +154,8 @@ public:
 		
 	std::mutex _snapshotMutex;
 	std::mutex _inferenceMutex;
+	std::mutex _chevronMutex;
+	
+	float _chevronLeftAngle;
+	float _chevronRightAngle;
 };

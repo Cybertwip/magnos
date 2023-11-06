@@ -148,6 +148,83 @@ private:
 };
 
 namespace{
+float calculateXAxisAngle(const std::vector<int>& point1, const std::vector<int>& point2) {
+	int deltaX = point2[0] - point1[0]; // Calculate the change in X-coordinate
+	int deltaY = point2[1] - point1[1]; // Calculate the change in Y-coordinate
+	
+	if (deltaY == 0) {
+		if (deltaX > 0) {
+			return 0.0f; // Rightward direction
+		} else if (deltaX < 0) {
+			return 180.0f; // Leftward direction
+		} else {
+			return 0.0f; // Same point
+		}
+	} else {
+		float angleInDegrees = atan2(deltaX, deltaY) * 180.0f / M_PI;
+		return angleInDegrees;
+	}
+}
+
+float calculateAverageXAxisAngle(const std::vector<std::vector<int>>& points) {
+	float totalAngle = 0.0;
+	size_t count = 0;
+	
+	for (size_t i = 0; i < points.size(); ++i) {
+		for (size_t j = i + 1; j < points.size(); ++j) {
+			float angle = calculateXAxisAngle(points[i], points[j]);
+			totalAngle += angle;
+			count++;
+		}
+	}
+	
+	if (count == 0) {
+		return 0.0f; // Avoid division by zero
+	}
+	
+	float averageAngle = totalAngle / count;
+	return averageAngle;
+}
+
+float calculateYAxisAngle(const std::vector<int>& point1, const std::vector<int>& point2) {
+	int deltaY = point2[1] - point1[1]; // Calculate the change in Y-coordinate
+	int deltaX = point2[0] - point1[0]; // Calculate the change in X-coordinate
+	
+	if (deltaX == 0) {
+		if (deltaY > 0) {
+			return 90.0f; // Vertical upward direction
+		} else if (deltaY < 0) {
+			return -90.0f; // Vertical downward direction
+		} else {
+			return 0.0f; // Same point
+		}
+	} else {
+		float angleInDegrees = atan2(deltaY, deltaX) * 180.0f / M_PI;
+		return angleInDegrees;
+	}
+}
+
+
+float calculateAverageYAxisAngle(const std::vector<std::vector<int>>& points) {
+	float totalAngle = 0.0;
+	size_t count = 0;
+	
+	for (size_t i = 0; i < points.size(); ++i) {
+		for (size_t j = i + 1; j < points.size(); ++j) {
+			float angle = calculateYAxisAngle(points[i], points[j]);
+			totalAngle += angle;
+			count++;
+		}
+	}
+	
+	if (count == 0) {
+		return 0.0f; // Avoid division by zero
+	}
+	
+	float averageAngle = totalAngle / count;
+	return averageAngle;
+}
+
 
 
 double xend = 400.0;  // end logging here, this also the end of our world
@@ -529,6 +606,20 @@ bool AdvancedCarGameState::init() {
 
 			auto [processed, points, lanes] = _trackInferenceEngine->detectLanes(inferenceDataCopy);
 			
+			_chevronMutex.lock();
+			if(lanes[1]){
+				_chevronLeftAngle = calculateXAxisAngle(points[1][0], points[1][points[1].size() -1]) - 180;
+			} else {
+				_chevronLeftAngle = 0;
+			}
+
+			if(lanes[2]){
+				_chevronRightAngle = calculateXAxisAngle(points[2][0], points[2][points[2].size() -1]) - 180;
+			} else {
+				_chevronRightAngle = 0;
+			}
+			_chevronMutex.unlock();
+			
 			auto [finalInference] = _roadInferenceEngine->detectLanes(processed);
 			
 			_snapshotMutex.lock();
@@ -540,7 +631,7 @@ bool AdvancedCarGameState::init() {
 //			dataCondition.notify_all();
 			
 			
-			std::this_thread::sleep_for(std::chrono::milliseconds(100)); // 10 fps
+			std::this_thread::sleep_for(std::chrono::milliseconds(75)); // 15 fps
 
 		}
 	});
@@ -582,13 +673,33 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 
 	_secondaryCamera = CustomViewportCamera::createPerspective(90, (float)viewport.width / viewport.height, 1, 1000);
 	
+	_chevronMutex.lock();
+
+	_chevronCameraLeft = CustomViewportCamera::createOrthographic(winSize.width * 0.4f, winSize.height * 0.4f, 1, 1000);
+
+	_chevronCameraRight = CustomViewportCamera::createOrthographic(winSize.width * 0.4f, winSize.height * 0.4f, 1, 1000);
+
+	_chevronLeft = ax::MeshRenderer::create("chevron/chevron.obj");
+	
+	_chevronRight = ax::MeshRenderer::create("chevron/chevron.obj");
+	
+	ax::Material* material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT_NOTEX, false);
+	
+	_chevronLeft->setMaterial(material);
+	_chevronLeft->setColor(ax::Color3B::BLUE);
+
+	_chevronRight->setMaterial(material);
+	_chevronRight->setColor(ax::Color3B::RED);
+	_mainLayer->addChild(_chevronLeft);
+	_mainLayer->addChild(_chevronRight);
+	_chevronMutex.unlock();
 	
 	_primaryCamera = CustomViewportCamera::createPerspective(90, (float)ax::Director::getInstance()->getWinSize().width / ax::Director::getInstance()->getWinSize().height, 1, 1000);
 
 	
-	_visionRenderer->setGlobalZOrder(120);
-	_primaryCamera->setGlobalZOrder(110);
-	_secondaryCamera->setGlobalZOrder(100);
+//	_visionRenderer->setGlobalZOrder(120);
+//	_primaryCamera->setGlobalZOrder(110);
+//	_secondaryCamera->setGlobalZOrder(100);
 	
 	defaultCamera->setVisible(false);
 	defaultCamera->setDepth(-1);
@@ -596,6 +707,17 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	_primaryCamera->setCustomViewport(ax::Camera::getDefaultViewport());
 	
 	_secondaryCamera->setCustomViewport(viewport);
+	
+	viewport.set((float)winSize.width * 0.2f, (float)winSize.height * 0.8f, (float)winSize.width * 0.2f, (float)winSize.height * 0.2f);
+
+	_chevronCameraLeft->setCustomViewport(viewport);
+
+	
+	viewport.set((float)winSize.width * 0.6f, (float)winSize.height * 0.8f, (float)winSize.width * 0.2f, (float)winSize.height * 0.2f);
+
+	_chevronCameraRight->setCustomViewport(viewport);
+
+	//_chevronCamera->setPositionY(winSize.height * 0.7);
 //	_secondaryCamera->setCustomViewport(Camera::getDefaultViewport());
 
 	_primaryCamera->setNearPlane(0.01f);
@@ -615,16 +737,45 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	_secondaryCamera->setPosition3D(ax::Vec3(5, 5, 5));
 	_secondaryCamera->setRotation3D(ax::Vec3(0, 0, 0));
 	_secondaryCamera->lookAt(ax::Vec3(0, 0, 0), ax::Vec3(0, 0, 1));
+	
+	_chevronMutex.lock();
+	_chevronCameraLeft->setNearPlane(0.01f);
+	_chevronCameraLeft->setFarPlane(10000);
+	_chevronCameraLeft->setFOV(90);
+	_chevronCameraLeft->setZoom(1);
+	_chevronCameraLeft->setPosition3D(ax::Vec3(5, 5, 5));
+	_chevronCameraLeft->setRotation3D(ax::Vec3(0, 0, 0));
+	_chevronCameraLeft->lookAt(ax::Vec3(0, 0, 0), ax::Vec3(0, 0, 1));
 
+	_chevronCameraRight->setNearPlane(0.01f);
+	_chevronCameraRight->setFarPlane(10000);
+	_chevronCameraRight->setFOV(90);
+	_chevronCameraRight->setZoom(1);
+	_chevronCameraRight->setPosition3D(ax::Vec3(5, 5, 5));
+	_chevronCameraRight->setRotation3D(ax::Vec3(0, 0, 0));
+	_chevronCameraRight->lookAt(ax::Vec3(0, 0, 0), ax::Vec3(0, 0, 1));
+	_chevronMutex.unlock();
+	
 	_primaryCamera->setDepth(0);
 	_primaryCamera->setCameraFlag(ax::CameraFlag::DEFAULT);
 
 	_secondaryCamera->setDepth(4);
 	_secondaryCamera->setCameraFlag(ax::CameraFlag::USER1);
 	
+	_chevronMutex.lock();
+	_chevronCameraLeft->setDepth(5);
+	_chevronCameraLeft->setCameraFlag(ax::CameraFlag::USER2);
+	_chevronCameraRight->setDepth(6);
+	_chevronCameraRight->setCameraFlag(ax::CameraFlag::USER3);
+	_chevronMutex.unlock();
+
 	auto blue = ax::Color4F::BLUE;
 	
 	_secondaryCamera->setBackgroundBrush(ax::CameraBackgroundBrush::createColorBrush(blue, 1));
+
+	_chevronCameraLeft->setBackgroundBrush(ax::CameraBackgroundBrush::createColorBrush(ax::Color4F(0, 0, 0, 0), 1));
+	_chevronCameraRight->setBackgroundBrush(ax::CameraBackgroundBrush::createColorBrush(ax::Color4F(0, 0, 0, 0), 1));
+
 	
 	this->addChild(_mainLayer);
 	
@@ -632,8 +783,15 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	_secondaryLayer->setCameraMask((unsigned short)ax::CameraFlag::DEFAULT | (unsigned short)ax::CameraFlag::USER1);
 	_2dLayer->setCameraMask((unsigned short)ax::CameraFlag::DEFAULT | (unsigned short)ax::CameraFlag::USER1);
 
+	_chevronMutex.lock();
+	_chevronLeft->setCameraMask((unsigned short)ax::CameraFlag::USER2);
+	_chevronRight->setCameraMask((unsigned short)ax::CameraFlag::USER3);
+	_chevronMutex.unlock();
+	
 	getScene()->addChild(_primaryCamera);
 	getScene()->addChild(_secondaryCamera);
+	getScene()->addChild(_chevronCameraLeft);
+	getScene()->addChild(_chevronCameraRight);
 }
 
 void AdvancedCarGameState::onMouseMove(ax::Event* event)
@@ -789,7 +947,29 @@ void AdvancedCarGameState::update(float delta) {
 	_secondaryCamera->setRotationQuat(originalQuaternion);
 	_secondaryCamera->setPosition3D(cameraPosition);
 	_secondaryCamera->lookAt(target, ax::Vec3(0, 0, 1));
+	
+	_chevronMutex.lock();
+	_chevronLeft->setPosition3D(cameraPosition - originalQuaternion * ax::Vec3(0, 0, 4));
+	_chevronLeft->setRotation3D(ax::Vec3(0, 0, _chevronLeftAngle));
+	
+	_chevronRight->setPosition3D(cameraPosition - originalQuaternion * ax::Vec3(0, 0, 4));
+	_chevronRight->setRotation3D(ax::Vec3(0, 0, _chevronRightAngle));
 
+	_chevronMutex.unlock();
+	
+	_chevronCameraLeft->setPosition3D(cameraPosition - originalQuaternion * ax::Vec3(0, 0, 5)
+									  //-  originalQuaternion * ax::Vec3(0, 2, 0)
+									  );
+	
+	_chevronCameraLeft->lookAt(_chevronLeft->getPosition3D());
+	
+
+	_chevronCameraRight->setPosition3D(cameraPosition - originalQuaternion * ax::Vec3(0, 0, 5)
+									  //-  originalQuaternion * ax::Vec3(0, 2, 0)
+									  );
+	
+	_chevronCameraRight->lookAt(_chevronRight->getPosition3D());
+	
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
 	
