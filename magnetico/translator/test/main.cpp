@@ -1,14 +1,14 @@
 #include "StbUtils.h"
 //#include "HybridnetsEngine.h"
-
-#include "TusimpleEngine.h"
+//#include "TusimpleEngine.h"
+#include "DepthEngine.h"
 
 #include <string>
 #include <iostream>
 
 int main() {
 	//HybridnetsEngine engine(3);
-	TusimpleEngine engine;
+	DepthEngine engine(3);
 		
 	std::string input_path = std::string{MODELS_PATH} + "input.png";
 	std::string output_path = std::string{MODELS_PATH} + "output.png";
@@ -16,9 +16,9 @@ int main() {
 	auto input_data = load_image_data(input_path);
 	
 	try {
-		auto [processedImage, points, lanes] = engine.detectLanes(input_data);
+		auto [depthMap] = engine.detectDepth(input_data);
 		
-		saveImage(processedImage, output_path);
+		saveImage(depthMap, output_path);
 
 		std::cout << "Done!" << std::endl;
 		

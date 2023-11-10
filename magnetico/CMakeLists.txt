@@ -402,10 +402,13 @@ translator/detective/DataUtils.cpp
 translator/detective/OnnxEngine.cpp
 translator/detective/TusimpleEngine.cpp
 translator/detective/HybridnetsEngine.cpp
+translator/detective/DepthEngine.cpp
+translator/detective/RoadEngine.cpp
 )
 
 target_include_directories(detective PUBLIC
    translator/detective
+   ${AIRSIM_ROOT}/AirLib/thirdparty/eigen3
    ${Boost_INCLUDE_DIRS}
    ${_AX_ROOT}/thirdparty/stb
    ${ONNXRUNTIME_INCLUDE_DIRS}
@@ -428,19 +431,19 @@ add_executable(detective_test
 translator/test/main.cpp
 )
 
-# target_include_directories(detective_test PRIVATE
-#    translator/test
-# )
+target_include_directories(detective_test PRIVATE
+   translator/test
+)
 
-# # Set C++ standard and other compiler options if necessary
-# set_target_properties(detective_test PROPERTIES
-#     CXX_STANDARD 17
-#     CXX_STANDARD_REQUIRED YES
-#     CXX_EXTENSIONS NO
-# )
+# Set C++ standard and other compiler options if necessary
+set_target_properties(detective_test PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
 
-# target_compile_definitions(detective_test PRIVATE DETECTIVE_STANDALONE=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+target_compile_definitions(detective_test PRIVATE MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
 
-# target_link_libraries(detective_test PRIVATE detective)
+target_link_libraries(detective_test PRIVATE detective)
 
 target_link_libraries(${PROJECT_NAME} detective)

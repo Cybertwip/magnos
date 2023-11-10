@@ -164,7 +164,7 @@ std::pair<std::vector<std::vector<std::vector<int>>>, std::vector<bool>> Tusimpl
 	
 	auto argmax = applyArgmaxToAxis0(processed_output);
 	
-	auto mask = createBooleanMask(argmax, cfg.griding_num, ComparisonType::EQUAL);
+	auto mask = createBooleanMask<std::size_t>(argmax, cfg.griding_num, ComparisonType::EQUAL);
 	
 	auto softmaxed_data = applySoftmaxToAxis0(softmax_buffer);
 	

@@ -73,7 +73,7 @@ std::tuple<Image> HybridnetsEngine::detectLanes(Image& image){
 	
 	auto [segmentation_map] = process_output(output[2], cfg);
 	
-	auto mask = createBooleanMask(segmentation_map, 0, ComparisonType::GREATER);
+	auto mask = createBooleanMask<std::size_t>(segmentation_map, 0, ComparisonType::GREATER);
 	
 	auto appliedMask = getAppliedBooleanMaskAxis1(segmentation_map, mask);
 	

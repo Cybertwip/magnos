@@ -61,45 +61,7 @@ applySoftmaxToAxis0(std::vector<std::vector<std::vector<float>>>& data) {
     return softmaxed_data;
 }
 
-std::vector<std::vector<bool>> createBooleanMask(
-    const std::vector<std::vector<std::size_t>>& argmax,
-    std::size_t value, ComparisonType comparisonType) {
-    std::vector<std::vector<bool>> mask;
 
-    for (const auto& row : argmax) {
-        std::vector<bool> rowMask;
-        for (std::size_t val : row) {
-			if(comparisonType == ComparisonType::EQUAL){
-				rowMask.push_back(val == value);
-			} if(comparisonType == ComparisonType::GREATER){
-				rowMask.push_back(val > value);
-			}
-        }
-        mask.push_back(rowMask);
-    }
-
-    return mask;
-}
-
-std::vector<std::vector<bool>> createBooleanMaskAxis1(
-													  const std::vector<std::vector<std::size_t>>& argmax,
-													  std::size_t value,
-													  ComparisonType comparisonType) {
-	std::vector<std::vector<bool>> mask(argmax[0].size(), std::vector<bool>(argmax.size()));
-	
-	for (size_t j = 0; j < argmax[0].size(); ++j) {
-		for (size_t i = 0; i < argmax.size(); ++i) {
-			if (comparisonType == ComparisonType::EQUAL) {
-				mask[j][i] = (argmax[i][j] == value);
-			} else if (comparisonType == ComparisonType::GREATER) {
-				mask[j][i] = (argmax[i][j] > value);
-			}
-			// Add more conditions for other comparison types if needed
-		}
-	}
-	
-	return mask;
-}
 
 
 std::vector<std::vector<std::size_t>> applyArgmaxToAxis0(std::vector<std::vector<std::vector<float>>>& data) {

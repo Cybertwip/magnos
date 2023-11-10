@@ -686,7 +686,7 @@ void AdvancedCarGameState::setup(ax::Camera* defaultCamera){
 	ax::Material* material = ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT_NOTEX, false);
 	
 	_chevronLeft->setMaterial(material);
-	_chevronLeft->setColor(ax::Color3B::BLUE);
+	_chevronLeft->setColor(ax::Color3B(0, 255, 255));
 
 	_chevronRight->setMaterial(material);
 	_chevronRight->setColor(ax::Color3B::RED);
