@@ -68,10 +68,8 @@ std::tuple<Image> DepthEngine::detectDepth(Image& image){
 	auto inputTensor = prepareInputImage(scaledImage);
 	
 	auto output = inference({inputTensor}, {input_shape});
-	
 
 	process_output(output[0], cfg);
-
 
 	auto scaledBuffer = resizeImage(*outputDepthBuffer, image.width, image.height);
 	
@@ -84,7 +82,6 @@ void  DepthEngine::process_output(const Ort::Value& tensor, const Config& cfg) {
 	
 	// Copy the data into the vector with the desired shape
 	size_t index = 0;
-	int vertex_idx = 0;
 
 	for (int k = 0; k < cfg.in_h; ++k) {
 		for (int j = 0; j < cfg.in_w; ++j) {
@@ -94,17 +91,12 @@ void  DepthEngine::process_output(const Ort::Value& tensor, const Config& cfg) {
 				depthValue = 0;
 			}
 			
-			(*outputDepthBuffer)[k][j] = depthValue;
-			if (_isnan(depthValue))
+			if (isnan(depthValue))
 			{
-				cloud.vertices.push_back(VertexType(0, 0, depthValue));
+				(*outputDepthBuffer)[k][j] = 0;
 				continue;
 			}
-			float z = depthValue; // Depth value for pixel (j, k)
-			float x = (j - kCx) * z / kFx;
-			float y = (k - kCy) * z / kFy;
-
-			cloud.vertices.push_back(VertexType(x, y, z));
+			(*outputDepthBuffer)[k][j] = depthValue;
 
 			index++;
 		}

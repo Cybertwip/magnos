@@ -395,6 +395,8 @@ get_target_property(ONNXRUNTIME_INCLUDE_DIRS onnxruntime::onnxruntime INTERFACE_
 # You can print or use them as needed.
 message("ONNX Runtime Include Directories: ${ONNXRUNTIME_INCLUDE_DIRS}")
 
+find_package(PCL REQUIRED)
+
 add_library(detective
 translator/detective/MLUtils.cpp
 translator/detective/StbUtils.cpp
@@ -412,7 +414,11 @@ target_include_directories(detective PUBLIC
    ${Boost_INCLUDE_DIRS}
    ${_AX_ROOT}/thirdparty/stb
    ${ONNXRUNTIME_INCLUDE_DIRS}
+   ${PCL_INCLUDE_DIRS}
 )
+
+
+target_link_directories(detective PUBLIC ${PCL_LIBRARY_DIRS})
 
 # Set C++ standard and other compiler options if necessary
 set_target_properties(detective PROPERTIES
@@ -421,10 +427,9 @@ set_target_properties(detective PROPERTIES
     CXX_EXTENSIONS NO
 )
 
-target_compile_definitions(detective PRIVATE MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+target_compile_definitions(detective PUBLIC MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/" ${PCL_DEFINITIONS})
 
-target_link_libraries(detective PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB})
-
+target_link_libraries(detective PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB} ${PCL_LIBRARIES})
 
 # Define the "translator" executable
 add_executable(detective_test
