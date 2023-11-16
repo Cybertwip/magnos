@@ -94,11 +94,25 @@ left_bar_y = height // 2 - iron_bar_height // 2
 
 # Variables for time counter and polarity swapping
 half_pi_time_reached = False
-polarity_l = 1  # Initial polarity
-polarity_r = 1  # Initial polarity
-polarity_factor_l = 1
-polarity_factor_r = -1
-time_counter = 0
+polarity_1l = 1  # Initial polarity
+polarity_1r = 1  # Initial polarity
+polarity_factor_1l = -1
+polarity_factor_1r = 1
+
+
+polarity_2l = 1  # Initial polarity
+polarity_2r = 1  # Initial polarity
+polarity_factor_2l = -1
+polarity_factor_2r = 1
+
+polarity_3l = 1  # Initial polarity
+polarity_3r = 1  # Initial polarity
+polarity_factor_3l = -1
+polarity_factor_3r = 1
+
+time_counter_1 = 0
+time_counter_2 = 0
+time_counter_3 = 0
 
 
 # Calculate EMF values
@@ -148,7 +162,9 @@ G = 6.67430e-11  # m^3 kg^-1 s^-2
 max_altitude = 0
 min_gravity = 10
 
-num_gravity_systems = 4
+num_gravity_systems = 2
+
+gravity_turn = 0
 
 while running:
     for event in pygame.event.get():
@@ -167,13 +183,32 @@ while running:
     emf_right_m_per_s_squared = g - (-result.expect[1][i] * g)
 
     # Accelerate gravity offset
-    left_bar_y -= emf_left_m_per_s_squared * polarity_l
-    right_bar_y -= emf_right_m_per_s_squared * polarity_r
+    if gravity_turn == 0:
+        left_bar_y -= emf_left_m_per_s_squared * polarity_1l
+        right_bar_y -= emf_right_m_per_s_squared * polarity_1r
+
+        left_bar_osc = emf_left_m_per_s_squared * polarity_1l
+        right_bar_osc = emf_left_m_per_s_squared * polarity_1l
+
+    if gravity_turn == 1:
+        left_bar_y -= emf_left_m_per_s_squared * polarity_2l
+        right_bar_y -= emf_right_m_per_s_squared * polarity_2r
+
+        left_bar_osc = emf_left_m_per_s_squared * polarity_2l
+        right_bar_osc = emf_left_m_per_s_squared * polarity_2r
+
+    if gravity_turn == 3:
+        left_bar_y -= emf_left_m_per_s_squared * polarity_3l
+        right_bar_y -= emf_right_m_per_s_squared * polarity_3l
+        left_bar_osc = emf_left_m_per_s_squared * polarity_2l
+        right_bar_osc = emf_left_m_per_s_squared * polarity_3r
 
     # Update camera position based on the average position of iron bars
     camera_y = (left_bar_y + right_bar_y) // 2
-
     camera_y -= iron_bar_height * 1.5
+
+    left_bar_osc += camera_y + iron_bar_height * 1.5
+    right_bar_osc += camera_y + iron_bar_height * 1.5
 
     # Clear the screen
     screen.fill((255, 255, 255))  # White background
@@ -185,19 +220,51 @@ while running:
         drawing_y += thickness
 
     # Check if it's time to swap polarity
-    if time_counter >= total_time / 8 and time_counter <= (total_time / 8) * 3:
+    if time_counter_1 >= total_time / 8 and time_counter_1 <= (total_time / 8) * 3:
         iron_bar_color = (0, 255, 0)  # Change color to green
-        polarity_l = polarity_factor_l # Swap polarity
-        polarity_r = polarity_factor_r # Swap polarity
     else:
         iron_bar_color = (255, 0, 0)  # Change color to red
-        polarity_l = polarity_factor_l # Swap polarity
-        polarity_r = polarity_factor_r # Swap polarity
 
-    if time_counter >= total_time:
-        time_counter = 0
-        polarity_factor_l *= -1
-        polarity_factor_r *= -1
+    if time_counter_1 >= total_time / 2 and gravity_turn == 0:
+        time_counter_1 = 0
+        time_counter_2 = 0
+        time_counter_3 = 0
+        polarity_factor_1l *= -1
+        polarity_factor_1r *= -1
+
+        polarity_1l = polarity_factor_1l # Swap polarity
+        polarity_1r = polarity_factor_1r # Swap polarity
+
+        if gravity_turn == 0:
+            gravity_turn = 1
+
+    if time_counter_2 >= total_time / 8 and time_counter_2 <= (total_time / 8) * 3 and gravity_turn == 3:
+        time_counter_1 = 0
+        time_counter_2 = 0
+        time_counter_3 = 0
+
+        polarity_2l = polarity_factor_2l # Swap polarity
+        polarity_2r = polarity_factor_2r # Swap polarity
+
+        polarity_factor_2l *= -1
+        polarity_factor_2r *= -1
+
+        if gravity_turn == 1:
+            gravity_turn = 2
+
+    if time_counter_3 >= total_time / 8 and time_counter_3 <= (total_time / 8) * 3 and gravity_turn == 3:
+        time_counter_1 = 0
+        time_counter_2 = 0
+        time_counter_3 = 0
+        polarity_factor_3l *= -1
+        polarity_factor_3r *= -1
+
+        polarity_3l = polarity_factor_3l # Swap polarity
+        polarity_3r = polarity_factor_3l # Swap polarity
+
+        if gravity_turn == 2:
+            gravity_turn = 0
+
 
     # Calculate altitude above Earth's surface
     altitude = -camera_y  # Assuming camera_y is the altitude above the surface
@@ -215,12 +282,10 @@ while running:
 
     if g < min_gravity:
         min_gravity = g
-    
-    print(altitude)
 
     # Draw iron bars with inverted polarity after reaching half pi time
-    pygame.draw.rect(screen, iron_bar_color, (width // 4 - iron_bar_width // 2, left_bar_y - camera_y, iron_bar_width, iron_bar_height))
-    pygame.draw.rect(screen, iron_bar_color, (3 * width // 4 - iron_bar_width // 2, right_bar_y - camera_y, iron_bar_width, iron_bar_height))
+    pygame.draw.rect(screen, iron_bar_color, (width // 4 - iron_bar_width // 2, left_bar_osc - camera_y, iron_bar_width, iron_bar_height))
+    pygame.draw.rect(screen, iron_bar_color, (3 * width // 4 - iron_bar_width // 2, right_bar_osc - camera_y, iron_bar_width, iron_bar_height))
 
     # Draw the ground
     pygame.draw.line(screen, (0, 0, 0), (0, height - camera_y), (width, height - camera_y), 2)
@@ -252,12 +317,19 @@ while running:
     pygame.display.flip()
 
     # Control the frame rate
-    clock.tick(30)
+    clock.tick(120)
 
     # Increment time step and time counter
     i += 1
-    time_counter += (total_time) * 1.0 / 24.0
-    
+    if gravity_turn == 0:
+        time_counter_1 += (total_time) * 1.0 / 24.0
+
+    if gravity_turn == 1:
+        time_counter_2 += (total_time) * 1.0 / 24.0
+
+    if gravity_turn == 2:
+        time_counter_3 += (total_time) * 1.0 / 24.0
+
     if i >= num_time_steps:
         i = 0
 
