@@ -2,6 +2,7 @@ import numpy as np
 import pygame
 from pygame.locals import QUIT, KEYDOWN, K_UP, K_DOWN
 from qutip import *
+import matplotlib.pyplot as plt
 
 pygame.init()
 
@@ -18,12 +19,16 @@ times = np.linspace(0, total_time, num_time_steps)
 # Pygame settings
 width, height = 800, 600
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Iron Bars Simulation")
+pygame.display.set_caption("Earth Atmosphere Simulation")
 
 # Iron bars settings
 iron_bar_width = 20
 iron_bar_height = 150
 iron_bar_color = (255, 0, 0)  # Red color
+
+# Camera settings (spaceship)
+camera_speed = 2
+camera_y = height // 2  # Initial camera position
 
 # Clock for controlling the frame rate
 clock = pygame.time.Clock()
@@ -32,6 +37,21 @@ clock = pygame.time.Clock()
 font = pygame.font.Font(None, 36)  # Choose your font and size
 label_color = (0, 0, 0)  # Black color
 
+# Earth atmospheric layers (using real Earth values)
+troposphere_thickness = 8000  # meters
+stratosphere_thickness = 32000  # meters
+mesosphere_thickness = 50000  # meters
+thermosphere_thickness = 200000  # meters
+
+layer_colors = [
+    (135, 206, 250),   # Sky Blue for troposphere
+    (0, 191, 255),     # Deep Sky Blue for stratosphere
+    (70, 130, 180),    # Steel Blue for mesosphere
+    (25, 25, 112)      # Midnight Blue for thermosphere
+]
+
+layer_thicknesses = [troposphere_thickness, stratosphere_thickness, mesosphere_thickness, thermosphere_thickness]
+
 # Define time-dependent Hamiltonian
 def hamiltonian_t(t, args):
     H_field = a.dag() * a
@@ -39,12 +59,8 @@ def hamiltonian_t(t, args):
     H_right_iron = args['right_component_mass'] * (a.dag() + a)
     return H_field + H_left_iron + H_right_iron
 
-# Initialize lists to store EMF values for left and right bars
-emf_left_values = []
-emf_right_values = []
-
 # Set up the arguments for the Hamiltonian
-hamiltonian_args = {'left_component_mass': 1.0, 'right_component_mass': 1.0}
+hamiltonian_args = {'left_component_mass': 1, 'right_component_mass': 1}
 
 # Use sesolve to calculate the time-dependent results
 result = sesolve(hamiltonian_t, psi0, tlist=times, e_ops=[a.dag() + a, a.dag() + a], args=(hamiltonian_args))
@@ -53,20 +69,86 @@ result = sesolve(hamiltonian_t, psi0, tlist=times, e_ops=[a.dag() + a, a.dag() +
 running = True
 i = 0
 
-update_label_interval = int(num_time_steps / (total_time))  # Update label every pi seconds
+update_label_interval = 1#int(num_time_steps / (total_time))  # Update label every pi seconds
 label_update_countdown = update_label_interval
 
 # Create left and right EMF labels
 left_label_text = f'Left EMF: {0:.2f} m/s²'
 right_label_text = f'Right EMF: {0:.2f} m/s²'
-current_time_minus_pi_label_text = f'PI time measure: {0:.2f}'
+current_time_minus_pi_label_text = f'Altitude: {0:.2f}'
 
 # Variables for adjusting pi interval
 pi_increase = 0
 min_pi_interval = 0
 max_pi_interval = np.pi
 
-g = 9.81 
+# Gravity offset settings
+gravity_offset = 0
+gravity_acceleration = 0.01  # Adjust this value to control acceleration
+
+g = 9.81
+
+# Find the initial y position of the iron bars
+right_bar_y = height // 2 - iron_bar_height // 2
+left_bar_y = height // 2 - iron_bar_height // 2
+
+# Variables for time counter and polarity swapping
+half_pi_time_reached = False
+polarity_l = 1  # Initial polarity
+polarity_r = 1  # Initial polarity
+polarity_factor_l = 1
+polarity_factor_r = -1
+time_counter = 0
+
+
+# Calculate EMF values
+emf_left_values = np.real(result.expect[0])
+emf_right_values = np.real(-result.expect[1])
+
+# Create separate plots for the left and right iron bars with values
+plt.figure(1)
+plt.plot(times, emf_left_values, label='Left Iron Bar (EMF)')
+plt.plot(times, emf_right_values, label='Right Iron Bar (EMF)')
+plt.xlabel('Time')
+plt.ylabel('EMF')
+plt.legend()
+
+g = 9.81  # Acceleration due to gravity (m/s^2)
+
+# Calculate EMF values in m/s²
+emf_left_m_per_s_squared = g - (emf_left_values * g) 
+emf_right_m_per_s_squared = g - (emf_right_values * g)
+
+# Create separate plots for the left and right iron bars with values in m/s²
+plt.figure(2)
+plt.plot(times, emf_left_m_per_s_squared, label='Left Iron Bar (EMF in m/s^2)')
+plt.plot(times, emf_right_m_per_s_squared, label='Right Iron Bar (EMF in m/s^2)')
+plt.xlabel('Time')
+plt.ylabel('EMF (m/s^2)')
+plt.legend()
+
+# Calculate the offsets
+gravity_offset = emf_left_m_per_s_squared - emf_right_m_per_s_squared
+
+# Plot the offsets for the left and right iron bars
+plt.figure(3)
+plt.plot(times, gravity_offset * np.ones(len(times)), label='Gravitational offset')
+plt.xlabel('Time')
+plt.ylabel('Offset (m/s^2)')
+plt.legend()
+
+plt.show()
+
+# Earth parameters
+earth_mass = 5.972e24  # kg
+earth_radius = 6.371e6  # meters
+# Gravitational constant
+G = 6.67430e-11  # m^3 kg^-1 s^-2
+
+max_altitude = 0
+min_gravity = 10
+
+num_gravity_systems = 4
 
 while running:
     for event in pygame.event.get():
@@ -76,7 +158,6 @@ while running:
             if event.key == K_UP:
                 pi_increase += np.pi * 0.25  # Increase the interval
                 pi_increase = min(pi_increase, max_pi_interval)
-
             elif event.key == K_DOWN:
                 pi_increase -= np.pi * 0.25  # Decrease the interval
                 pi_increase = max(pi_increase, min_pi_interval)
@@ -85,25 +166,64 @@ while running:
     emf_left_m_per_s_squared = g - (result.expect[0][i] * g)
     emf_right_m_per_s_squared = g - (-result.expect[1][i] * g)
 
-    # Calculate the offsets
-    gravity_offset = emf_left_m_per_s_squared - emf_right_m_per_s_squared
+    # Accelerate gravity offset
+    left_bar_y -= emf_left_m_per_s_squared * polarity_l
+    right_bar_y -= emf_right_m_per_s_squared * polarity_r
 
-    # Update iron bars based on EMF values
-    left_bar_y = height // 2 - iron_bar_height // 2 + gravity_offset
-    right_bar_y = height // 2 - iron_bar_height // 2 - gravity_offset
+    # Update camera position based on the average position of iron bars
+    camera_y = (left_bar_y + right_bar_y) // 2
+
+    camera_y -= iron_bar_height * 1.5
 
     # Clear the screen
     screen.fill((255, 255, 255))  # White background
 
-    # Draw iron bars
-    pygame.draw.rect(screen, iron_bar_color, (width // 4 - iron_bar_width // 2, left_bar_y, iron_bar_width, iron_bar_height))
-    pygame.draw.rect(screen, iron_bar_color, (3 * width // 4 - iron_bar_width // 2, right_bar_y, iron_bar_width, iron_bar_height))
+    # Draw Earth atmospheric layers
+    drawing_y = camera_y
+    for thickness, color in zip(layer_thicknesses, layer_colors):
+        pygame.draw.rect(screen, color, (0, height - thickness - drawing_y, width, thickness))
+        drawing_y += thickness
 
-    # Find the minimum y position of the iron bars
-    min_y_position = max(left_bar_y, right_bar_y)
+    # Check if it's time to swap polarity
+    if time_counter >= total_time / 8 and time_counter <= (total_time / 8) * 3:
+        iron_bar_color = (0, 255, 0)  # Change color to green
+        polarity_l = polarity_factor_l # Swap polarity
+        polarity_r = polarity_factor_r # Swap polarity
+    else:
+        iron_bar_color = (255, 0, 0)  # Change color to red
+        polarity_l = polarity_factor_l # Swap polarity
+        polarity_r = polarity_factor_r # Swap polarity
+
+    if time_counter >= total_time:
+        time_counter = 0
+        polarity_factor_l *= -1
+        polarity_factor_r *= -1
+
+    # Calculate altitude above Earth's surface
+    altitude = -camera_y  # Assuming camera_y is the altitude above the surface
+    if altitude < 0:
+        altitude = 0  # Prevent altitude from going below 0
+
+    if altitude > max_altitude:
+        max_altitude = altitude
+
+    # Calculate gravitational acceleration
+    gravity = G * earth_mass / (earth_radius + altitude)**2
+
+    # Update the acceleration due to gravity in your code
+    g = gravity
+
+    if g < min_gravity:
+        min_gravity = g
+    
+    print(altitude)
+
+    # Draw iron bars with inverted polarity after reaching half pi time
+    pygame.draw.rect(screen, iron_bar_color, (width // 4 - iron_bar_width // 2, left_bar_y - camera_y, iron_bar_width, iron_bar_height))
+    pygame.draw.rect(screen, iron_bar_color, (3 * width // 4 - iron_bar_width // 2, right_bar_y - camera_y, iron_bar_width, iron_bar_height))
 
     # Draw the ground
-    pygame.draw.line(screen, (0, 0, 0), (0, min_y_position + iron_bar_height), (width, min_y_position + iron_bar_height), 2)
+    pygame.draw.line(screen, (0, 0, 0), (0, height - camera_y), (width, height - camera_y), 2)
 
     # Update label every pi seconds
     label_update_countdown -= 1
@@ -116,7 +236,7 @@ while running:
 
         # Calculate current time - PI
         current_time_minus_pi = pi_increase
-        current_time_minus_pi_label_text = f'PI time measure: {current_time_minus_pi:.2f}'
+        current_time_minus_pi_label_text = f'Altitude: {max_altitude:.2f}'
 
     # Render labels
     left_label_render = font.render(left_label_text, True, label_color)
@@ -132,15 +252,13 @@ while running:
     pygame.display.flip()
 
     # Control the frame rate
-    clock.tick(120)
+    clock.tick(30)
 
-    # Increment time step
+    # Increment time step and time counter
     i += 1
+    time_counter += (total_time) * 1.0 / 24.0
+    
     if i >= num_time_steps:
         i = 0
 
 pygame.quit()
-
-
-
-
