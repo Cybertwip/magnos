@@ -1,6 +1,10 @@
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
+def exponential_fit(t, a, b, c):
+    return a * np.exp(b * t) + c
 
 # Constants
 N = 2
@@ -17,8 +21,9 @@ d = 1.0  # Example value for the dipole moment
 mu_iron = 2.0  # Example value for the magnetic moment of iron in Bohr magnetons
 c = 3e8  # Speed of light in meters per second
 
+num_masses = 30
 # Iron masses to simulate
-iron_masses = np.linspace(1, 50, 50)  # Adjust as needed
+iron_masses = np.linspace(1, num_masses, num_masses)  # Adjust as needed
 
 # Lists to store results
 max_speeds_left = []
@@ -51,6 +56,9 @@ polarity_factor_3l = -1
 polarity_factor_3r = 1
 
 gravity_turn = 0
+
+energy_values_left = []  # Store energy for the left iron bar
+energy_values_right = []  # Store energy for the right iron bar
 
 for iron_mass in iron_masses:
     # Define time-dependent Hamiltonian
@@ -153,33 +161,52 @@ for iron_mass in iron_masses:
         if gravity_turn == 2:
             time_counter_3 += 1
             
+        energy_values_left.append(speed_l**2 * hamiltonian_args['left_component_mass'] / 2)
+        energy_values_right.append(speed_l**2 * hamiltonian_args['right_component_mass'] / 2)
+
         # Store the results
         max_speeds_left.append(np.abs(speed_l_equated))
         max_speeds_right.append(np.abs(speed_r_equated))
-        #time_values.append(times[i] + total_time * iron_mass / 50)  # Adjust time scaling as needed
-
 
 # Plot the results
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(10, 10))
 
-plt.subplot(3, 1, 1)
+plt.subplot(4, 1, 1)
 plt.plot(np.repeat(iron_masses, num_time_steps), max_speeds_left, label='Left Iron Bar')
 plt.xlabel('Iron Mass')
 plt.ylabel('Max Speed')
 plt.legend()
 
-plt.subplot(3, 1, 2)
+plt.subplot(4, 1, 2)
 plt.plot(np.repeat(iron_masses, num_time_steps), max_speeds_right, label='Right Iron Bar')
 plt.xlabel('Iron Mass')
 plt.ylabel('Max Speed')
 plt.legend()
 
-#plt.subplot(3, 1, 3)
-#plt.plot(np.repeat(iron_masses, num_time_steps), time_values, label='Time')
-#plt.xlabel('Time')
-#plt.ylabel('Force')
-#plt.legend()
+# Assuming power and frequency of the laser
+power = 10000.0  # Adjust as needed, in watts
+frequency = 30000.0  # Adjust as needed, in hertz
 
+# Calculate charge based on power and frequency
+charge = power / frequency
+
+# Convert energy values to volts
+volts_values_left = np.array(energy_values_left) / charge
+volts_values_right = np.array(energy_values_right) / charge
+
+# Plot energy values for the left iron bar
+plt.subplot(4, 1, 3)
+plt.plot(np.repeat(iron_masses, num_time_steps), volts_values_left, label='Right Iron Bar')
+plt.xlabel('Time')
+plt.ylabel('Energy (Volts)')
+plt.legend()
+
+# Plot energy values for the right iron bar
+plt.subplot(4, 1, 4)
+plt.plot(np.repeat(iron_masses, num_time_steps), volts_values_right, label='Right Iron Bar')
+plt.xlabel('Time')
+plt.ylabel('Energy (Volts)')
+plt.legend()
 
 plt.tight_layout()
 plt.show()
