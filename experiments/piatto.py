@@ -19,7 +19,7 @@ def visualize_pcd(file_path):
 
 
 # Specify the path to your PCD file
-pcd_file_path = "/Users/victor.lopez1/Projects/magnos/magnetico/translator/models/output_cloud.pcd"
+pcd_file_path = ""
 
 # Visualize the PCD file
 visualize_pcd(pcd_file_path)
