@@ -162,8 +162,6 @@ G = 6.67430e-11  # m^3 kg^-1 s^-2
 max_altitude = 0
 min_gravity = 10
 
-num_gravity_systems = 2
-
 gravity_turn = 0
 
 while running:
