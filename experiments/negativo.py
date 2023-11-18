@@ -22,7 +22,7 @@ mu_iron = 2.0  # Example value for the magnetic moment of iron in Bohr magnetons
 c = 3e8  # Speed of light in meters per second
 
 # Iron masses to simulate
-iron_mass = 1
+iron_mass = 0.00001
 
 # Lists to store results
 max_speeds_left = []
@@ -78,6 +78,7 @@ result = sesolve(hamiltonian_t, psi0, tlist=times, e_ops=[a.dag() + a, a.dag() +
 emf_left_m_per_s_squared = (result.expect[0] * g)
 emf_right_m_per_s_squared = (-result.expect[1] * g)
 
+force_left_values = -np.pi / 2 * mu_iron * c / (240 * d**4) * np.gradient(np.real(emf_left_m_per_s_squared), times)
 
 # Total time and number of time steps
 total_time_pair_production = 1e-15 * np.pi 
@@ -101,7 +102,7 @@ def hamiltonian_pair_production_with_emf(t, args):
     return H_photon + H_fermion
 
 # Set up the arguments for the Hamiltonian
-hamiltonian_args_pair_production = {'omega': 2 * np.pi * 1e15, 'g': 1e-10, 'F_t': emf_left_m_per_s_squared}
+hamiltonian_args_pair_production = {'omega': 2 * np.pi * 1e15, 'g': 1e-10, 'F_t': force_left_values}
 
 # Initial state: vacuum state for the photon field
 psi0_photon = fock(N, 0)
@@ -113,13 +114,39 @@ result_pair_production_with_emf = sesolve(hamiltonian_pair_production_with_emf, 
                                            options=Options(nsteps=10000))
 
 # Threshold for pair production
-threshold = 1e-39
+threshold = 1e-30
 #pair_production_count = sum()
 #print("Number of pair-produced particles:", pair_production_count)
 
+force_left_values = -np.pi / 2 * mu_iron * c / (240 * d**4) * np.gradient(np.real(emf_left_m_per_s_squared), times)
+
+energy_values = force_left_values**2 * hamiltonian_args['left_component_mass'] / 2
+
+# Adjust power and frequency to very low values
+power = 100  # Adjust the power to a very low value, in watts
+frequency = 3000  # Adjust the frequency to a very low value, in hertz
+
+
+# Calculate charge based on power and frequency
+charge = power / frequency
+
+# Convert energy values to volts
+volts_values_left = np.array(energy_values) / charge
+
 # Plot the photon occupation number as a function of time
+plt.subplot(2, 1, 1)
+
 plt.plot(times_pair_production, result_pair_production_with_emf.expect[0] > threshold, marker='o')
 plt.xlabel('Time (s)')
 plt.ylabel('Pairs produced')
 plt.title('Pair Production: Particle Presence vs. Time')
+
+plt.subplot(2, 1, 2)
+plt.plot(times_pair_production, volts_values_left, label='3Khz photon laser')
+plt.xlabel('Time')
+plt.ylabel('Energy (Volts)')
+plt.legend()
+
+
+plt.tight_layout()
 plt.show()
