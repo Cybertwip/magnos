@@ -154,8 +154,8 @@ for iron_mass in iron_masses:
             time_counter_3 += 1
             
         # Store the results
-        max_speeds_left.append(-speed_l_equated)
-        max_speeds_right.append(-speed_r_equated)
+        max_speeds_left.append(np.abs(speed_l_equated))
+        max_speeds_right.append(np.abs(speed_r_equated))
         #time_values.append(times[i] + total_time * iron_mass / 50)  # Adjust time scaling as needed
 
 
