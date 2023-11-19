@@ -290,7 +290,7 @@ particle_presence = wavelength_values_femtometers > threshold
 
 # Plot the combined waveform and proton position with a cross at the matching points
 plt.figure(figsize=(14, 8))
-plt.subplot(2, 1, 1)
+plt.subplot(3, 1, 1)
 
 # Create an interpolation function
 interpolation_function = interp1d(original_x_values_protons, samples, kind='cubic', fill_value="extrapolate")
@@ -365,13 +365,93 @@ for i in range(1, num_time_steps):
         positions[i] = trap_center + trap_width / 2
         velocities[i] = -velocities[i]  # Reflect the positron
 
-plt.subplot(2, 1, 2)
+plt.subplot(3, 1, 2)
 
 # Plot positron's trajectory in the trap
 plt.plot(times_protons[:len(compressed_audio_wave)], positions, label='Positron')
 plt.xlabel('Time')
 plt.ylabel('Position (m)')
 plt.title('Positron Trajectory in an EMF Trap')
+plt.legend()
+
+
+
+# Function to calculate the Lorentz force on a charged particle
+def lorentz_force(q, v, B, E):
+    # q: charge, v: velocity vector, B: magnetic field vector, E: electric field vector
+    return q * (np.cross(v, B) + E)
+
+# Function to update the position and velocity of a charged particle using the Lorentz force
+def update_particle_motion(q, m, x, v, dt, B, E):
+    a = lorentz_force(q, v, B, E) / m  # acceleration
+    v_new = v + a * dt
+    x_new = x + v_new * dt
+    return x_new, v_new
+
+# Penning Trap Simulation
+
+
+# Penning Trap Simulation
+def penning_trap_simulation(q_particles, m_particles, x_particles, v_particles, dt, total_time, B, E_left, E_right):
+    num_particles = len(q_particles)
+    num_time_steps = 10
+    time_values = np.linspace(0, total_time, num_time_steps)
+
+    # Lists to store particle trajectories
+    particle_positions = [[] for _ in range(num_particles)]
+
+    for i in range(num_time_steps):
+        for j in range(num_particles):
+            # Use the Casimir force field as the electric field for the electron (negative charge)
+            if q_particles[j] < 0:
+                E = E_left[i]
+            # Use emf_right_m_per_s_squared as the electric field for the proton (positive charge)
+            else:
+                E = E_right[i]
+
+            x_particles[j], v_particles[j] = update_particle_motion(
+                q_particles[j], m_particles[j], x_particles[j], v_particles[j], dt, B, E
+            )
+            particle_positions[j].append(x_particles[j].tolist())
+
+    return time_values, particle_positions
+
+# Constants
+q_electron = -1.602176634e-19  # charge of an electron in coulombs
+q_proton = 1.602176634e-19  # charge of a proton in coulombs
+m_electron = 9.10938356e-31  # mass of an electron in kg
+m_proton = 1.6726219e-27  # mass of a proton in kg
+
+# Penning trap parameters
+B_field = np.array([0, 0, 1e-5])  # static magnetic field along the z-axis
+E_field = np.array([1e4, 0, 0])  # electric field along the x-axis
+
+# Particle initialization
+num_particles = 2
+q_particles = [q_electron, q_proton]  # charges of electrons and protons
+m_particles = [m_electron, m_proton]  # masses of electrons and protons
+
+# Initial positions and velocities (for simplicity, placing particles on the x-axis)
+x_particles = np.array([[1e-3, 0, 0], [-1e-3, 0, 0]])
+v_particles = np.array([[0, 1e4, 0], [0, -1e4, 0]])
+
+# Simulation parameters
+dt = 1e-8  # time step
+total_time = len(compressed_audio_wave)  # total simulation time
+
+# Run Penning trap simulation
+time_values, particle_positions = penning_trap_simulation(q_particles, m_particles, x_particles, v_particles, dt, total_time, B_field, emf_left_m_per_s_squared, emf_right_m_per_s_squared)
+
+plt.subplot(3, 1, 3)
+
+# Plot particle trajectories
+for i in range(num_particles):
+    positions = np.array(particle_positions[i])
+    plt.plot(times_protons[:len(compressed_audio_wave)], positions[:, 1], label=f'{["Electron", "Proton"][i]} Trajectory')
+
+plt.xlabel('Time (s)')
+plt.ylabel('Position along y-axis (m)')
+plt.title('Particle Trajectories in a Penning Trap')
 plt.legend()
 
 plt.tight_layout()
