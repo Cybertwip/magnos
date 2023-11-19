@@ -1,10 +1,6 @@
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
-
-def exponential_fit(t, a, b, c):
-    return a * np.exp(b * t) + c
 
 # Constants
 N = 2
