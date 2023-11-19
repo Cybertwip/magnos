@@ -432,8 +432,8 @@ q_particles = [q_electron, q_proton]  # charges of electrons and protons
 m_particles = [m_electron, m_proton]  # masses of electrons and protons
 
 # Initial positions and velocities (for simplicity, placing particles on the x-axis)
-x_particles = np.array([[1e-3, 0, 0], [-1e-3, 0, 0]])
-v_particles = np.array([[0, 1e4, 0], [0, -1e4, 0]])
+x_particles = np.array([[1e-3, 1e-3, 0], [-1e-3, -1e-3, 0]])
+v_particles = np.array([[0, -1e4, 0], [0, 1e4, 0]])
 
 # Simulation parameters
 dt = 1e-8  # time step
