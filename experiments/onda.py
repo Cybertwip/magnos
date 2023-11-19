@@ -4,16 +4,7 @@ import matplotlib.pyplot as plt
 from qutip import *
 from scipy.interpolate import interp1d
 
-def measure_wavelength(audio_path, duration=10000):
-    # Load audio file
-    audio = AudioSegment.from_wav(audio_path)
-
-    # Extract the first 10 seconds
-    audio_10s = audio[:duration]
-
-    # Get audio data as a numpy array
-    samples = np.array(audio_10s.get_array_of_samples())
-
+def measure_wavelength(audio, samples):
     # Calculate the Fast Fourier Transform (FFT)
     fft_result = np.fft.fft(samples)
     fft_freq = np.fft.fftfreq(len(samples), 1 / audio.frame_rate)
@@ -49,9 +40,9 @@ def compress_wavelength(wavelength, compression_factor):
 
     return compressed_wavelength
 
-def acoustic_lens_simulation_compressed_wavelength(audio_path, radius, compression_factor=2, num_points=500):
+def acoustic_lens_simulation_compressed_wavelength(audio, samples, radius, compression_factor=2, num_points=500):
     # Measure the wavelength of the audio
-    wavelength_femtometers = measure_wavelength(audio_path)
+    wavelength_femtometers = measure_wavelength(audio, samples)
 
     # Create an array of x-coordinates for visualization
     original_x_values = np.linspace(-2 * radius, 2 * radius, num_points)
@@ -67,26 +58,38 @@ def acoustic_lens_simulation_compressed_wavelength(audio_path, radius, compressi
 
     return original_x_values, original_wavelength, compressed_x_values, compressed_wavelength
 
-def calculate_number_of_protons(radius, compression_factor):
+def calculate_number_of_protons(radius, compressed_wavelength):
     # Assuming a cylindrical volume for the compressed wavelength region
-    volume_compressed_region = np.pi * radius**2 * 2 * radius
+    volume_compressed_region = np.pi * radius**2 * 2 * radius * (compressed_wavelength / 1e15)
 
     # Volume occupied by a single proton (using average proton radius)
-    volume_proton = (4/3) * np.pi * (0.84e-15)**3  # Proton radius is approximately 0.84 femtometers
+    volume_proton = (4/3) * np.pi * (0.84*1e-15)**3  # Proton radius is approximately 0.84 femtometers
+    # Calculate the number of protons that can fit in the compressed region
+    num_protons = volume_compressed_region / volume_proton
 
-    # Check if the compressed region can contain at least one proton
-    if volume_compressed_region >= volume_proton:
-        return 1
-    else:
-        return 0
-
+    return int(num_protons)
+    
 # Parameters for the simulation
 audio_path = 'protoman.wav'
-radius = 0.5  # Reduce the radius to create a compressed region for a single proton
-compression_factor = 50  # Adjust as needed
+radius = 1e-8 * 0.29 # Reduce the radius to create a compressed region for a single proton
+compression_factor = 10  # Adjust as needed
 
+frequency_ratio = 2
 
+audio = AudioSegment.from_wav("protoman.wav")
 
+# Extract the first 10 seconds
+duration = 1000  # in milliseconds
+audio = audio[:duration]
+
+# Get audio data as a numpy array
+samples = np.array(audio.get_array_of_samples())
+
+# Run the compressed simulation for protons with the same time duration as pair production
+total_time_protons = duration / 1000 * np.pi / 2
+
+num_time_steps_protons = len(samples) * frequency_ratio
+times_protons = np.linspace(0, total_time_protons, num_time_steps_protons)
 
 # Constants
 N = 2
@@ -94,9 +97,9 @@ n_photons = 0
 a = destroy(N)
 H_field = a.dag() * a
 psi0 = fock(N, n_photons)
-total_time = np.pi 
-num_time_steps = 10
-times = np.linspace(0, total_time, num_time_steps)
+total_time = total_time_protons
+num_time_steps = num_time_steps_protons
+times = times_protons
 
 # Iron-related properties
 d = 1.0  # Example value for the dipole moment
@@ -163,9 +166,9 @@ emf_right_m_per_s_squared = (-result.expect[1] * g)
 force_left_values = -np.pi / 2 * mu_iron * c / (240 * d**4) * np.gradient(np.real(emf_left_m_per_s_squared), times)
 
 # Total time and number of time steps
-total_time_pair_production = 1e-15 * np.pi 
-num_time_steps_pair_production = 10
-times_pair_production = np.linspace(0, total_time_pair_production, num_time_steps_pair_production)
+simulation_time_factor = 9
+total_time_pair_production = simulation_time_factor * 1e-15 * np.pi
+times_pair_production = np.linspace(0, total_time_pair_production, num_time_steps)
 
 index = 0
 # Define the Hamiltonian for pair production with time-dependent EMF
@@ -218,26 +221,12 @@ volts_values_left = np.array(energy_values) / charge
 
 wavelength_values_femtometers = estimate_wavelength_from_emf(emf_left_m_per_s_squared)
 
-audio = AudioSegment.from_wav("protoman.wav")
-# Extract the first 10 seconds
-duration = 10000  # in milliseconds
-audio_10s = audio[:duration]
-
-# Get audio data as a numpy array
-samples = np.array(audio_10s.get_array_of_samples())
-
-# Create time values for x-axis
-time_values = np.linspace(0, duration / 1000, len(samples))
-
-# Run the compressed simulation for protons with the same time duration as pair production
-total_time_protons = duration / 1000
-num_time_steps_protons = len(samples)
-times_protons = np.linspace(0, total_time_protons, num_time_steps_protons)
-
 # Run the compressed simulation for protons
-original_x_values_protons, original_wavelength_protons, compressed_x_values_protons, compressed_wavelength_protons = acoustic_lens_simulation_compressed_wavelength(audio_path, radius, compression_factor, num_points=num_time_steps_protons)
+original_x_values_protons, original_wavelength_protons, compressed_x_values_protons, compressed_wavelength_protons = acoustic_lens_simulation_compressed_wavelength(audio, samples, radius, compression_factor, num_points=num_time_steps_protons)
 # Calculate the number of protons
-num_protons = calculate_number_of_protons(radius, compression_factor)
+
+num_protons = calculate_number_of_protons(radius, compressed_wavelength_protons)
+print("Number of protons " + str(num_protons))
 plt.figure(figsize=(14, 6))
 
 plt.subplot(4, 1, 1)
@@ -266,16 +255,17 @@ plt.plot(original_x_values_protons, original_wavelength_protons, label='Original
 plt.plot(compressed_x_values_protons, np.full_like(compressed_x_values_protons, compressed_wavelength_protons), label=f"Compressed Wavelength (Factor={compression_factor})")
 
 # Mark the position of a single proton within the compressed region
+
 if num_protons > 0:
     plt.scatter([0], [compressed_wavelength_protons], color='red', label='Proton', marker='o')
 
-plt.title("Original and Compressed Wavelengths with Proton")
 plt.xlabel("Position along Lens (arbitrary units)")
 plt.ylabel("Wavelength (femtometers)")
 plt.legend()
 
 # Ensure samples, original_x_values_protons, and compressed_x_values_protons have the same length
-min_length = min(len(samples), len(times_pair_production), len(compressed_x_values_protons))
+
+min_length = min(len(samples), len(original_x_values_protons), len(compressed_x_values_protons))
 samples = samples[:min_length]
 original_x_values_protons = original_x_values_protons[:min_length]
 compressed_x_values_protons = compressed_x_values_protons[:min_length]
@@ -290,7 +280,7 @@ particle_presence = wavelength_values_femtometers > threshold
 
 # Plot the combined waveform and proton position with a cross at the matching points
 plt.figure(figsize=(14, 8))
-plt.subplot(3, 1, 1)
+plt.subplot(1, 1, 1)
 
 # Create an interpolation function
 interpolation_function = interp1d(original_x_values_protons, samples, kind='cubic', fill_value="extrapolate")
@@ -298,23 +288,58 @@ interpolation_function = interp1d(original_x_values_protons, samples, kind='cubi
 # Interpolate the compressed audio waveform from the wavelength
 compressed_audio_wave = interpolation_function(compressed_x_values_protons)
 
-plt.plot(times_protons[:len(compressed_audio_wave)], emf_left_m_per_s_squared, label='Estimated EMF Wave', linestyle='dashed', color='green')
-plt.plot(times_protons[:len(compressed_audio_wave)], compressed_audio_wave, label='Compressed Audio Wave', linestyle='dashed', color='blue')
-plt.scatter(times_protons[:len(compressed_audio_wave)], particle_presence, color='cyan', label='Pairs', marker='^', s=100)  # Mark the position of a single proton
+y_time = len(compressed_audio_wave)
 
-if num_protons > 0:
-    plt.scatter([times_protons[0:len(compressed_audio_wave)]], [compressed_audio_wave[0:len(compressed_audio_wave)]], color='red', label='Proton', marker='o')
+#y_time = 2
 
-tolerance = 10000000
+plt.plot(times_protons[0:y_time], emf_left_m_per_s_squared[0:y_time], label='Estimated EMF Wave', linestyle='dashed', color='green')
+plt.plot(times_protons[0:y_time], compressed_audio_wave[0:y_time], label='Compressed Audio Wave', linestyle='dashed', color='blue')
+plt.scatter(times_protons[0:y_time], particle_presence[0:y_time], color='cyan', label='Pairs', marker='^', s=100)  # Mark the position of a single proton
 
-matching_indices = np.where(np.abs(particle_presence - compressed_audio_wave) < tolerance)[0]
+# Mark the position of protons within the compressed region
+# if num_protons > 0:
+#     proton_y_values = np.full_like(times_protons[0:y_time], num_protons)
+#     plt.scatter(times_protons[0:y_time], proton_y_values, marker='o', color='red', label='Proton')
 
-plt.scatter(times_protons[matching_indices], compressed_audio_wave[matching_indices], marker='x', color='black', label='Matching particles', s=100)
-plt.ylim(0, len(compressed_audio_wave))
-plt.ylim(-compressed_wavelength_protons * 2, compressed_wavelength_protons * 2)
+protons_per_second = (num_protons / total_time_protons) * len(times_protons[0:y_time])
+print("Number of protons per second:", protons_per_second)
+
+
+# Constants
+avogadro_number = 6.022e23
+molar_volume_stp = 22.4  # liters/mol
+rate_of_generation = protons_per_second  # atoms per second
+
+# Step 1: Number of moles of hydrogen gas needed to fill 1 liter at STP
+volume_liters = 1
+moles_of_hydrogen = volume_liters / molar_volume_stp
+
+# Step 2: Total number of molecules
+total_molecules = moles_of_hydrogen * avogadro_number
+
+# Step 3: Time required
+time_required_seconds = total_molecules / rate_of_generation
+
+# Convert time to hours for better readability
+time_required_hours = time_required_seconds / 3600
+
+print("Time required to create 1 liter of hydrogen gas:")
+print(f"In seconds: {time_required_seconds} seconds")
+print(f"In hours: {time_required_hours:.2} hours")
+
+tolerance = 10000000000
+
+matching_indices = np.where(np.abs(particle_presence[0:y_time] - compressed_audio_wave[0:y_time]) < tolerance)[0]
+
+# plt.scatter(times_protons[matching_indices], compressed_audio_wave[matching_indices], marker='x', color='black', label='Matching particles', s=100)
+
+#plt.ylim(0, len(compressed_audio_wave))
+#plt.ylim(-compressed_wavelength_protons * 2, compressed_wavelength_protons * 2)
 plt.xlabel('Time (s)')
 plt.ylabel('Amplitude (femtometers)')
 plt.title('Estimated Compressed Audio and EMF Waveforms over Time')
+plt.ticklabel_format(style='plain', axis='x')  # Disable scientific notation on the x-axis
+
 plt.legend()
 
 # Constants
@@ -323,7 +348,6 @@ charge_of_positron = 1.602176634e-19  # C (charge of positron)
 
 # Simulation parameters
 total_time = len(compressed_audio_wave)  # Total simulation time in seconds
-num_time_steps = 10  # Number of time steps
 time_values = np.linspace(0, total_time, num_time_steps)
 dt = total_time / num_time_steps
 
@@ -365,14 +389,14 @@ for i in range(1, num_time_steps):
         positions[i] = trap_center + trap_width / 2
         velocities[i] = -velocities[i]  # Reflect the positron
 
-plt.subplot(3, 1, 2)
+# plt.subplot(3, 1, 2)
 
-# Plot positron's trajectory in the trap
-plt.plot(times_protons[:len(compressed_audio_wave)], positions, label='Positron')
-plt.xlabel('Time')
-plt.ylabel('Position (m)')
-plt.title('Positron Trajectory in an EMF Trap')
-plt.legend()
+# # Plot positron's trajectory in the trap
+# plt.plot(times_protons[:len(compressed_audio_wave)], positions[0:len(compressed_audio_wave)], label='Positron')
+# plt.xlabel('Time')
+# plt.ylabel('Position (m)')
+# plt.title('Positron Trajectory in an EMF Trap')
+# plt.legend()
 
 
 
@@ -393,8 +417,8 @@ def update_particle_motion(q, m, x, v, dt, B, E):
 
 # Penning Trap Simulation
 def penning_trap_simulation(q_particles, m_particles, x_particles, v_particles, dt, total_time, B, E_left, E_right):
+    global num_time_steps
     num_particles = len(q_particles)
-    num_time_steps = 10
     time_values = np.linspace(0, total_time, num_time_steps)
 
     # Lists to store particle trajectories
@@ -442,17 +466,17 @@ total_time = len(compressed_audio_wave)  # total simulation time
 # Run Penning trap simulation
 time_values, particle_positions = penning_trap_simulation(q_particles, m_particles, x_particles, v_particles, dt, total_time, B_field, emf_left_m_per_s_squared, emf_right_m_per_s_squared)
 
-plt.subplot(3, 1, 3)
+# plt.subplot(3, 1, 3)
 
-# Plot particle trajectories
-for i in range(num_particles):
-    positions = np.array(particle_positions[i])
-    plt.plot(times_protons[:len(compressed_audio_wave)], positions[:, 1], label=f'{["Electron", "Proton"][i]} Trajectory')
+# # Plot particle trajectories
+# for i in range(num_particles):
+#     positions = np.array(particle_positions[i])
+#     plt.plot(times_protons[:len(compressed_audio_wave)], positions[0:len(compressed_audio_wave)], label=f'{["Electron", "Proton"][i]} Trajectory')
 
-plt.xlabel('Time (s)')
-plt.ylabel('Position along y-axis (m)')
-plt.title('Particle Trajectories in a Penning Trap')
-plt.legend()
+# plt.xlabel('Time (s)')
+# plt.ylabel('Position along y-axis (m)')
+# plt.title('Particle Trajectories in a Penning Trap')
+# plt.legend()
 
 plt.tight_layout()
 plt.show()
