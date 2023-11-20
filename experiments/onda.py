@@ -290,20 +290,19 @@ compressed_audio_wave = interpolation_function(compressed_x_values_protons)
 
 y_time = len(compressed_audio_wave)
 
-#y_time = 2
+#y_time = 32
 
 plt.plot(times_protons[0:y_time], emf_left_m_per_s_squared[0:y_time], label='Estimated EMF Wave', linestyle='dashed', color='green')
 plt.plot(times_protons[0:y_time], compressed_audio_wave[0:y_time], label='Compressed Audio Wave', linestyle='dashed', color='blue')
 plt.scatter(times_protons[0:y_time], particle_presence[0:y_time], color='cyan', label='Pairs', marker='^', s=100)  # Mark the position of a single proton
 
 # Mark the position of protons within the compressed region
-# if num_protons > 0:
-#     proton_y_values = np.full_like(times_protons[0:y_time], num_protons)
-#     plt.scatter(times_protons[0:y_time], proton_y_values, marker='o', color='red', label='Proton')
+if num_protons > 0:
+    proton_y_values = np.full_like(times_protons[0:y_time], num_protons)
+    plt.scatter([times_protons[0:y_time]], proton_y_values, marker='o', color='red', label='Proton')
 
 protons_per_second = (num_protons / total_time_protons) * len(times_protons[0:y_time])
 print("Number of protons per second:", protons_per_second)
-
 
 # Constants
 avogadro_number = 6.022e23
@@ -327,11 +326,11 @@ print("Time required to create 1 liter of hydrogen gas:")
 print(f"In seconds: {time_required_seconds} seconds")
 print(f"In hours: {time_required_hours:.2} hours")
 
-tolerance = 10000000000
+tolerance = 1e32
 
 matching_indices = np.where(np.abs(particle_presence[0:y_time] - compressed_audio_wave[0:y_time]) < tolerance)[0]
 
-# plt.scatter(times_protons[matching_indices], compressed_audio_wave[matching_indices], marker='x', color='black', label='Matching particles', s=100)
+plt.scatter(times_protons[matching_indices], compressed_audio_wave[matching_indices], color='black', label='Matching particles', s=100)
 
 #plt.ylim(0, len(compressed_audio_wave))
 #plt.ylim(-compressed_wavelength_protons * 2, compressed_wavelength_protons * 2)
