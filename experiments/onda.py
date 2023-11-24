@@ -326,6 +326,28 @@ print("Time required to create 1 liter of hydrogen gas:")
 print(f"In seconds: {time_required_seconds} seconds")
 print(f"In hours: {time_required_hours:.2} hours")
 
+# Constants for iron
+molar_volume_iron = 7.09  # liters/mol (approximate molar volume of iron at STP)
+rate_of_generation_iron = protons_per_second  # atoms per second for iron
+
+# Step 1: Number of moles of iron needed to fill 1 liter at STP
+volume_liters_iron = 1
+moles_of_iron = volume_liters_iron / molar_volume_iron
+
+# Step 2: Total number of iron atoms
+total_iron_atoms = moles_of_iron * avogadro_number
+
+# Step 3: Time required for iron generation
+time_required_seconds_iron = total_iron_atoms / rate_of_generation_iron
+
+# Convert time to hours for better readability
+time_required_hours_iron = time_required_seconds_iron / 3600
+
+print("Time required to create 1 liter of iron:")
+print(f"In seconds: {time_required_seconds_iron} seconds")
+print(f"In hours: {time_required_hours_iron:.2f} hours")
+
+
 tolerance = 1e32
 
 matching_indices = np.where(np.abs(particle_presence[0:y_time] - compressed_audio_wave[0:y_time]) < tolerance)[0]
@@ -412,16 +434,15 @@ def update_particle_motion(q, m, x, v, dt, B, E):
     return x_new, v_new
 
 # Penning Trap Simulation
-
-
-# Penning Trap Simulation
-def penning_trap_simulation(q_particles, m_particles, x_particles, v_particles, dt, total_time, B, E_left, E_right):
+def penning_trap_simulation(q_particles, m_particles, x_particles, v_particles, dt, total_time, B, E_left, E_right, matching_distance):
     global num_time_steps
     num_particles = len(q_particles)
     time_values = np.linspace(0, total_time, num_time_steps)
 
     # Lists to store particle trajectories
     particle_positions = [[] for _ in range(num_particles)]
+
+    matching_circle = []  # List to store matching circle points
 
     for i in range(num_time_steps):
         for j in range(num_particles):
@@ -437,13 +458,22 @@ def penning_trap_simulation(q_particles, m_particles, x_particles, v_particles, 
             )
             particle_positions[j].append(x_particles[j].tolist())
 
-    return time_values, particle_positions
+        # Check if the particle positions match within a certain distance
+        if np.linalg.norm(x_particles[0] - x_particles[1]) < matching_distance:
+            matching_circle.append(x_particles[0].tolist())  # Mark the circle point
+
+    return time_values, particle_positions, matching_circle
 
 # Constants
 q_electron = -1.602176634e-19  # charge of an electron in coulombs
 q_proton = 1.602176634e-19  # charge of a proton in coulombs
 m_electron = 9.10938356e-31  # mass of an electron in kg
 m_proton = 1.6726219e-27  # mass of a proton in kg
+
+q_proton_iron = 1.602176634e-19  # charge of a proton in coulombs
+q_electron_iron = -1.602176634e-19  # charge of an electron in coulombs
+m_proton_iron = 1.6726219e-27  # mass of a proton in kg
+m_electron_iron = 9.10938356e-31  # mass of an electron in kg
 
 # Penning trap parameters
 B_field = np.array([0, 0, 1e-5])  # static magnetic field along the z-axis
@@ -458,24 +488,42 @@ m_particles = [m_electron, m_proton]  # masses of electrons and protons
 x_particles = np.array([[1e-3, 1e-3, 0], [-1e-3, -1e-3, 0]])
 v_particles = np.array([[0, -1e4, 0], [0, 1e4, 0]])
 
+# Charges and masses for iron particles
+q_particles_iron = [q_proton_iron, q_electron_iron]
+m_particles_iron = [m_proton_iron, m_electron_iron]
+
+
+x_particles_iron = np.array([[1e-3, 1e-3, 0], [-1e-3, -1e-3, 0]])
+v_particles_iron = np.array([[0, -1e4, 0], [0, 1e4, 0]])
+
 # Simulation parameters
 dt = 1e-8  # time step
 total_time = len(compressed_audio_wave)  # total simulation time
 
 # Run Penning trap simulation
-time_values, particle_positions = penning_trap_simulation(q_particles, m_particles, x_particles, v_particles, dt, total_time, B_field, emf_left_m_per_s_squared, emf_right_m_per_s_squared)
+# time_values, particle_positions = penning_trap_simulation(q_particles, m_particles, x_particles, v_particles, dt, total_time, B_field, emf_left_m_per_s_squared, emf_right_m_per_s_squared)
+# Run Penning trap simulation for iron particles
+matching_distance = 1e-15  # Start with a small value and adjust as needed
+time_values_iron, particle_positions_iron, matching_circle_iron = penning_trap_simulation(
+    q_particles_iron, m_particles_iron, x_particles_iron, v_particles_iron, dt, total_time, B_field, emf_left_m_per_s_squared, emf_right_m_per_s_squared, matching_distance
+)
 
-# plt.subplot(3, 1, 3)
+plt.figure(figsize=(14, 6))
 
-# # Plot particle trajectories
-# for i in range(num_particles):
-#     positions = np.array(particle_positions[i])
-#     plt.plot(times_protons[:len(compressed_audio_wave)], positions[0:len(compressed_audio_wave)], label=f'{["Electron", "Proton"][i]} Trajectory')
+print(matching_circle_iron)
+# Plot particle trajectories
+for i in range(num_particles):
+    positions = np.array(particle_positions_iron[i])
+    plt.plot(times_protons[:len(compressed_audio_wave)], positions[0:len(compressed_audio_wave)], label=f'Particle {i + 1} Trajectory')
 
-# plt.xlabel('Time (s)')
-# plt.ylabel('Position along y-axis (m)')
-# plt.title('Particle Trajectories in a Penning Trap')
-# plt.legend()
+# Plot circles for matching particles
+for circle in matching_circle_iron:
+    center, radius = circle
+    plt.gca().add_patch(plt.Circle(center, radius, fill=False, color='red'))
 
+plt.xlabel('Time (s)')
+plt.ylabel('Position along y-axis (m)')
+plt.title('Particle Trajectories in a Penning Trap with Matching Circles')
+plt.legend()
 plt.tight_layout()
 plt.show()

@@ -116,7 +116,12 @@ void Scene::initDefaultCamera()
 {
     if (!_defaultCamera)
     {
-        _defaultCamera = Camera::create();
+		auto winSize = ax::Camera::getDefaultViewport();
+		
+		ax::Viewport viewport;
+		viewport.set((float)winSize.width * 0.5f, 0, (float)winSize.width * 0.5f, (float)winSize.height * 0.5f);
+
+		_defaultCamera = ax::Camera::createPerspective(90, (float)viewport.width / viewport.height, 0.5f, 50);
         addChild(_defaultCamera);
     }
 }
