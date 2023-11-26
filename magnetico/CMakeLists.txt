@@ -8,16 +8,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(APPLE)
+if(APPLE AND CLANG)
     set(CMAKE_OSX_ARCHITECTURES arm64)
-    
-    set(OpenMP_CXX_INCLUDE_DIRS "/opt/homebrew/opt/libomp/include")
-    set(OpenMP_CXX_LIBRARIES "/opt/homebrew/opt/libomp/lib/libomp.a")
+endif()
 
-    set(protobuf_DIR " /opt/homebrew/Cellar/protobuf@3/3.20.3")
-
-    LIST(APPEND CMAKE_PREFIX_PATH "${protobuf_DIR}") 
-
+if(APPLE)
+    if(BUILD_COMPONENT_DETECTIVE)
+        set(OpenMP_CXX_INCLUDE_DIRS "/opt/homebrew/opt/libomp/include")
+        set(OpenMP_CXX_LIBRARIES "/opt/homebrew/opt/libomp/lib/libomp.a")
+        set(protobuf_DIR " /opt/homebrew/Cellar/protobuf@3/3.20.3")
+        LIST(APPEND CMAKE_PREFIX_PATH "${protobuf_DIR}") 
+    endif()
 endif()
 
 set(USE_OPENMP OFF CACHE STRING "USE_OPENMP")
@@ -65,7 +66,6 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
-
 set(_AX_ROOT ${CMAKE_CURRENT_LIST_DIR}/axmol CACHE INTERNAL "_AX_ROOT")
 set(AX_ROOT ${CMAKE_CURRENT_LIST_DIR}/axmol CACHE INTERNAL "AX_ROOT")
 
@@ -97,7 +97,7 @@ if(NOT DEFINED BUILD_ENGINE_DONE) # to test magnos into root project
     endif()
 
     if (NOT _AX_USE_PREBUILT)
-        add_subdirectory(${_AX_ROOT}/core ${ENGINE_BINARY_PATH}/axmol/core)
+        #add_subdirectory(${_AX_ROOT}/core ${ENGINE_BINARY_PATH}/axmol/core)
     endif()
 endif()
 
@@ -113,81 +113,40 @@ set(GAME_INC_DIRS
   "${CMAKE_CURRENT_SOURCE_DIR}/Source"
 )
 
-set(content_folder
-    "${CMAKE_CURRENT_SOURCE_DIR}/Content"
-    )
-
-if(APPLE)
-    ax_mark_multi_resources(common_content_files RES_TO "Resources" FOLDERS ${content_folder})
-elseif(WINDOWS)
-    ax_mark_multi_resources(common_content_files RES_TO "Content" FOLDERS ${content_folder})
-endif()
-
 if(ANDROID)
     # the APP_NAME should match on AndroidManifest.xml
-    list(APPEND GAME_SOURCE
-         proj.android/app/jni/main.cpp
-         )
+    # list(APPEND GAME_SOURCE
+    #      proj.android/app/jni/main.cpp
+    #      )
+
+    message(FATAL_ERROR "Not supported yet")
+
 elseif(LINUX)
     list(APPEND GAME_SOURCE
          proj.linux/main.cpp
          )
     list(APPEND GAME_SOURCE ${common_content_files})
 elseif(WASM)
-    list(APPEND GAME_SOURCE
-         proj.wasm/main.cpp
-         )
-    list(APPEND GAME_SOURCE ${common_content_files})
+    message(FATAL_ERROR "Not supported yet")
 elseif(WINDOWS)
     if(NOT WINRT)
-        list(APPEND GAME_HEADER
-            proj.win32/main.h
-            proj.win32/resource.h
-            )
         list(APPEND GAME_SOURCE
-            proj.win32/main.cpp
-            proj.win32/game.rc
+            proj.linux/main.cpp
             )
     else()
-        ax_setup_winrt_sources()
+        message(FATAL_ERROR "Not supported yet")
     endif()
     list(APPEND GAME_SOURCE ${common_content_files})
 elseif(APPLE)
     if(IOS)
-        list(APPEND GAME_HEADER
-             proj.ios_mac/ios/AppController.h
-             proj.ios_mac/ios/RootViewController.h
-             )
-
-        if (TVOS)
-            set(APP_UI_RES
-                proj.ios_mac/ios/LaunchScreenBackground.png
-                proj.ios_mac/ios/targets/tvos/LaunchScreen.storyboard
-                proj.ios_mac/ios/targets/tvos/Images.xcassets
-                )
-        else()
-            set(APP_UI_RES
-                proj.ios_mac/ios/LaunchScreenBackground.png
-                proj.ios_mac/ios/targets/ios/LaunchScreen.storyboard
-                proj.ios_mac/ios/targets/ios/Images.xcassets
-                )
-        endif()
-
-        list(APPEND GAME_SOURCE
-             proj.ios_mac/ios/main.m
-             proj.ios_mac/ios/AppController.mm
-             proj.ios_mac/ios/RootViewController.mm
-             proj.ios_mac/ios/Prefix.pch
-             ${APP_UI_RES}
-             )
+        message(FATAL_ERROR "Not supported yet")
     elseif(MACOSX)
-        set(APP_UI_RES
-            proj.ios_mac/mac/Icon.icns
-            proj.ios_mac/mac/Info.plist
-            )
+        # set(APP_UI_RES
+        #     proj.ios_mac/mac/Icon.icns
+        #     proj.ios_mac/mac/Info.plist
+        #     )
         list(APPEND GAME_SOURCE
-             proj.ios_mac/mac/main.cpp
-             proj.ios_mac/mac/Prefix.pch
+             proj.linux/main.cpp
              ${APP_UI_RES}
              )
     endif()
@@ -202,15 +161,16 @@ set(APP_SOURCES
 if(NOT ANDROID)
     add_executable(${APP_NAME} ${APP_SOURCES})
 else()
-    add_library(${APP_NAME} SHARED ${APP_SOURCES})
-    # whole archive for jni
-    target_link_libraries(${APP_NAME} -Wl,--whole-archive cpp_android_spec -Wl,--no-whole-archive)
-    config_android_shared_libs("org.axmol.lib" "${CMAKE_CURRENT_SOURCE_DIR}/proj.android/app/src")
+    message(FATAL_ERROR "Not supported yet")
+    # add_library(${APP_NAME} SHARED ${APP_SOURCES})
+    # # whole archive for jni
+    # target_link_libraries(${APP_NAME} -Wl,--whole-archive cpp_android_spec -Wl,--no-whole-archive)
+    # config_android_shared_libs("org.axmol.lib" "${CMAKE_CURRENT_SOURCE_DIR}/proj.android/app/src")
 endif()
 
-if (NOT _AX_USE_PREBUILT)
-    target_link_libraries(${APP_NAME} ${_AX_CORE_LIB})
-endif()
+#if (NOT _AX_USE_PREBUILT)
+    #target_link_libraries(${APP_NAME} ${_AX_CORE_LIB})
+#endif()
 
 CommonTargetLink()
 
@@ -220,62 +180,25 @@ target_link_libraries(${APP_NAME} ${RPC_LIB})
 
 if(BUILD_COMPONENT_DETECTIVE)
     target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
-endif()
+    
+    if(APPLE)
+        target_link_libraries(${APP_NAME} ${OpenMP_CXX_LIBRARIES})  
+    endif()
 
-if(APPLE)
-    target_link_libraries(${APP_NAME} ${OpenMP_CXX_LIBRARIES})  
-endif()
-
-if(BUILD_COMPONENT_DETECTIVE)
     target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
-endif()
 
+endif()
 
 if(EMSCRIPTEN)
-    if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-        target_compile_options(${APP_NAME} PRIVATE "-O2")
-        target_compile_options(AirLib PRIVATE "-O2")
-    else()
-        target_compile_options(${APP_NAME} PRIVATE "-fsanitize=address")
-        target_compile_options(AirLib PRIVATE "-fsanitize=address")
-        target_compile_options(${APP_NAME} PRIVATE "-g3")
-        target_compile_options(AirLib PRIVATE "-g3")
-        target_compile_options(${APP_NAME} PRIVATE "-gseparate-dwarf")
-        target_compile_options(AirLib PRIVATE "-gseparate-dwarf")
-        target_link_options(${APP_NAME} PRIVATE "-fsanitize=address")
-        target_link_options(${APP_NAME} PRIVATE "-fsanitize=address")
-    endif()
-    target_link_options(${APP_NAME} PRIVATE "-s ALLOW_MEMORY_GROWTH=1")
-    target_link_options(${APP_NAME} PRIVATE "-s INITIAL_MEMORY=4gb")
-endif()
-
-#set(_geant4_lib_use_suffix -static)
-#set(Geant4_LIBRARIES
-# Geant4::G4Tree${_geant4_lib_use_suffix}
-#   Geant4::G4FR${_geant4_lib_use_suffix}
-#   Geant4::G4GMocren${_geant4_lib_use_suffix}
-#   Geant4::G4visHepRep${_geant4_lib_use_suffix}
-#   Geant4::G4RayTracer${_geant4_lib_use_suffix}
-#   Geant4::G4VRML${_geant4_lib_use_suffix}
-#   Geant4::G4ToolsSG${_geant4_lib_use_suffix})
-
-# target_link_libraries(${APP_NAME} ${Geant4_LIBRARIES})
-
-
-
-# The optional thirdparties(not dependent by engine)
-if (AX_WITH_YAML_CPP)
-    list(APPEND GAME_INC_DIRS "${_AX_ROOT}/thirdparty/yaml-cpp/include")
-endif()
-
-
-if(APPLE)
-    target_include_directories(${APP_NAME} PRIVATE ${OpenMP_CXX_INCLUDE_DIRS})
+    message(FATAL_ERROR "Not supported yet")
 endif()
 
 target_include_directories(${APP_NAME} PRIVATE ${GAME_INC_DIRS})
 
 if(BUILD_COMPONENT_DETECTIVE)
+    if(APPLE)
+        target_include_directories(${APP_NAME} PRIVATE ${OpenMP_CXX_INCLUDE_DIRS})
+    endif()
     target_include_directories(${APP_NAME} PRIVATE ${CHRONO_INCLUDE_DIRS})
 endif()
 
@@ -289,11 +212,7 @@ if(APPLE)
     if(MACOSX)
         set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/proj.ios_mac/mac/Info.plist")
     elseif(TVOS)
-        set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/proj.ios_mac/ios/targets/tvos/Info.plist")
-        set_xcode_property(${APP_NAME} ASSETCATALOG_COMPILER_APPICON_NAME "Brand Assets")
-    elseif(IOS)
-        set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/proj.ios_mac/ios/targets/ios/Info.plist")
-        set_xcode_property(${APP_NAME} ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon")
+        message(FATAL_ERROR "Not supported yet")
     endif()
 
     # For code-signing, set the DEVELOPMENT_TEAM:
@@ -315,9 +234,7 @@ if ((NOT APPLE) AND (NOT WINRT))
         endif()
     endif()
 elseif(WINRT)
-    if(NOT DEFINED BUILD_ENGINE_DONE)
-        set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${APP_NAME})
-    endif()
+    message(FATAL_ERROR "Not supported yet")
 endif()
 
 if (_AX_USE_PREBUILT) # support windows and linux
@@ -345,137 +262,137 @@ set_target_properties(${APP_NAME} PROPERTIES
 # Add any include directories if required
 if(BUILD_COMPONENT_DETECTIVE)
 
-# Define the "translator" executable
-add_executable(translator
-    translator/src/main.cpp
-    translator/src/layer_details.hpp
-    translator/src/mlpack_to_torch.hpp
-    translator/src/model_parser_impl.hpp
-    translator/src/model_parser.hpp
-    translator/src/onnx_pb.h
-    translator/src/onnx_to_mlpack.hpp
-)
+    # Define the "translator" executable
+    add_executable(translator
+        translator/src/main.cpp
+        translator/src/layer_details.hpp
+        translator/src/mlpack_to_torch.hpp
+        translator/src/model_parser_impl.hpp
+        translator/src/model_parser.hpp
+        translator/src/onnx_pb.h
+        translator/src/onnx_to_mlpack.hpp
+    )
 
-# Set C++ standard and other compiler options if necessary
-set_target_properties(translator PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
+    # Set C++ standard and other compiler options if necessary
+    set_target_properties(translator PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO
+    )
 
-target_include_directories(AirLib PRIVATE
-   ${_AX_ROOT}/thirdparty
-   ${AIRSIM_ROOT}/AirLib/thirdparty
-)
+    target_include_directories(AirLib PRIVATE
+    ${_AX_ROOT}/thirdparty
+    ${AIRSIM_ROOT}/AirLib/thirdparty
+    )
 
-target_compile_definitions(${APP_NAME} PRIVATE "BUILD_COMPONENT_DETECTIVE=1") 
+    target_compile_definitions(${APP_NAME} PRIVATE "BUILD_COMPONENT_DETECTIVE=1") 
 
-find_package(onnxruntime REQUIRED)
+    find_package(onnxruntime REQUIRED)
 
-if(onnxruntime_FOUND)
-    message(STATUS "onnxruntime found")
-else()
-    message(FATAL_ERROR "onnxruntime not found. Please install onnxruntime or provide the onnxruntime path.")
-endif()
+    if(onnxruntime_FOUND)
+        message(STATUS "onnxruntime found")
+    else()
+        message(FATAL_ERROR "onnxruntime not found. Please install onnxruntime or provide the onnxruntime path.")
+    endif()
 
-# Find required protobuf package
-find_package(protobuf REQUIRED)
+    # Find required protobuf package
+    find_package(protobuf REQUIRED)
 
-# Check if protobuf was found
-if(TARGET protobuf::libprotobuf)
-    message(STATUS "protobuf found: ${PROTOBUF_LIBRARIES}")
-else()
-    message(FATAL_ERROR "Protobuf not found. Please install it or specify its location.")
-endif()
+    # Check if protobuf was found
+    if(TARGET protobuf::libprotobuf)
+        message(STATUS "protobuf found: ${PROTOBUF_LIBRARIES}")
+    else()
+        message(FATAL_ERROR "Protobuf not found. Please install it or specify its location.")
+    endif()
 
-add_subdirectory(onnx)
+    add_subdirectory(onnx)
 
-target_compile_definitions(onnx PRIVATE NDEBUG=1)
-target_compile_definitions(onnx_proto PRIVATE NDEBUG=1)
+    target_compile_definitions(onnx PRIVATE NDEBUG=1)
+    target_compile_definitions(onnx_proto PRIVATE NDEBUG=1)
 
-if(NOT WINDOWS)
+    if(NOT WINDOWS)
 
-find_package(Boost REQUIRED)
+    find_package(Boost REQUIRED)
 
-if(Boost_FOUND)
-    message(STATUS "Boost found: ${Boost_INCLUDE_DIRS}")
-else()
-    message(FATAL_ERROR "Boost not found. Please install Boost or provide the Boost path.")
-endif()
+    if(Boost_FOUND)
+        message(STATUS "Boost found: ${Boost_INCLUDE_DIRS}")
+    else()
+        message(FATAL_ERROR "Boost not found. Please install Boost or provide the Boost path.")
+    endif()
 
-target_include_directories(translator PRIVATE
-   translator/src
-   ${Boost_INCLUDE_DIRS}
-   ${_AX_ROOT}/thirdparty/stb
-)
+    target_include_directories(translator PRIVATE
+    translator/src
+    ${Boost_INCLUDE_DIRS}
+    ${_AX_ROOT}/thirdparty/stb
+    )
 
-target_compile_definitions(translator PRIVATE MLPACK_HAS_STB=1 MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+    target_compile_definitions(translator PRIVATE MLPACK_HAS_STB=1 MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
 
-target_link_libraries(translator PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB})
-endif()
+    target_link_libraries(translator PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB})
+    endif()
 
-# Extract include directories from the imported target.
-get_target_property(ONNXRUNTIME_INCLUDE_DIRS onnxruntime::onnxruntime INTERFACE_INCLUDE_DIRECTORIES)
+    # Extract include directories from the imported target.
+    get_target_property(ONNXRUNTIME_INCLUDE_DIRS onnxruntime::onnxruntime INTERFACE_INCLUDE_DIRECTORIES)
 
-# Now ONNXRUNTIME_INCLUDE_DIRS contains the include directories.
-# You can print or use them as needed.
-message("ONNX Runtime Include Directories: ${ONNXRUNTIME_INCLUDE_DIRS}")
+    # Now ONNXRUNTIME_INCLUDE_DIRS contains the include directories.
+    # You can print or use them as needed.
+    message("ONNX Runtime Include Directories: ${ONNXRUNTIME_INCLUDE_DIRS}")
 
-find_package(PCL REQUIRED)
+    find_package(PCL REQUIRED)
 
-add_library(detective
-translator/detective/MLUtils.cpp
-translator/detective/StbUtils.cpp
-translator/detective/DataUtils.cpp
-translator/detective/OnnxEngine.cpp
-translator/detective/TusimpleEngine.cpp
-translator/detective/HybridnetsEngine.cpp
-translator/detective/DepthEngine.cpp
-translator/detective/RoadEngine.cpp
-)
+    add_library(detective
+    translator/detective/MLUtils.cpp
+    translator/detective/StbUtils.cpp
+    translator/detective/DataUtils.cpp
+    translator/detective/OnnxEngine.cpp
+    translator/detective/TusimpleEngine.cpp
+    translator/detective/HybridnetsEngine.cpp
+    translator/detective/DepthEngine.cpp
+    translator/detective/RoadEngine.cpp
+    )
 
-target_include_directories(detective PUBLIC
-   translator/detective
-   ${AIRSIM_ROOT}/AirLib/thirdparty/eigen3
-   ${Boost_INCLUDE_DIRS}
-   ${_AX_ROOT}/thirdparty/stb
-   ${ONNXRUNTIME_INCLUDE_DIRS}
-   ${PCL_INCLUDE_DIRS}
-)
+    target_include_directories(detective PUBLIC
+    translator/detective
+    ${AIRSIM_ROOT}/AirLib/thirdparty/eigen3
+    ${Boost_INCLUDE_DIRS}
+    ${_AX_ROOT}/thirdparty/stb
+    ${ONNXRUNTIME_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
+    )
 
 
-target_link_directories(detective PUBLIC ${PCL_LIBRARY_DIRS})
+    target_link_directories(detective PUBLIC ${PCL_LIBRARY_DIRS})
 
-# Set C++ standard and other compiler options if necessary
-set_target_properties(detective PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
+    # Set C++ standard and other compiler options if necessary
+    set_target_properties(detective PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO
+    )
 
-target_compile_definitions(detective PUBLIC MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/" ${PCL_DEFINITIONS})
+    target_compile_definitions(detective PUBLIC MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/" ${PCL_DEFINITIONS})
 
-target_link_libraries(detective PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB} ${PCL_LIBRARIES})
+    target_link_libraries(detective PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB} ${PCL_LIBRARIES})
 
-# Define the "translator" executable
-add_executable(detective_test
-translator/test/main.cpp
-)
+    # Define the "translator" executable
+    add_executable(detective_test
+    translator/test/main.cpp
+    )
 
-target_include_directories(detective_test PRIVATE
-   translator/test
-)
+    target_include_directories(detective_test PRIVATE
+    translator/test
+    )
 
-# Set C++ standard and other compiler options if necessary
-set_target_properties(detective_test PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
+    # Set C++ standard and other compiler options if necessary
+    set_target_properties(detective_test PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO
+    )
 
-target_compile_definitions(detective_test PRIVATE MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
+    target_compile_definitions(detective_test PRIVATE MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
 
-target_link_libraries(detective_test PRIVATE detective)
+    target_link_libraries(detective_test PRIVATE detective)
 
-target_link_libraries(${PROJECT_NAME} detective)
+    target_link_libraries(${PROJECT_NAME} detective)
 endif()
