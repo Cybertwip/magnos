@@ -178,7 +178,6 @@ set(CH_C_FLAGS "${CH_C_FLAGS} ${CMAKE_THREAD_LIBS_INIT}")
 message(STATUS "Searching for OpenMP...")
 
 if(APPLE)
-
 set(OpenMP_CXX_FLAGS "")
 set(OpenMP_C_FLAGS "")
 set(OpenMP_CXX_INCLUDE_DIRS "")
@@ -190,13 +189,17 @@ set(OpenMP_CXX_LIBRARIES "/opt/homebrew/opt/libomp/lib/libomp.a")
 set(ENABLE_OPENMP ON)
 set(OPENMP_FOUND ON)
 else()
+if(NOT MSVC)
 find_package(OpenMP)
+else()
+set(OPENMP_FOUND ON)
+endif()
 endif()
 
 # Determine OpenMP version. Prepare substitution variables that can be used in
 # generating configuration header files.
 
-if(OPENMP_FOUND)
+if(OPENMP_FOUND AND NOT MSVC)
   include(CheckOpenMPVersion)
   message(STATUS "  OpenMP version:   ${OMP_VERSION}")
   set(CHRONO_OMP_FOUND "#define CHRONO_OMP_FOUND")
@@ -217,7 +220,13 @@ if(OPENMP_FOUND)
     set(CHRONO_OMP_40 "")
   endif()
 else()
-  message(STATUS "  OpenMP not found")
+  if(WINDOWS)
+    set(CHRONO_OMP_20 "#define CHRONO_OMP_20")
+    set(CHRONO_OMP_30 "#define CHRONO_OMP_30")
+    set(CHRONO_OMP_40 "#define CHRONO_OMP_40")
+  else()
+    message(STATUS "  OpenMP not found")
+  endif()
 endif()
 
 # Provide an option (dependent on OPENMP_FOUND) for the user to disable OpenMP

@@ -17,7 +17,6 @@ if(APPLE)
 endif()
 
 set(USE_OPENMP OFF CACHE STRING "USE_OPENMP")
-
 set(AIRLIB_CXX_STD ${CMAKE_CXX_STANDARD} CACHE STRING "AIRLIB_CXX_STD")
 set(AIRSIM_ROOT ${CMAKE_CURRENT_LIST_DIR}/AirSim CACHE STRING "AIRSIM_ROOT")
 set(AX_ENABLE_EXT_LUA NO CACHE INTERNAL "AX_ENABLE_EXT_LUA")
@@ -49,6 +48,7 @@ set(WITH_WERROR NO CACHE INTERNAL "WITH_WERROR")
 add_subdirectory(AirSim/cmake/AirLib)
 add_subdirectory(AirSim/cmake/MavLinkCom)
 add_subdirectory(AirSim/cmake/rpclib_wrapper)
+add_subdirectory(chrono)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
@@ -280,7 +280,7 @@ if(APPLE)
     #set_xcode_property(${APP_NAME} DEVELOPMENT_TEAM "GRLXXXX2K9")
 elseif(WINDOWS)
     if((NOT _AX_USE_PREBUILT) AND (NOT WINRT))
-        ax_copy_target_dll(${APP_NAME})
+        ax_sync_target_dlls(${APP_NAME})
     endif()
 endif()
 
@@ -317,6 +317,8 @@ ax_setup_app_props(${APP_NAME})
 
 #Translator
 
+# Add any include directories if required
+if(BUILD_COMPONENT_DETECTIVE)
 
 # Define the "translator" executable
 add_executable(translator
@@ -336,16 +338,12 @@ set_target_properties(translator PROPERTIES
     CXX_EXTENSIONS NO
 )
 
-# Add any include directories if required
+target_include_directories(AirLib PRIVATE
+   ${_AX_ROOT}/thirdparty
+   ${AIRSIM_ROOT}/AirLib/thirdparty
+)
 
-find_package(Boost REQUIRED)
-
-if(Boost_FOUND)
-    message(STATUS "Boost found: ${Boost_INCLUDE_DIRS}")
-else()
-    message(FATAL_ERROR "Boost not found. Please install Boost or provide the Boost path.")
-endif()
-
+target_compile_definitions(${APP_NAME} PRIVATE "BUILD_COMPONENT_DETECTIVE=1") 
 
 find_package(onnxruntime REQUIRED)
 
@@ -365,6 +363,20 @@ else()
     message(FATAL_ERROR "Protobuf not found. Please install it or specify its location.")
 endif()
 
+add_subdirectory(onnx)
+
+target_compile_definitions(onnx PRIVATE NDEBUG=1)
+target_compile_definitions(onnx_proto PRIVATE NDEBUG=1)
+
+if(NOT WINDOWS)
+
+find_package(Boost REQUIRED)
+
+if(Boost_FOUND)
+    message(STATUS "Boost found: ${Boost_INCLUDE_DIRS}")
+else()
+    message(FATAL_ERROR "Boost not found. Please install Boost or provide the Boost path.")
+endif()
 
 target_include_directories(translator PRIVATE
    translator/src
@@ -372,21 +384,10 @@ target_include_directories(translator PRIVATE
    ${_AX_ROOT}/thirdparty/stb
 )
 
-
-target_include_directories(AirLib PRIVATE
-   ${_AX_ROOT}/thirdparty
-   ${AIRSIM_ROOT}/AirLib/thirdparty
-)
-
-add_subdirectory(onnx)
-
-target_compile_definitions(onnx PRIVATE NDEBUG=1)
-target_compile_definitions(onnx_proto PRIVATE NDEBUG=1)
-
 target_compile_definitions(translator PRIVATE MLPACK_HAS_STB=1 MLPACK_ENABLE_ANN_SERIALIZATION=1 MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
 
 target_link_libraries(translator PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB})
-
+endif()
 
 # Extract include directories from the imported target.
 get_target_property(ONNXRUNTIME_INCLUDE_DIRS onnxruntime::onnxruntime INTERFACE_INCLUDE_DIRECTORIES)
@@ -452,3 +453,4 @@ target_compile_definitions(detective_test PRIVATE MODELS_PATH="${CMAKE_CURRENT_S
 target_link_libraries(detective_test PRIVATE detective)
 
 target_link_libraries(${PROJECT_NAME} detective)
+endif()
