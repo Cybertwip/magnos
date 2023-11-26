@@ -141,10 +141,10 @@ elseif(APPLE)
     if(IOS)
         message(FATAL_ERROR "Not supported yet")
     elseif(MACOSX)
-        # set(APP_UI_RES
-        #     proj.ios_mac/mac/Icon.icns
-        #     proj.ios_mac/mac/Info.plist
-        #     )
+        set(APP_UI_RES
+            proj.ios_mac/mac/Icon.icns
+            proj.ios_mac/mac/Info.plist
+            )
         list(APPEND GAME_SOURCE
              proj.linux/main.cpp
              ${APP_UI_RES}
