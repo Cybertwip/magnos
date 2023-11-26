@@ -8,7 +8,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(Mumps C Fortran)
 SET(VERSION 5.0.2)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CHRONO_ROOT}/cmake")
 
 #################### Mumps configuration ####################
 # Arithmetic configuration
@@ -98,7 +98,7 @@ SET(GENERIC_COMPILER_FLAGS_FORTRAN #aka OPTF
 			"-MD -Dintel_ -fpp")
 			
 #Get MUMPS version
-FILE(STRINGS "${CMAKE_SOURCE_DIR}/include/${ARITH_PREFIX}mumps_c.h" CMAKE_MUMPS_VERSION REGEX "#define[ ]+MUMPS_VERSION[ ]+\"*\".+\"")
+FILE(STRINGS "${CHRONO_ROOT}/include/${ARITH_PREFIX}mumps_c.h" CMAKE_MUMPS_VERSION REGEX "#define[ ]+MUMPS_VERSION[ ]+\"*\".+\"")
 string(REGEX MATCHALL "[0-9]+" CMAKE_MUMPS_VERSION_LIST ${CMAKE_MUMPS_VERSION})
 IF (CMAKE_MUMPS_VERSION_LIST)
 	list(GET CMAKE_MUMPS_VERSION_LIST 0 CMAKE_MUMPS_VERSION_MAJOR)
@@ -180,7 +180,7 @@ ENDIF()
 SET(USE_METIS FALSE CACHE BOOL "Select if METIS ordering is used")
 
 IF (USE_METIS)
-	SET(METIS_DIR "${CMAKE_SOURCE_DIR}" CACHE PATH "Path to METIS folder")
+	SET(METIS_DIR "${CHRONO_ROOT}" CACHE PATH "Path to METIS folder")
 	SET(ORDERINGS_COMPILER_FLAGS_C "${ORDERINGS_COMPILER_FLAGS_C} -Dmetis" )
 	SET(ORDERINGS_COMPILER_FLAGS_FORTRAN "${ORDERINGS_COMPILER_FLAGS_FORTRAN} -Dmetis" )
 	LIST(APPEND ORDERINGS_INCLUDE_DIRS "${METIS_DIR}/include")
@@ -192,7 +192,7 @@ ENDIF (USE_METIS)
 #######################################################
 
 ############### PORD library ###############
-SET(PORD_DIR "${CMAKE_SOURCE_DIR}/PORD")
+SET(PORD_DIR "${CHRONO_ROOT}/PORD")
 SET(PORD_INCLUDE_DIRS "${PORD_DIR}/include")
 SET(PORD_SOURCES
 		"${PORD_DIR}/lib/bucket.c"
@@ -245,7 +245,7 @@ SET(LIBSEQ_SRC_FORTRAN
 		"libseq/mpi.f")
 		
 SET(LIBSEQ_INCLUDE_DIRS
-		"${CMAKE_SOURCE_DIR}/libseq") #aka INCSEQ	
+		"${CHRONO_ROOT}/libseq") #aka INCSEQ	
 	
 SET(LIBSEQ_HEAD_C
 		"${LIBSEQ_INCLUDE_DIRS}/mpi.h"
@@ -289,7 +289,7 @@ ENDIF()
 ############### MUMPS library ###############
 # MUMPS common files
 SET(MUMPS_INCLUDE_DIRS #aka INCS
-			"${CMAKE_SOURCE_DIR}/include") #aka INCSEQ
+			"${CHRONO_ROOT}/include") #aka INCSEQ
 			
 SET(MUMPS_HEADERS # TODO never used. Actually they are only used by the external user to link the library
 			"${MUMPS_INCLUDE_DIRS}/${ARITH_PREFIX}mumps_c.h"

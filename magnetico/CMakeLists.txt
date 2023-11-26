@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
 
+if(MSVC)
+    set(CMAKE_SYSTEM_VERSION 10.0)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -19,6 +23,7 @@ endif()
 set(USE_OPENMP OFF CACHE STRING "USE_OPENMP")
 set(AIRLIB_CXX_STD ${CMAKE_CXX_STANDARD} CACHE STRING "AIRLIB_CXX_STD")
 set(AIRSIM_ROOT ${CMAKE_CURRENT_LIST_DIR}/AirSim CACHE STRING "AIRSIM_ROOT")
+set(CHRONO_ROOT ${CMAKE_CURRENT_LIST_DIR}/chrono CACHE STRING "CHRONO_ROOT")
 set(AX_ENABLE_EXT_LUA NO CACHE INTERNAL "AX_ENABLE_EXT_LUA")
 
 set(APP_NAME MagnosSimulator)
@@ -37,6 +42,11 @@ CommonSetup()
 
 if(EMSCRIPTEN)
     set(TARGET RISCV64_GENERIC CACHE INTERNAL "OPENBLAS_TARGET")
+    set(ONLY_CBLAS NO CACHE INTERNAL "ONLY_CBLAS")
+    set(NOFORTRAN 1 CACHE STRING "NOFORTRAN")
+endif()
+
+if(WINDOWS)
     set(ONLY_CBLAS NO CACHE INTERNAL "ONLY_CBLAS")
     set(NOFORTRAN 1 CACHE STRING "NOFORTRAN")
 endif()
@@ -224,7 +234,6 @@ if(EMSCRIPTEN)
         target_compile_options(AirLib PRIVATE "-g3")
         target_compile_options(${APP_NAME} PRIVATE "-gseparate-dwarf")
         target_compile_options(AirLib PRIVATE "-gseparate-dwarf")
-
         target_link_options(${APP_NAME} PRIVATE "-fsanitize=address")
         target_link_options(${APP_NAME} PRIVATE "-fsanitize=address")
     endif()
@@ -314,6 +323,11 @@ endif()
 
 ax_setup_app_props(${APP_NAME})
 
+set_target_properties(${APP_NAME} PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
 
 #Translator
 

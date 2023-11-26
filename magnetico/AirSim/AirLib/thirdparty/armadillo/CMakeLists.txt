@@ -204,7 +204,7 @@ option(ALLOW_BLAS_LAPACK_MACOS "Allow detection of BLAS and LAPACK on macOS" OFF
 ## Example use on the command line:
 ## cmake -D ALLOW_BLAS_LAPACK_MACOS=true .
 
-option(BUILD_SMOKE_TEST "Build the smoke test" ON)
+option(BUILD_SMOKE_TEST "Build the smoke test" OFF)
 # set(BUILD_SMOKE_TEST false)
 ## uncomment the above line to disable building the smoke test;
 ## you can also disable building the smoke test directly on the command line:
@@ -441,6 +441,14 @@ else()
 endif()
 
 if(EMSCRIPTEN)
+  set(ARMA_USE_LAPACK true)
+  set(ARMA_USE_BLAS   true)
+  set(ARMA_USE_ATLAS  false)
+  set(ARMA_USE_ARPACK false)
+  set(ARMA_USE_SUPERLU false)
+endif()
+
+if(MSVC)
   set(ARMA_USE_LAPACK true)
   set(ARMA_USE_BLAS   true)
   set(ARMA_USE_ATLAS  false)

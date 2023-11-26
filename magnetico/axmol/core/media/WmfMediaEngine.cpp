@@ -1384,7 +1384,7 @@ HRESULT WmfMediaEngine::CreateSession()
     // Create a new attribute store.
     CHECK_HR(hr = MFCreateAttributes(&pAttributes, 2));
 
-    pAttributes->SetUINT32(MF_LOW_LATENCY, TRUE);
+    //pAttributes->SetUINT32(MF_LOW_LATENCY, TRUE);
     CHECK_HR(hr = MFCreateMediaSession(pAttributes.Get(), &m_pSession));
 
     // TODO:

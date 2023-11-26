@@ -114,7 +114,7 @@ foreach(GLSL_SHADER ${GLSL_SHADERS})
             -DSYMBOL=${GLSL_SHADER}
             -DDATA_FILE=${CMAKE_CURRENT_SOURCE_DIR}/resources/${GLSL_SHADER}.glsl 
             -DHEADER_FILE=${CMAKE_BINARY_DIR}/resources/${GLSL_SHADER}.h
-            -P ${CMAKE_SOURCE_DIR}/cmake/embedfile.cmake
+            -P ${CHRONO_ROOT}/cmake/embedfile.cmake
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/resources/${GLSL_SHADER}.glsl
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endforeach()
@@ -132,7 +132,7 @@ foreach(DEFAULT_OBJ_FILE ${DEFAULT_OBJ_FILES})
             -DSYMBOL=${DEFAULT_OBJ_FILE}_mesh_data
             -DDATA_FILE=${CMAKE_CURRENT_SOURCE_DIR}/resources/${DEFAULT_OBJ_FILE}.obj
             -DHEADER_FILE=${CMAKE_BINARY_DIR}/resources/${DEFAULT_OBJ_FILE}.h
-            -P ${CMAKE_SOURCE_DIR}/cmake/embedfile.cmake
+            -P ${CHRONO_ROOT}/cmake/embedfile.cmake
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/resources/${DEFAULT_OBJ_FILE}.obj
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endforeach()
@@ -232,16 +232,16 @@ set(CE_OpenGL_RESOURCES_FILES
   )
 
 set(CE_OpenGL_TINYOBJLOADER_FILES
-  ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/tinyobjloader/tiny_obj_loader.cc
-  ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/tinyobjloader/tiny_obj_loader.h
+  ${CHRONO_ROOT}/src/chrono_thirdparty/tinyobjloader/tiny_obj_loader.cc
+  ${CHRONO_ROOT}/src/chrono_thirdparty/tinyobjloader/tiny_obj_loader.h
   )
 
 set(CE_OpenGL_STB_FILES
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.cpp
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.cpp
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.cpp
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.cpp
 )
 
 source_group("" FILES ${CE_OpenGL_BASE_FILES})
@@ -302,7 +302,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
         FILES_MATCHING PATTERN "*.h" PATTERN "resources" EXCLUDE)
 
 # Install required chrono_thirdparty headers
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/tinyobjloader
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/tinyobjloader
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 

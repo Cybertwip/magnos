@@ -28,12 +28,14 @@ public:
   using _Alty        = std::_Rebind_alloc_t<_Alloc, _Elem>;
   using _Alty_traits = std::allocator_traits<_Alty>;
 
+#if (!defined(_HAS_CXX23) || !_HAS_CXX23) 
   using _Scary_val = std::_String_val<
       std::conditional_t<std::_Is_simple_alloc_v<_Alty>, std::_Simple_types<_Elem>,
                          std::_String_iter_types<
                              _Elem, typename _Alty_traits::size_type,
                              typename _Alty_traits::difference_type, typename _Alty_traits::pointer,
-                             typename _Alty_traits::const_pointer, _Elem&, const _Elem&>>>;
+                             typename _Alty_traits::const_pointer>>>;
+#  endif
 #endif
   // See also afxmfc CString::GetBufferSetLength
   // Why do this hack?

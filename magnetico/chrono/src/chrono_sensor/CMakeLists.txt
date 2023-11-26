@@ -156,7 +156,7 @@ if(USE_CUDA_NVRTC)
       ${CUDA_INCLUDE_DIRS}
       ${CMAKE_CURRENT_SOURCE_DIR}/optix/shaders
       ${CMAKE_INSTALL_PREFIX}/include
-      ${CMAKE_SOURCE_DIR}/src CACHE STRING "NVRTC include dirs as list." FORCE)
+      ${CHRONO_ROOT}/src CACHE STRING "NVRTC include dirs as list." FORCE)
     mark_as_advanced(CUDA_NVRTC_INCLUDE_DIRS)
 
     set(CUDA_NVRTC_INCLUDE_LIST)
@@ -441,18 +441,18 @@ source_group(Utils FILES
 )
 
 set(SENSOR_STB_FILES
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.cpp
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.cpp
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.cpp
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.cpp
 )
 source_group("utils\\stb" FILES ${SENSOR_STB_FILES})
 
 
 set(SENSOR_TINYOBJ_FILES
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/tinyobjloader/tiny_obj_loader.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/tinyobjloader/tiny_obj_loader.cc
+    ${CHRONO_ROOT}/src/chrono_thirdparty/tinyobjloader/tiny_obj_loader.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/tinyobjloader/tiny_obj_loader.cc
 )
 source_group("utils\\tinyobjloader" FILES ${SENSOR_TINYOBJ_FILES})
 

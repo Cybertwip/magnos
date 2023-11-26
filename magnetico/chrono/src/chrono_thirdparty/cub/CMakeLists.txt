@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project(CUB CUDA CXX)
 
-set(CUB_SOURCE ${CMAKE_SOURCE_DIR})
+set(CUB_SOURCE ${CHRONO_ROOT})
 # include(cmake/common_variables.cmake)
 
 if ("" STREQUAL "${CMAKE_BUILD_TYPE}")
@@ -217,7 +217,7 @@ target_include_directories(
 #Create Header-Only Library/Target
 
 add_library(CUB INTERFACE)
-target_include_directories(CUB INTERFACE ${CMAKE_SOURCE_DIR})
+target_include_directories(CUB INTERFACE ${CHRONO_ROOT})
 
 
 
@@ -230,8 +230,8 @@ math(EXPR CUB_TEST_ARCH ${CUB_MINIMAL_ENABLED_ARCH}*10)
 message("-- CUB Test architecture (TEST_ARCH): ${CUB_TEST_ARCH}")
 
 set(CUB_TEST_RUN_ARGUMENTS
-  -DCUB_SOURCE=${CMAKE_SOURCE_DIR}
-  -P "${CMAKE_SOURCE_DIR}/cmake/run_test.cmake")
+  -DCUB_SOURCE=${CHRONO_ROOT}
+  -P "${CHRONO_ROOT}/cmake/run_test.cmake")
 
 list(APPEND CUB_TEST_GLOBS test/test_*.cu)
 
@@ -299,8 +299,8 @@ else ()
 endif ()
 
 set(CUB_EXAMPLE_RUN_ARGUMENTS
-  -DCUB_SOURCE=${CMAKE_SOURCE_DIR}
-  -P "${CMAKE_SOURCE_DIR}/cmake/run_example.cmake")
+  -DCUB_SOURCE=${CHRONO_ROOT}
+  -P "${CHRONO_ROOT}/cmake/run_example.cmake")
 
 foreach (CUB_EXAMPLE_SOURCE IN LISTS CUB_EXAMPLES)
   # TODO: Per-example flags.

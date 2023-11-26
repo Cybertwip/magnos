@@ -1,4 +1,5 @@
 #pragma once
+#if BUILD_COMPONENT_DETECTIVE
 #include "GameState.h"
 #include "StbUtils.h"
 #include "components/MovingAverageFilter.hpp"
@@ -159,3 +160,4 @@ public:
 	float _chevronLeftAngle;
 	float _chevronRightAngle;
 };
+#endif

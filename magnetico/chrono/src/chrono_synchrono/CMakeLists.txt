@@ -252,7 +252,7 @@ set(SYN_INCLUDES  "${SYN_INCLUDES}"  PARENT_SCOPE)
 set(SYN_LIBRARIES "${SYN_LIBRARIES}" PARENT_SCOPE)
 set(SYN_CXX_FLAGS "${SYN_CXX_FLAGS}" PARENT_SCOPE)
 
-include_directories("${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/flatbuffers/include")
+include_directories("${CHRONO_ROOT}/src/chrono_thirdparty/flatbuffers/include")
 include_directories(${SYN_INCLUDES})
 
 add_library(ChronoEngine_synchrono
@@ -275,7 +275,7 @@ set_target_properties(ChronoEngine_synchrono PROPERTIES
 
 target_compile_definitions(ChronoEngine_synchrono PRIVATE "SYN_API_COMPILE")
 
-target_include_directories(ChronoEngine_synchrono PUBLIC "${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/flatbuffers/include")
+target_include_directories(ChronoEngine_synchrono PUBLIC "${CHRONO_ROOT}/src/chrono_thirdparty/flatbuffers/include")
 target_include_directories(ChronoEngine_synchrono PUBLIC ${SYN_INCLUDES})
 
 target_link_libraries(ChronoEngine_synchrono ${SYN_LIB_NAMES} ${SYN_LIBRARIES})
@@ -294,6 +294,6 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
         FILES_MATCHING PATTERN "*.h" PATTERN "fbs" EXCLUDE)
 
 # Install required chrono_thirdparty headers
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/flatbuffers/include
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/flatbuffers/include
         DESTINATION include/chrono_thirdparty/flatbuffers
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")

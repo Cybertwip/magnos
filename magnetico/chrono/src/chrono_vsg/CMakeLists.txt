@@ -103,11 +103,11 @@ source_group("utils" FILES ${CE_VSG_UTILS_FILES})
 
 if(INCLUDE_STB)
     set(CE_VSG_STB_FILES
-        ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb.h
-        ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.h
-        ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.cpp
-        ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.h
-        ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.cpp
+        ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb.h
+        ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.h
+        ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.cpp
+        ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.h
+        ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.cpp
     )
     
     source_group("utils" FILES ${CE_VSG_STB_FILES})

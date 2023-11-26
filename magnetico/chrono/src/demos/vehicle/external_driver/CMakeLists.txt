@@ -18,10 +18,10 @@ set(DEMOS
 # STB files
 
 set(STB_FILES
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.cpp
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.cpp
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.cpp
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.cpp
 )
 source_group("stb" FILES ${STB_FILES})
 

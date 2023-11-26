@@ -25,7 +25,7 @@
  ****************************************************************************/
 
 #if defined(_WIN32) && defined(_AX_HAVE_WEBVIEW2)
-
+#    include "unsupported/span"
 #    include "UIWebViewImpl-win32.h"
 #    include "UIWebView.h"
 #    include "base/Director.h"
@@ -218,7 +218,7 @@ static std::string getUriStringFromArgs(ArgType* args)
 
 static std::string getDataURI(const ax::Data& data, std::string_view mime_type)
 {
-    auto encodedData = utils::base64Encode(std::span{data.getBytes(), data.getBytes() + data.getSize()});
+    auto encodedData = utils::base64Encode(tcb::span{data.getBytes(), data.getBytes() + data.getSize()});
     return std::string{"data:"}.append(mime_type).append(";base64,").append(utils::urlEncode(encodedData));
 }
 

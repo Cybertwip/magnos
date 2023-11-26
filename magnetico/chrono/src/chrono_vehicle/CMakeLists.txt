@@ -862,11 +862,11 @@ source_group("" FILES ${CVGL_FILES})
 # --------------- THIRD-PARTY FILES
 
 set(CV_STB_FILES
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image.cpp
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.h
-    ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb/stb_image_write.cpp
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image.cpp
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.h
+    ${CHRONO_ROOT}/src/chrono_thirdparty/stb/stb_image_write.cpp
 )
 source_group("utils\\stb" FILES ${CV_STB_FILES})
 
@@ -1078,11 +1078,11 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
         FILES_MATCHING PATTERN "*.h")
 
 # Install required chrono_thirdparty headers
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/Easy_BMP
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/Easy_BMP
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/stb
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 

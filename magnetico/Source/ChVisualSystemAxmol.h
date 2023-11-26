@@ -14,6 +14,7 @@
 
 #ifndef CH_VISUAL_SYSTEM_IRRLICHT_H
 #define CH_VISUAL_SYSTEM_IRRLICHT_H
+#if BUILD_COMPONENT_INSPECTOR
 
 #include <string>
 #include <unordered_set>
@@ -186,5 +187,7 @@ private:
 
 }  // namespace irrlicht
 }  // namespace chrono
+
+#endif
 
 #endif

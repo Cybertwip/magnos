@@ -110,7 +110,7 @@ function(git_describe _var)
 		${hash}
 		${ARGN}
 		WORKING_DIRECTORY
-		"${CMAKE_SOURCE_DIR}"
+		"${CMAKE_CURRENT_LIST_DIR}"
 		RESULT_VARIABLE
 		res
 		OUTPUT_VARIABLE

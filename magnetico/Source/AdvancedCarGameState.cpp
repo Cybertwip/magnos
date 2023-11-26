@@ -1,3 +1,4 @@
+#if BUILD_COMPONENT_DETECTIVE
 #include "AdvancedCarGameState.h"
 
 #include "components/Magnos.hpp"
@@ -1083,3 +1084,4 @@ void AdvancedCarGameState::updatePhysics(float dt){
 	terrain->Advance(dt);
 
 }
+#endif

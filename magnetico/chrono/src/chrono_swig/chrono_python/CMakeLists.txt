@@ -160,7 +160,7 @@ set(PYC_DATA_PATH "${PROJECT_SOURCE_DIR}/data/")
 set(PYC_SHADER_PATH "${PROJECT_SOURCE_DIR}/src/chrono_sensor/optix/shaders/")
 
 # Generate the __init__.py file using substitution variables and place it in a temporary place
-configure_file(${CMAKE_SOURCE_DIR}/contrib/packaging-python/__init__.py.local.in
+configure_file(${CHRONO_ROOT}/contrib/packaging-python/__init__.py.local.in
                ${PROJECT_BINARY_DIR}/chrono_python/__init__.py)
 
 # ---------- Pychrono in INSTALL tree
@@ -173,7 +173,7 @@ if (CH_CONDA_INSTALL)
   set(PYC_SHADER_PATH "${CH_PYCHRONO_SHADER_PATH}") 
 
   # Generate the __init__.py file using substitution variables and place it in a temporary place 
-  configure_file(${CMAKE_SOURCE_DIR}/contrib/packaging-python/__init__.py.conda.in
+  configure_file(${CHRONO_ROOT}/contrib/packaging-python/__init__.py.conda.in
                  ${PROJECT_BINARY_DIR}/chrono_python/__init__.py.install)
 else()
   # Default path to Chrono data/ directory (in INSTALL tree)
@@ -183,7 +183,7 @@ else()
   set(PYC_SHADER_PATH "${CMAKE_INSTALL_PREFIX}/include/chrono_sensor/optix/shaders/")
 
   # Generate the __init__.py file using substitution variables and place it in a temporary place
-  configure_file(${CMAKE_SOURCE_DIR}/contrib/packaging-python/__init__.py.local.in
+  configure_file(${CHRONO_ROOT}/contrib/packaging-python/__init__.py.local.in
                  ${PROJECT_BINARY_DIR}/chrono_python/__init__.py.install)
 endif()
 
@@ -193,7 +193,7 @@ endif()
 
 ### TODO: install demos only for configured modules!!!
 
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/src/demos/python/" DESTINATION "${CH_INSTALL_PYTHON}/${CHPY_PACKAGENAME}/demos")
+install(DIRECTORY "${CHRONO_ROOT}/src/demos/python/" DESTINATION "${CH_INSTALL_PYTHON}/${CHPY_PACKAGENAME}/demos")
 
 #-----------------------------------------------------------------------------
 # MODULE for the core wrapper, including most of the C::E

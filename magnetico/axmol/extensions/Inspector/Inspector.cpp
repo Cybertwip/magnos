@@ -125,16 +125,17 @@ void Inspector::drawTreeRecusrive(Node* node, int index)
 
     if (is_open)
     {
-        const auto &children = node->getChildren();
-        for (int i = 0; auto* child : children)
+        const auto& children = node->getChildren();
+        for (size_t i = 0; i < children.size(); ++i)
         {
-            if(!child)
+            auto child = children.at(i);
+            if (!child)
             {
                 continue;
             }
 
             drawTreeRecusrive(child, i);
-            i++;
+
         }
         ImGui::TreePop();
     }

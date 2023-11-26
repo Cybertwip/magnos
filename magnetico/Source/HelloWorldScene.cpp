@@ -24,12 +24,14 @@
  ****************************************************************************/
 
 #include "HelloWorldScene.h"
-#include "RoverGameState.h"
 #include "BasicCarGameState.h"
+#include "RocketGameState.h"
 #include "WheelGameState.h"
 
+#if BUILD_COMPONENT_DETECTIVE
 #include "AdvancedCarGameState.h"
-#include "RocketGameState.h"
+#include "RoverGameState.h"
+#endif
 
 #include "components/systems/CoilSystem.hpp"
 
@@ -70,9 +72,11 @@ bool HelloWorld::init()
 	
 	// Enable mouse input (optional, if not already enabled)
 	_director->getOpenGLView()->setCursorVisible(true);
-
+#if BUILD_COMPONENT_DETECTIVE
 	this->currentGameState = AdvancedCarGameState::create();
-	
+#else
+	this->currentGameState = BasicCarGameState::create();
+#endif
 	this->addChild(currentGameState);
 
 	currentGameState->setup(_defaultCamera);
@@ -113,7 +117,7 @@ void HelloWorld::onImGuiDraw()
 		this->currentGameState->setup(_defaultCamera);
 		this->addChild(currentGameState);
 	}
-	
+#if BUILD_COMPONENT_DETECTIVE
 	// Button to switch to RoverGameState
 	if (ImGui::Button("Car"))
 	{
@@ -130,6 +134,8 @@ void HelloWorld::onImGuiDraw()
 		this->currentGameState->setup(_defaultCamera);
 		this->addChild(currentGameState);
 	}
+#endif
+
 	
 	
 	ImGui::End();

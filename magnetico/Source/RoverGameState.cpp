@@ -1,3 +1,4 @@
+#if BUILD_COMPONENT_DETECTIVE
 #include "RoverGameState.h"
 
 #include "components/Magnos.hpp"
@@ -555,3 +556,4 @@ void RoverGameState::renderUI() {
 	
 
 }
+#endif

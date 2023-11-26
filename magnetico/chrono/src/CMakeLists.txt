@@ -427,7 +427,7 @@ if(CUDA_FOUND)
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; --compiler-options -fPIC)
   endif()
 
-  include(${CMAKE_SOURCE_DIR}/cmake/FindCudaArch.cmake)
+  include(${CHRONO_ROOT}/cmake/FindCudaArch.cmake)
   SELECT_NVCC_ARCH_FLAGS(NVCC_FLAGS_EXTRA)
   list(APPEND CUDA_NVCC_FLAGS ${NVCC_FLAGS_EXTRA})
 
@@ -476,7 +476,7 @@ if (CUDA_FOUND) # CUB should only be used with CUDA
 			cub.cuh
 			PATHS 
 				"${CUDA_TOOLKIT_ROOT_DIR}/include/cub/"
-				"${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/cub/cub/"
+				"${CHRONO_ROOT}/src/chrono_thirdparty/cub/cub/"
 			DOC "Path to the CUB include directory" 
 			REQUIRED
 		)
@@ -785,61 +785,61 @@ endif()
 # Install headers from chrono_thirdparty folder
 #------------------------------------------------------------
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/filesystem
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/filesystem
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/cxxopts
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/cxxopts
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/HACD
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/HACD
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/HACDv2
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/HACDv2
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/rapidjson
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/rapidjson
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/rapidxml
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/rapidxml
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/tinyobjloader
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/tinyobjloader
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/yafel
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/yafel
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/chpf
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/chpf
 	      DESTINATION include/chrono_thirdparty
 	      FILES_MATCHING PATTERN "*.hpp")
         
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/stb
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/stb
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/variant
+install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/variant
         DESTINATION include/chrono_thirdparty
         FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inl")
 
 if(BUILD_TESTING)
-   install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/googletest/googletest/include
+   install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/googletest/googletest/include
            DESTINATION include/chrono_thirdparty/googletest/googletest
            FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
-   install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/googletest/googlemock/include
+   install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/googletest/googlemock/include
            DESTINATION include/chrono_thirdparty/googletest/googlemock
            FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 endif()
 
 if(BUILD_BENCHMARKING)
-   install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/chrono_thirdparty/googlebenchmark/include
+   install(DIRECTORY ${CHRONO_ROOT}/src/chrono_thirdparty/googlebenchmark/include
            DESTINATION include/chrono_thirdparty/googlebenchmark
            FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh" PATTERN "*.hpp" PATTERN "*.inl")
 endif()

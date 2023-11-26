@@ -14,7 +14,7 @@
 
 //// RADU TODO
 //// Allow attaching more than one ChSystem to the same Irrlicht visualization
-
+#if BUILD_COMPONENT_INSPECTOR
 #include <codecvt>
 #include <locale>
 
@@ -730,3 +730,4 @@ void ChVisualSystemAxmol::PopulateAxmolNode(ax::Node* node,
 
 }  // namespace irrlicht
 }  // namespace chrono
+#endif
