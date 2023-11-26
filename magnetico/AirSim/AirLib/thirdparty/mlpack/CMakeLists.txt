@@ -5,7 +5,14 @@ include(CMake/cotire.cmake)
 include(CMake/CheckHash.cmake)
 include(CMake/Autodownload.cmake)
 include(CMake/ConfigureCrossCompile.cmake)
-include(CMake/CheckAtomic.cmake)
+
+if(NOT RASPBERRY_PI)
+  include(CMake/CheckAtomic.cmake)
+else()
+  set(HAVE_CXX_ATOMICS_WITHOUT_LIB YES)
+endif()
+
+
 
 # First, define all the compilation options.
 # We default to debugging mode for developers.

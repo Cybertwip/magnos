@@ -17,7 +17,7 @@ include(GNUInstallDirs)
 
 include(CMakePackageConfigHelpers)
 
-if(APPLE OR MSVC)
+if(APPLE OR MSVC OR RASPBERRY_PI)
   set(NO_LAPACKE True)
 endif()
 

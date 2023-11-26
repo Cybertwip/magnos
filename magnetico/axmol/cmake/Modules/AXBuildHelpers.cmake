@@ -424,7 +424,6 @@ function(ax_setup_app_config app_name)
     get_target_property(_APP_SOURCE_DIR ${app_name} SOURCE_DIR)
     set(app_shaders_dir "${_APP_SOURCE_DIR}/Source/shaders")
 
-    ax_find_shaders(${app_shaders_dir} app_shaders RECURSE)
     if (app_shaders)
         list(LENGTH app_shaders app_shaders_count)
         message(STATUS "${app_shaders_count} shader sources found in ${app_shaders_dir}")

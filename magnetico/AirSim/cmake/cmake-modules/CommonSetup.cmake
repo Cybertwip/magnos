@@ -24,7 +24,7 @@ macro(SetupConsoleBuild)
 endmacro(SetupConsoleBuild)
 
 macro(CommonSetup)
-    find_package(Threads REQUIRED)
+    find_package (Threads)
 
     #setup include and lib for rpclib which will be referenced by other projects
     set(RPCLIB_VERSION_FOLDER rpclib-2.3.0)
