@@ -57,7 +57,9 @@ target_link_libraries(${PROJECT_NAME} MavLinkCom)
 target_link_libraries(${PROJECT_NAME} ensmallen)
 target_link_libraries(${PROJECT_NAME} openblas_static)
 
-target_compile_options(${PROJECT_NAME} PRIVATE "/Zc:__cplusplus")
+if(MSVC)
+  target_compile_options(${PROJECT_NAME} PRIVATE "/Zc:__cplusplus")
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 17
