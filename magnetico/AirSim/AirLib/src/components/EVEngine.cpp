@@ -98,44 +98,44 @@ float EVEngine::getEngineConsumption() const {
 	return engine_consumption_;
 }
 
-void EVEngine::update(float){
+void EVEngine::update(float delta){
 	
-	msr::airlib::Node::update(Settings::fixed_delta);
+	msr::airlib::Node::update(delta);
 	
 	if(Settings::enable_lasers){
 		for(auto laser : lasers_){
-			laser->update(Settings::fixed_delta);
+			laser->update(delta);
 		}
 	}
 			
 	if(Settings::enable_lasers){
 		float laserVoltage = Settings::desired_laser_voltage * Settings::number_of_lasers;
-		float powerDraw = (laserVoltage / (float)(Settings::number_of_gimbals)) * Settings::fixed_delta;
+		float powerDraw = (laserVoltage / (float)(Settings::number_of_gimbals)) * delta;
 		
 		float totalPowerDrawn = 0;
 		for(auto magnos : gimbals_){
 			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
 		}
 			
-		float laserInput = totalPowerDrawn / Settings::fixed_delta;
+		float laserInput = totalPowerDrawn / delta;
 		
 		for(auto laser : lasers_){
 			laser->setVoltageInput(laserInput);
 		}
 		
-		battery_->discharge(voltsToCurrent(laserInput, Settings::circuit_resistance), Settings::fixed_delta);
+		battery_->discharge(voltsToCurrent(laserInput, Settings::circuit_resistance), delta);
 	}
 	
 	bool anyDataCollectionMode = false;
 	for(auto magnos : gimbals_){
 		
-		magnos->update(Settings::fixed_delta);
+		magnos->update(delta);
 		
 		float totalPowerDrawn = 0.0f;
 		
-		totalPowerDrawn += currentToVolts(magnos->getCoilSystem().current, Settings::circuit_resistance) * Settings::fixed_delta;
+		totalPowerDrawn += currentToVolts(magnos->getCoilSystem().current, Settings::circuit_resistance) * delta;
 
-		battery_->discharge(voltsToCurrent(totalPowerDrawn / Settings::fixed_delta, Settings::circuit_resistance), Settings::fixed_delta);
+		battery_->discharge(voltsToCurrent(totalPowerDrawn / delta, Settings::circuit_resistance), delta);
 				
 		if(!anyDataCollectionMode){
 			anyDataCollectionMode = magnos->getCoilSystem().collecting();
@@ -149,14 +149,14 @@ void EVEngine::update(float){
 		
 		powerDraw /= Settings::number_of_gimbals;
 		
-		powerDraw *= Settings::fixed_delta;
+		powerDraw *= delta;
 		
 		float totalPowerDrawn = 0.0f;
 		for(auto magnos : gimbals_){
 			totalPowerDrawn += magnos->getCoilSystem().withdrawPower(powerDraw);
 		}
 		
-		battery_->discharge(voltsToCurrent(totalPowerDrawn / Settings::fixed_delta, Settings::circuit_resistance), Settings::fixed_delta);
+		battery_->discharge(voltsToCurrent(totalPowerDrawn / delta, Settings::circuit_resistance), delta);
 	}
 	
 	static float guiEMF = 0;
@@ -233,7 +233,7 @@ void EVEngine::update(float){
 				laser->dischargeAccumulatedVoltage(storedPower);
 			}
 			
-			battery_->charge(voltsToCurrent(storedPower, Settings::circuit_resistance) / Settings::fixed_delta, Settings::fixed_delta);
+			battery_->charge(voltsToCurrent(storedPower, Settings::circuit_resistance) / delta, delta);
 		}
 		
 	}
