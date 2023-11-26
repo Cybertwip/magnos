@@ -58,11 +58,13 @@ set(WITH_WERROR NO CACHE INTERNAL "WITH_WERROR")
 add_subdirectory(AirSim/cmake/AirLib)
 add_subdirectory(AirSim/cmake/MavLinkCom)
 add_subdirectory(AirSim/cmake/rpclib_wrapper)
-add_subdirectory(chrono)
+if(BUILD_COMPONENT_DETECTIVE)
+    add_subdirectory(chrono)
+    find_package(Chrono COMPONENTS Vehicle)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
-find_package(Chrono COMPONENTS Vehicle)
 
 set(_AX_ROOT ${CMAKE_CURRENT_LIST_DIR}/axmol CACHE INTERNAL "_AX_ROOT")
 set(AX_ROOT ${CMAKE_CURRENT_LIST_DIR}/axmol CACHE INTERNAL "AX_ROOT")
@@ -215,13 +217,19 @@ CommonTargetLink()
 target_link_libraries(${APP_NAME} AirLib)
 target_link_libraries(${APP_NAME} MavLinkCom)
 target_link_libraries(${APP_NAME} ${RPC_LIB})
-target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
+
+if(BUILD_COMPONENT_DETECTIVE)
+    target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
+endif()
 
 if(APPLE)
     target_link_libraries(${APP_NAME} ${OpenMP_CXX_LIBRARIES})  
 endif()
 
-target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
+if(BUILD_COMPONENT_DETECTIVE)
+    target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
+endif()
+
 
 if(EMSCRIPTEN)
     if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
@@ -266,7 +274,10 @@ if(APPLE)
 endif()
 
 target_include_directories(${APP_NAME} PRIVATE ${GAME_INC_DIRS})
-target_include_directories(${APP_NAME} PRIVATE ${CHRONO_INCLUDE_DIRS})
+
+if(BUILD_COMPONENT_DETECTIVE)
+    target_include_directories(${APP_NAME} PRIVATE ${CHRONO_INCLUDE_DIRS})
+endif()
 
 # mark app resources, resource will be copy auto after mark
 ax_setup_app_config(${APP_NAME})
