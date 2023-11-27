@@ -1,5 +1,6 @@
 {
-    "cmake.configureOnOpen": true,
+    "cmake.configureOnOpen": false,
+    "cmake.configureOnEdit": false,
     "files.associations": {
         "span": "cpp",
         "cmath": "cpp",
@@ -69,6 +70,14 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "valarray": "cpp",
-        "sched.h": "c"
+        "sched.h": "c",
+        "bit": "cpp",
+        "condition_variable": "cpp",
+        "future": "cpp",
+        "mutex": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp",
+        "any": "cpp",
+        "typeindex": "cpp"
     }
 }

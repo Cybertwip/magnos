@@ -38,6 +38,10 @@
 #include <errno.h>
 #endif
 
+#if defined(OS_RASPBIAN)
+#include <filesystem>
+#endif
+
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #endif
@@ -125,9 +129,13 @@ std::string FileSystem::getExecutableFolder()
 
     path = std::string(szPath);
 #else
+#if defined(OS_RASPBIAN)
+    path = std::filesystem::current_path().string();
+#else
     char szPath[8192];
     readlink("/proc/self/exe", szPath, sizeof(szPath));
     path = std::string(szPath);
+#endif
 #endif
 
     size_t pathSeparatorIndex = path.find_last_of(kPathSeparator);

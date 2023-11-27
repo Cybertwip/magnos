@@ -8,10 +8,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(RASPBERRY_PI)
-    set(DYNAMIC_ARCH 1)
-endif()
-
 if(APPLE AND CLANG AND NOT EMBEDDED)
     set(CMAKE_OSX_ARCHITECTURES arm64)
 endif()
@@ -60,18 +56,19 @@ if(WINDOWS)
 endif()
 
 if(RASPBERRY_PI)
+    set(TARGET ARMV5 CACHE INTERNAL "OPENBLAS_TARGET")
     set(ONLY_CBLAS NO CACHE INTERNAL "ONLY_CBLAS")
     set(NOFORTRAN 1 CACHE STRING "NOFORTRAN")
 endif()
-
 
 set(BUILD_STATIC_LIBS ON CACHE INTERNAL "BUILD_STATIC_LIBS")
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "BUILD_SHARED_LIBS")
 set(WITH_WERROR NO CACHE INTERNAL "WITH_WERROR")
 
+
 add_subdirectory(AirSim/cmake/AirLib)
-#add_subdirectory(AirSim/cmake/MavLinkCom)
-#add_subdirectory(AirSim/cmake/rpclib_wrapper)
+add_subdirectory(AirSim/cmake/MavLinkCom)
+add_subdirectory(AirSim/cmake/rpclib_wrapper)
 if(BUILD_COMPONENT_DETECTIVE)
     add_subdirectory(chrono)
     find_package(Chrono COMPONENTS Vehicle)
@@ -196,8 +193,12 @@ endif()
 CommonTargetLink()
 
 target_link_libraries(${APP_NAME} AirLib)
-#target_link_libraries(${APP_NAME} MavLinkCom)
-#target_link_libraries(${APP_NAME} ${RPC_LIB})
+target_link_libraries(${APP_NAME} MavLinkCom)
+target_link_libraries(${APP_NAME} ${RPC_LIB})
+
+
+target_compile_definitions(${APP_NAME} PRIVATE "AIRLIB_NO_RPC") 
+target_compile_definitions(AirLib PRIVATE "AIRLIB_NO_RPC") 
 
 if(BUILD_COMPONENT_DETECTIVE)
     target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  

@@ -281,7 +281,9 @@
 #endif
 
 #if !defined(ARMA_DONT_USE_STD_MUTEX)
-  // #define ARMA_DONT_USE_STD_MUTEX
+#if defined(OS_RASPBIAN)
+  //#define ARMA_DONT_USE_STD_MUTEX
+#endif
   //// Uncomment the above line to disable use of std::mutex
 #endif
 

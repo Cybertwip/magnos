@@ -1,5 +1,9 @@
 ﻿cmake_minimum_required(VERSION 3.5.0)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 cmake_policy(SET CMP0079 NEW)
 
 set(PROJECT_NAME AirLib)
@@ -56,6 +60,8 @@ target_link_libraries(${PROJECT_NAME} ${RPC_LIB})
 target_link_libraries(${PROJECT_NAME} MavLinkCom)
 target_link_libraries(${PROJECT_NAME} ensmallen)
 target_link_libraries(${PROJECT_NAME} openblas_static)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE "ARMA_DONT_USE_STD_MUTEX=1")
 
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE "/Zc:__cplusplus")

@@ -214,13 +214,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   endif ()
 endif()
 
-# If we're using gcc, then we need to link against pthreads to use std::thread,
-# which we do in the tests.
-if (CMAKE_COMPILER_IS_GNUCC)
-  find_package(Threads)
-  set(MLPACK_LIBRARIES ${MLPACK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-endif()
-
 # Debugging CFLAGS.  Turn optimizations off; turn debugging symbols on.
 set (BFD_DL_AVAILABLE "NO")
 if (DEBUG)

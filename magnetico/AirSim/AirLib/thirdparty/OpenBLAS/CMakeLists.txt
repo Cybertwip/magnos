@@ -241,12 +241,6 @@ if (USE_THREAD)
       INTERFACE_COMPILE_OPTIONS "-pthread"
     )
   endif()
-  if(BUILD_STATIC_LIBS)
-    target_link_libraries(${OpenBLAS_LIBNAME}_static ${CMAKE_THREAD_LIBS_INIT})
-  endif()
-  if(BUILD_SHARED_LIBS)
-    target_link_libraries(${OpenBLAS_LIBNAME}_shared ${CMAKE_THREAD_LIBS_INIT})
-  endif()
 endif()
 
 #if (MSVC OR NOT NOFORTRAN)

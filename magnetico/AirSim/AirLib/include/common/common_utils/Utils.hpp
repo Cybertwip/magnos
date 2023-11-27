@@ -398,7 +398,7 @@ public:
         //      : 0;
         return static_cast<R>(-(onecount != 0)) & (static_cast<R>(-1) >> ((sizeof(R) * CHAR_BIT) - onecount));
     }
-
+    
     static void cleanupThread(std::thread& th)
     {
         if (th.joinable()) {

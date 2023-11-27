@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(MavLinkCom)
 
-if(NOT EMSCRIPTEN)
+if(NOT EMSCRIPTEN AND NOT RASPBERRY_PI)
   add_subdirectory("MavLinkTest")
 endif()
 

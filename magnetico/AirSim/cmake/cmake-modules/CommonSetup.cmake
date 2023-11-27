@@ -1,7 +1,11 @@
 # Common setup instructions shared by all AirSim CMakeLists.
 
 macro(CommonTargetLink)
-    target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+    if(RASPBERRY_PI)
+        target_link_libraries(${PROJECT_NAME} pthread)
+    else()
+        target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+    endif()
     #target_link_libraries(c++abi)
 endmacro(CommonTargetLink)
 
