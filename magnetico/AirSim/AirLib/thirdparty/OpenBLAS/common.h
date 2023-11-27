@@ -122,7 +122,7 @@ extern "C" {
 #define ATOM GOTO_ATOM
 #undef  GOTO_ATOM
 #endif
-#elif !defined(OS_EMBEDDED)
+#elif !defined(OS_EMBEDDED) && !defined(OS_RASPBIAN)
 #include <sys/mman.h>
 #ifndef NO_SYSV_IPC
 #include <sys/shm.h>
@@ -555,10 +555,16 @@ static __inline void blas_lock(volatile BLASULONG *address){
 #define DTB_DEFAULT_ENTRIES 64
 #endif
 
+#if !defined(OS_RASPBIAN)
 #define MMAP_ACCESS (PROT_READ | PROT_WRITE)
+#else
+#define MMAP_ACCESS (PROT_WRITE)
+#endif  
 
 #ifdef __NetBSD__
 #define MMAP_POLICY (MAP_PRIVATE | MAP_ANON)
+#elif OS_RASPBIAN
+#define MMAP_POLICY (MAP_ANONYMOUS)
 #else
 #define MMAP_POLICY (MAP_PRIVATE | MAP_ANONYMOUS)
 #endif

@@ -8,11 +8,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(APPLE AND CLANG)
+if(RASPBERRY_PI)
+    set(DYNAMIC_ARCH 1)
+endif()
+
+if(APPLE AND CLANG AND NOT EMBEDDED)
     set(CMAKE_OSX_ARCHITECTURES arm64)
 endif()
 
-if(APPLE)
+if(APPLE AND NOT EMBEDDED)
     if(BUILD_COMPONENT_DETECTIVE)
         set(OpenMP_CXX_INCLUDE_DIRS "/opt/homebrew/opt/libomp/include")
         set(OpenMP_CXX_LIBRARIES "/opt/homebrew/opt/libomp/lib/libomp.a")
@@ -27,8 +31,8 @@ set(AIRSIM_ROOT ${CMAKE_CURRENT_LIST_DIR}/AirSim CACHE STRING "AIRSIM_ROOT")
 set(CHRONO_ROOT ${CMAKE_CURRENT_LIST_DIR}/chrono CACHE STRING "CHRONO_ROOT")
 set(AX_ENABLE_EXT_LUA NO CACHE INTERNAL "AX_ENABLE_EXT_LUA")
 
-set(RASPBERRY_PI True CACHE INTERNAL "RASPBERRY_PI")
-set(BOARD_NAME RPI3 CACHE INTERNAL "RPI3")
+set(BOARD_NAME RPI1 CACHE INTERNAL "RPI1")
+set(BOARD RPI1 CACHE INTERNAL "RPI1")
 
 set(APP_NAME MagnosSimulator)
 
@@ -55,13 +59,19 @@ if(WINDOWS)
     set(NOFORTRAN 1 CACHE STRING "NOFORTRAN")
 endif()
 
+if(RASPBERRY_PI)
+    set(ONLY_CBLAS NO CACHE INTERNAL "ONLY_CBLAS")
+    set(NOFORTRAN 1 CACHE STRING "NOFORTRAN")
+endif()
+
+
 set(BUILD_STATIC_LIBS ON CACHE INTERNAL "BUILD_STATIC_LIBS")
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "BUILD_SHARED_LIBS")
 set(WITH_WERROR NO CACHE INTERNAL "WITH_WERROR")
 
 add_subdirectory(AirSim/cmake/AirLib)
-add_subdirectory(AirSim/cmake/MavLinkCom)
-add_subdirectory(AirSim/cmake/rpclib_wrapper)
+#add_subdirectory(AirSim/cmake/MavLinkCom)
+#add_subdirectory(AirSim/cmake/rpclib_wrapper)
 if(BUILD_COMPONENT_DETECTIVE)
     add_subdirectory(chrono)
     find_package(Chrono COMPONENTS Vehicle)
@@ -140,7 +150,7 @@ elseif(WINDOWS)
         message(FATAL_ERROR "Not supported yet")
     endif()
     list(APPEND GAME_SOURCE ${common_content_files})
-elseif(APPLE)
+elseif(APPLE AND NOT EMBEDDED)
     if(IOS)
         message(FATAL_ERROR "Not supported yet")
     elseif(MACOSX)
@@ -154,6 +164,14 @@ elseif(APPLE)
              )
     endif()
     list(APPEND GAME_SOURCE ${common_content_files})
+elseif(EMBEDDED)
+
+    list(APPEND GAME_SOURCE
+        proj.linux/main.cpp
+        ${APP_UI_RES}
+        )
+    list(APPEND GAME_SOURCE ${common_content_files})
+
 endif()
 
 # mark app complie info and libs info
@@ -178,8 +196,8 @@ endif()
 CommonTargetLink()
 
 target_link_libraries(${APP_NAME} AirLib)
-target_link_libraries(${APP_NAME} MavLinkCom)
-target_link_libraries(${APP_NAME} ${RPC_LIB})
+#target_link_libraries(${APP_NAME} MavLinkCom)
+#target_link_libraries(${APP_NAME} ${RPC_LIB})
 
 if(BUILD_COMPONENT_DETECTIVE)
     target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
@@ -207,7 +225,7 @@ endif()
 
 # mark app resources, resource will be copy auto after mark
 ax_setup_app_config(${APP_NAME})
-if(APPLE)
+if(APPLE AND NOT EMBEDDED)
     set_target_properties(${APP_NAME} PROPERTIES RESOURCE "${APP_UI_RES}")
     set_xcode_property(${APP_NAME} INSTALL_PATH "\$(LOCAL_APPS_DIR)")
     set_xcode_property(${APP_NAME} PRODUCT_BUNDLE_IDENTIFIER "org.axmol.hellocpp")
@@ -220,13 +238,13 @@ if(APPLE)
 
     # For code-signing, set the DEVELOPMENT_TEAM:
     #set_xcode_property(${APP_NAME} DEVELOPMENT_TEAM "GRLXXXX2K9")
-elseif(WINDOWS)
+elseif(WINDOWS AND NOT EMBEDDED)
     if((NOT _AX_USE_PREBUILT) AND (NOT WINRT))
         ax_sync_target_dlls(${APP_NAME})
     endif()
 endif()
 
-if ((NOT APPLE) AND (NOT WINRT))
+if (((NOT APPLE) AND (NOT WINRT)) OR (EMBEDDED))
     ax_get_resource_path(APP_RES_DIR ${APP_NAME})
     ax_sync_target_res(${APP_NAME} LINK_TO ${APP_RES_DIR} FOLDERS ${content_folder} SYM_LINK 1)
 

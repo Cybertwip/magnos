@@ -209,7 +209,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Link everything with -lm.
   set(MLPACK_LIBRARIES ${MLPACK_LIBRARIES} "m")
   # Use -pthread, but not on OS X.
-  if (NOT APPLE)
+  if (NOT APPLE AND NOT EMBEDDED)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
   endif ()
 endif()

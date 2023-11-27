@@ -131,7 +131,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MEM_LARGE_PAGES  0x20000000
 #endif
 #else
+#if !defined(OS_RASPBIAN)
 #define ALLOC_MMAP
+#endif
 #define ALLOC_MALLOC
 #endif
 
@@ -139,7 +141,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <fcntl.h>
 
-#if !defined(OS_WINDOWS) || defined(OS_CYGWIN_NT)
+#if !defined(OS_RASPBIAN) && !defined(OS_WINDOWS) || defined(OS_CYGWIN_NT)
 #include <sys/mman.h>
 #ifndef NO_SYSV_IPC
 #include <sys/shm.h>
@@ -182,8 +184,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #endif
 
-#if (defined(PPC440) || !defined(OS_LINUX) || defined(HPL)) && !defined(NO_WARMUP)
+#if  !defined(OS_RASPBIAN) && (defined(PPC440) || !defined(OS_LINUX) || defined(HPL)) && !defined(NO_WARMUP)
 #define NO_WARMUP
+#endif
+
+#if defined(OS_RASPBIAN) && defined(NO_WARMUP)
+#undef NO_WARMUP
 #endif
 
 #ifndef SHM_HUGETLB
@@ -1700,7 +1706,9 @@ void gotoblas_dummy_for_PGI(void) {
 #define MEM_LARGE_PAGES  0x20000000
 #endif
 #elif !defined(OS_EMBEDDED)
+#if !defined(OS_RASPBIAN)
 #define ALLOC_MMAP
+#endif
 #define ALLOC_MALLOC
 #else
 #define ALLOC_MALLOC
@@ -1715,7 +1723,7 @@ inline int atoi(const char *str) { return 0; }
 #include <stdio.h>
 #include <fcntl.h>
 
-#if (!defined(OS_WINDOWS) || defined(OS_CYGWIN_NT)) && !defined(OS_EMBEDDED)
+#if !defined(OS_RASPBIAN) && (!defined(OS_WINDOWS) || defined(OS_CYGWIN_NT)) 
 #include <sys/mman.h>
 #ifndef NO_SYSV_IPC
 #include <sys/shm.h>
@@ -1753,8 +1761,12 @@ inline int atoi(const char *str) { return 0; }
 
 #endif
 
-#if (defined(PPC440) || !defined(OS_LINUX) || defined(HPL)) && !defined(NO_WARMUP)
+#if !defined(OS_RASPBIAN) && (defined(PPC440) || !defined(OS_LINUX) || defined(HPL)) && !defined(NO_WARMUP)
 #define NO_WARMUP
+#endif
+
+#if defined(OS_RASPBIAN) && defined(NO_WARMUP)
+#undef NO_WARMUP
 #endif
 
 #ifndef SHM_HUGETLB

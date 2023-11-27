@@ -45,13 +45,20 @@ macro(CommonSetup)
         if (APPLE)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wstrict-aliasing -D__CLANG__")
         else ()
-            set(CMAKE_CXX_FLAGS "\
+            if(NOT RASPBERRY_PI)
+                set(CMAKE_CXX_FLAGS "\
+                    -Wall -Wextra \
+                    -Wnon-virtual-dtor -Woverloaded-virtual \
+                    -Wno-variadic-macros -Wno-unused-function -Wno-unused \
+                    -pthread \
+                    ${RPC_LIB_DEFINES} ${CMAKE_CXX_FLAGS}")
+            else()
+                set(CMAKE_CXX_FLAGS "\
                 -Wall -Wextra \
                 -Wnon-virtual-dtor -Woverloaded-virtual \
                 -Wno-variadic-macros -Wno-unused-function -Wno-unused \
-                -pthread \
                 ${RPC_LIB_DEFINES} ${CMAKE_CXX_FLAGS}")
-
+            endif()
             if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
                 set(CMAKE_CXX_FLAGS "-stdlib=libc++ -Wno-documentation -Wno-unknown-warning-option ${CMAKE_CXX_FLAGS}")
                 if(EMSCRIPTEN)

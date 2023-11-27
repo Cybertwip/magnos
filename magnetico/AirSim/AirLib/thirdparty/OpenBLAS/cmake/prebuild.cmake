@@ -841,7 +841,8 @@ if (DEFINED CORE AND CMAKE_CROSSCOMPILING AND NOT (${HOST_OS} STREQUAL "WINDOWSS
     set(ZGEMM_UNROLL_M 2)
     set(ZGEMM_UNROLL_N 2)
   elseif ("${TCORE}" STREQUAL "ARMV6")
-    file(APPEND ${TARGET_CONF_TEMP}
+    if(NOT RASPBERRY_PI)
+      file(APPEND ${TARGET_CONF_TEMP}
       "#define L1_DATA_SIZE\t65536\n"
       "#define L1_DATA_LINESIZE\t32\n"
       "#define L2_SIZE\t512488\n"
@@ -850,6 +851,17 @@ if (DEFINED CORE AND CMAKE_CROSSCOMPILING AND NOT (${HOST_OS} STREQUAL "WINDOWSS
       "#define DTB_SIZE\t4096\n"
       "#define L2_ASSOCIATIVE\t4\n"
       "#define HAVE_VFP\n")
+    else()
+      file(APPEND ${TARGET_CONF_TEMP}
+      "#define L1_DATA_SIZE\t65536\n"
+      "#define L1_DATA_LINESIZE\t32\n"
+      "#define L2_SIZE\t512488\n"
+      "#define L2_LINESIZE\t32\n"
+      "#define DTB_DEFAULT_ENTRIES\t64\n"
+      "#define DTB_SIZE\t4096\n"
+      "#define L2_ASSOCIATIVE\t4\n")
+    endif()
+
     set(SGEMM_UNROLL_M 4)
     set(SGEMM_UNROLL_N 2)
     set(DGEMM_UNROLL_M 4)

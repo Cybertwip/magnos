@@ -196,7 +196,9 @@ if(EMSCRIPTEN)
     message(STATUS "_AX_WASM_THREADS_INT=${_AX_WASM_THREADS_INT}")
 
     if (_AX_WASM_THREADS_INT)
-        add_compile_options(-pthread)
+        if(NOT RASPBERRY_PI)
+            add_compile_options(-pthread)
+        endif()
         add_link_options(-pthread -sPTHREAD_POOL_SIZE=${_AX_WASM_THREADS_INT})
     endif()
 

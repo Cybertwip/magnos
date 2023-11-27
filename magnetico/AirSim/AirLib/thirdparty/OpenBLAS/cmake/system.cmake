@@ -117,6 +117,8 @@ if (POWER)
   set(GETARCH_FLAGS "${GETARCH_FLAGS} -DHAVE_GAS=${HAVE_GAS}")
 endif ()
 
+
+
 #if don't use Fortran, it will only compile CBLAS.
 if (ONLY_CBLAS)
   set(NO_LAPACK 1)
@@ -439,8 +441,11 @@ endif ()
 if (USE_THREAD)
   # USE_SIMPLE_THREADED_LEVEL3 = 1
   # NO_AFFINITY = 1
-  set(CCOMMON_OPT "${CCOMMON_OPT} -DSMP_SERVER -pthread")
-
+  if(NOT RASPBERRY_PI)
+    set(CCOMMON_OPT "${CCOMMON_OPT} -DSMP_SERVER -pthread")
+  else()
+    set(CCOMMON_OPT "${CCOMMON_OPT} -DSMP_SERVER")
+  endif()
   if (MIPS64)
     if (NOT ${CORE} STREQUAL "LOONGSON3B")
       set(USE_SIMPLE_THREADED_LEVEL3 1)
@@ -452,7 +457,7 @@ if (USE_THREAD)
   endif ()
 endif ()
 
-if (NO_WARMUP)
+if (NO_WARMUP AND NOT RASPBERRY_PI)
   set(CCOMMON_OPT "${CCOMMON_OPT} -DNO_WARMUP")
 endif ()
 

@@ -235,7 +235,7 @@ endif()
 if (USE_THREAD)
   # Add threading library to linker
   find_package(Threads)
-  if (THREADS_HAVE_PTHREAD_ARG)
+  if (THREADS_HAVE_PTHREAD_ARG AND NOT EMBEDDED)
     set_target_properties(${OpenBLAS_LIBS} PROPERTIES
       COMPILE_OPTIONS "-pthread"
       INTERFACE_COMPILE_OPTIONS "-pthread"
