@@ -1,8 +1,9 @@
-cmake_minimum_required (VERSION 2.6.2)
-project (cereal)
+cmake_minimum_required(VERSION 3.3.2)
+
+project (cereal LANGUAGES C CXX)
 
 option(SKIP_PORTABILITY_TEST "Skip portability (32 bit) tests" OFF)
-option(SKIP_PERFORMANCE_COMPARISON "Skip building performance comparison (requires boost)" OFF)
+option(SKIP_PERFORMANCE_COMPARISON "Skip building performance comparison (requires boost)" TRUE)
 if(NOT CMAKE_VERSION VERSION_LESS 3.0) # installing cereal requires INTERFACE lib
     option(JUST_INSTALL_CEREAL "Don't do anything besides installing the library" OFF)
 endif()
@@ -67,24 +68,4 @@ include_directories(./include)
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.12)
   cmake_policy(VERSION 3.12)
-endif()
-
-# Boost serialization for performance sandbox
-find_package(Boost COMPONENTS serialization)
-
-if(Boost_FOUND)
-  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-endif(Boost_FOUND)
-  
-if(BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(unittests)
-endif()
-
-if(BUILD_SANDBOX)
-    add_subdirectory(sandbox)
-endif()
-
-if(BUILD_DOCS)
-    add_subdirectory(doc)
 endif()
