@@ -227,7 +227,7 @@ if(APPLE)
 endif()
 
 if(BUILD_COMPONENT_DETECTIVE)
-    target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"") 
+    target_compile_definitions(${APP_NAME} PRIVATE "CHRONO_DATA_DIR=\"chrono/data/\"" BUILD_COMPONENT_INSPECTOR=1) 
 endif()
 
 

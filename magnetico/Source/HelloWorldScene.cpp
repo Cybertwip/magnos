@@ -72,11 +72,7 @@ bool HelloWorld::init()
 	
 	// Enable mouse input (optional, if not already enabled)
 	_director->getOpenGLView()->setCursorVisible(true);
-#if BUILD_COMPONENT_DETECTIVE
-	this->currentGameState = AdvancedCarGameState::create();
-#else
 	this->currentGameState = BasicCarGameState::create();
-#endif
 	this->addChild(currentGameState);
 
 	currentGameState->setup(_defaultCamera);
