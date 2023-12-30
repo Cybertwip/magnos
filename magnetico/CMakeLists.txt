@@ -28,7 +28,11 @@ set(AX_ENABLE_EXT_LUA NO CACHE INTERNAL "AX_ENABLE_EXT_LUA")
 
 set(APP_NAME MagnosSimulator)
 
-project(${APP_NAME})
+if(APPLE)
+    project(${APP_NAME} LANGUAGES C CXX OBJCXX)
+else()
+    project(${APP_NAME} LANGUAGES C CXX)
+endif()
 
 set(MAGNOS_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} CACHE STRING "MAGNOS_RUNTIME_OUTPUT_DIRECTORY")
 
@@ -62,6 +66,9 @@ if(BUILD_COMPONENT_DETECTIVE)
     add_subdirectory(chrono)
     find_package(Chrono COMPONENTS Vehicle)
 endif()
+
+add_subdirectory(viper)
+
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
@@ -217,6 +224,7 @@ CommonTargetLink()
 target_link_libraries(${APP_NAME} AirLib)
 target_link_libraries(${APP_NAME} MavLinkCom)
 target_link_libraries(${APP_NAME} ${RPC_LIB})
+target_link_libraries(${APP_NAME} viper)
 
 if(BUILD_COMPONENT_DETECTIVE)
     target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  

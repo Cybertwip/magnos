@@ -1,5 +1,6 @@
 {
     "cmake.configureOnOpen": true,
+    "cmake.configureOnEdit": false,
     "files.associations": {
         "span": "cpp",
         "cmath": "cpp",
