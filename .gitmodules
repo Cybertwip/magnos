@@ -1,0 +1,3 @@
+[submodule "magnetico/Viper"]
+	path = magnetico/Viper
+	url = git@github.com:Cybertwip/Viper.git
