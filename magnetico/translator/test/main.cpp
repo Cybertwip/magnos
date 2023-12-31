@@ -350,7 +350,7 @@ private:
 		alGenSources(1, &source);
 		alSourcei(source, AL_BUFFER, buffer);
 		
-		alSourcef(source, AL_GAIN, 4.0f);
+		alSourcef(source, AL_GAIN, 5.0f);
 
 	}
 	
