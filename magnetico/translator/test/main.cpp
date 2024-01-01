@@ -131,7 +131,6 @@ public:
 		
 		std::vector<std::tuple<std::string, int64_t, int64_t>> recognizedSegments;
 		
-		
 		auto s = recognizer->CreateStream();
 		s->AcceptWaveform(sampling_rate, pcmf32.data(), pcmf32.size());
 		
@@ -214,7 +213,6 @@ private:
 	}
 	
 	void loadAudioFile() {
-		int32_t sampling_rate = -1;
 		bool is_ok;
 
 		normalPcmData =
