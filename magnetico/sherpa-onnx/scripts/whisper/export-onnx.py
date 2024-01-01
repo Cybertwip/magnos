@@ -437,6 +437,7 @@ def main():
         "translate": tokenizer.translate,
         "sot_prev": tokenizer.sot_prev,
         "sot_lm": tokenizer.sot_lm,
+        "timestamp_begin": tokenizer.timestamp_begin,
         "no_timestamps": tokenizer.no_timestamps,
     }
     print(f"encoder_meta_data: {encoder_meta_data}")

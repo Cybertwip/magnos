@@ -79,7 +79,10 @@ public:
 
 		config.model_config.tokens = "tiny-tokens.txt";
 		
+		config.decoding_method = "greedy_search";
+		
 		config.model_config.whisper.language = "es";
+		
 		config.model_config.whisper.tail_paddings = 300;
 
 		
@@ -139,7 +142,7 @@ public:
 
 		recognizer->DecodeStreams(ss_pointers.data(), ss_pointers.size());
 		
-		auto result = s->GetResult();
+		auto result = ss_pointers.back()->GetResult();
 		
 		
 
@@ -164,6 +167,8 @@ public:
 		}
 		
 //		data.push_back({phonemeIds, pcms});
+		
+		recognizedSegments.push_back({result.text, result.timestamps[0], result.timestamps[1]});
 		
 		for(auto& wordSet : recognizedSegments){
 			auto [text, t0, t1] = wordSet;
