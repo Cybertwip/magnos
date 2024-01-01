@@ -1,6 +1,5 @@
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
-#include <sndfile.h>
 #include <Eigen/Dense>
 
 #include "mlpack.hpp"
@@ -49,10 +48,12 @@ using namespace Eigen;
 class AudioProcessor {
 private:
 	sherpa_onnx::OfflineRecognizerConfig config;
-	std::uniqe_ptr<sherpa_onnx::OfflineRecognizer> recognizer;
+	std::unique_ptr<sherpa_onnx::OfflineRecognizer> recognizer;
 	
 	std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>> ss;
 	std::vector<sherpa_onnx::OfflineStream *> ss_pointers;
+	
+	int sampling_rate;
 
 public:
 	AudioProcessor(const char* filename) : filename(filename) {
@@ -70,7 +71,19 @@ public:
 		// Use espeak-ng for phonemization
 		eSpeakConfig.voice = "es";
 		
-		recognizer = std::make_unique<sherpa_onnx::OfflineRecognizer>(config)
+		config.model_config.whisper.task = "transcribe";
+		
+		config.model_config.whisper.encoder = "./tiny-encoder.onnx";
+
+		config.model_config.whisper.decoder = "./tiny-decoder.onnx";
+
+		config.model_config.tokens = "tiny-tokens.txt";
+		
+		config.model_config.whisper.language = "es";
+		config.model_config.whisper.tail_paddings = 300;
+
+		
+		recognizer = std::make_unique<sherpa_onnx::OfflineRecognizer>(config);
 		
 		initializeOpenAL();
 		loadAudioFile();
@@ -118,7 +131,20 @@ public:
 		
 		std::vector<std::tuple<std::string, int64_t, int64_t>> recognizedSegments;
 		
-//		
+		
+		auto s = recognizer->CreateStream();
+		s->AcceptWaveform(sampling_rate, pcmf32.data(), pcmf32.size());
+		
+		ss.push_back(std::move(s));
+		ss_pointers.push_back(ss.back().get());
+
+		recognizer->DecodeStreams(ss_pointers.data(), ss_pointers.size());
+		
+		auto result = s->GetResult();
+		
+		
+
+//
 //		std::string text = "Para entrenar un modelo. Con rapidez, no necesitas una GPU super buena, o una MacBook. De hecho, estoy trabajando en algo sencillo. El español tiene fonemas, como ua, o paahpaah. Por ejemplo. Entonces, para generar un sintetizador de voz, le dices a la computadora ah mira, cuando yo diga agua, tu tienes que verificar que la onda de audio (pe ce emes) o salida de audio, es exactamente (o un aproximado) a la que escuchaste cuando te entrené. El primer paso es convertir audio en fonemas, eso se hace con espik ene je. Después se le pasa un entrenamiento de Machine Learning. Me llevó cierto tiempo pensar en la solución, justo ahora estoy trabajando en ello. No desesperen. Saludos.";
 //		
 		std::vector<std::vector<piper::Phoneme>> phonemes;
@@ -143,7 +169,7 @@ public:
 		for(auto& wordSet : recognizedSegments){
 			auto [text, t0, t1] = wordSet;
 						
-			int samplingRate = sfInfo.samplerate;
+			int samplingRate = sampling_rate;
 
 			int64_t sampleT0 = static_cast<int64_t>(t0 * 0.001 * samplingRate);
 			int64_t sampleT1 = static_cast<int64_t>(t1 * 0.001 * samplingRate);
@@ -173,8 +199,6 @@ private:
 	const char* filename;
 	ALCdevice* device;
 	ALCcontext* context;
-	SF_INFO sfInfo;
-	SNDFILE* sndfile;
 	std::vector<int16_t> pcmData;
 	std::vector<float> normalPcmData;
 	ALuint buffer;
@@ -190,18 +214,11 @@ private:
 	}
 	
 	void loadAudioFile() {
-		sndfile = sf_open(filename, SFM_READ, &sfInfo);
-		
-		if (!sndfile || sfInfo.frames <= 0) {
-			std::cerr << "Error opening/reading audio file: " << filename << std::endl;
-			cleanup();
-			std::exit(1);
-		}
-		
-		std::vector<float> normalPcmData;
-		normalPcmData.resize(sfInfo.frames * sfInfo.channels);
-		sf_read_float(sndfile, &normalPcmData[0], sfInfo.frames * sfInfo.channels);
-		sf_close(sndfile);
+		int32_t sampling_rate = -1;
+		bool is_ok;
+
+		normalPcmData =
+		sherpa_onnx::ReadWave(filename, &sampling_rate, &is_ok);
 		
 		trainModel(normalPcmData);
 		
@@ -232,7 +249,7 @@ private:
 					
 			std::vector<float> specs;
 
-			int sr = sfInfo.samplerate;
+			int sr = sampling_rate;
 			int n_fft = 20;
 			int n_hop = 5;
 			std::string window = "hann";
@@ -329,7 +346,7 @@ private:
 		std::vector<int16_t> pcmFinal = denormalize(pcmOutput);
 
 		alGenBuffers(1, &buffer);
-		alBufferData(buffer, AL_FORMAT_MONO16, pcmFinal.data(), pcmFinal.size() * sizeof(int16_t), sfInfo.samplerate * sfInfo.channels);
+		alBufferData(buffer, AL_FORMAT_MONO16, pcmFinal.data(), pcmFinal.size() * sizeof(int16_t), sampling_rate * 1);
 		
 		alGenSources(1, &source);
 		alSourcei(source, AL_BUFFER, buffer);
