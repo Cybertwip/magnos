@@ -8,7 +8,11 @@
 #include "phonemize.hpp"
 #include "phoneme_ids.hpp"
 #include "espeak-ng/speak_lib.h"
-#include "whisper.h"
+
+#include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/wave-reader.h"
+
 
 #include "librosa.h"
 
@@ -43,11 +47,6 @@ std::vector<WordSet> wordData;
 using namespace Eigen;
 
 class AudioProcessor {
-private:
-	struct whisper_context_params cparams;
-	struct whisper_context * ctx;
-	whisper_full_params wparams;
-
 public:
 	AudioProcessor(const char* filename) : filename(filename) {
 		
@@ -63,24 +62,6 @@ public:
 		
 		// Use espeak-ng for phonemization
 		eSpeakConfig.voice = "es";
-
-		wparams = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
-		
-		wparams.language = "es";
-		
-		wparams.n_threads = 10;
-		
-		wparams.split_on_word = true;
-
-		wparams.max_len = 1;
-		
-		wparams.print_timestamps = true;
-		wparams.print_realtime = true;
-		wparams.token_timestamps = true;
-//		wparams.speed_up = true;
-		
-		cparams.use_gpu = true;
-		ctx = whisper_init_from_file_with_params("ggml-tiny.bin", cparams);
 		
 		initializeOpenAL();
 		loadAudioFile();
@@ -124,29 +105,10 @@ public:
 	}
 
 	void trainModel(std::vector<float> pcmf32) {
-				
-		whisper_full_parallel(ctx, wparams, pcmf32.data(), pcmf32.size(), wparams.n_threads);
-		
-		const int n_segments = whisper_full_n_segments(ctx);
-		
 		std::string text = "";
 		
 		std::vector<std::tuple<std::string, int64_t, int64_t>> recognizedSegments;
 		
-		for (int i = 0; i < n_segments; ++i) {
-			const std::string chain = whisper_full_get_segment_text(ctx, i);
-			
-			if(chain.empty()){
-				continue;
-			}
-						
-			const int64_t t0 = whisper_full_get_segment_t0(ctx, i);
-			const int64_t t1 = whisper_full_get_segment_t1(ctx, i);
-			
-			text += chain;
-			
-			recognizedSegments.emplace_back(std::make_tuple(chain, t0, t1));
-		}
 //		
 //		std::string text = "Para entrenar un modelo. Con rapidez, no necesitas una GPU super buena, o una MacBook. De hecho, estoy trabajando en algo sencillo. El español tiene fonemas, como ua, o paahpaah. Por ejemplo. Entonces, para generar un sintetizador de voz, le dices a la computadora ah mira, cuando yo diga agua, tu tienes que verificar que la onda de audio (pe ce emes) o salida de audio, es exactamente (o un aproximado) a la que escuchaste cuando te entrené. El primer paso es convertir audio en fonemas, eso se hace con espik ene je. Después se le pasa un entrenamiento de Machine Learning. Me llevó cierto tiempo pensar en la solución, justo ahora estoy trabajando en ello. No desesperen. Saludos.";
 //		
