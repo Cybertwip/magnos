@@ -84,7 +84,6 @@ if(KALDIFST_BUILD_PYTHON)
   include(pybind11)
 endif()
 
-include(openfst)
 if(KALDIFST_BUILD_TESTS)
   enable_testing()
   include(googletest)

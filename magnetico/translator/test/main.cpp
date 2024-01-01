@@ -47,6 +47,10 @@ std::vector<WordSet> wordData;
 using namespace Eigen;
 
 class AudioProcessor {
+private:
+	sherpa_onnx::OfflineRecognizerConfig config;
+	std::uniqe_ptr<sherpa_onnx::OfflineRecognizer> recognizer;
+
 public:
 	AudioProcessor(const char* filename) : filename(filename) {
 		
@@ -62,6 +66,8 @@ public:
 		
 		// Use espeak-ng for phonemization
 		eSpeakConfig.voice = "es";
+		
+		recognizer = std::make_unique<>(config)
 		
 		initializeOpenAL();
 		loadAudioFile();
