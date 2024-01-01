@@ -73,6 +73,7 @@ set(SHERPA_ONNX_ENABLE_C_API ON)
 
 add_subdirectory(openfst)
 add_subdirectory(kaldifst)
+add_subdirectory(kaldi-decoder)
 add_subdirectory(kaldi-native-fbank)
 add_subdirectory(sherpa-onnx)
 

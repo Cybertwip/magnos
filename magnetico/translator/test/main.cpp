@@ -50,6 +50,9 @@ class AudioProcessor {
 private:
 	sherpa_onnx::OfflineRecognizerConfig config;
 	std::uniqe_ptr<sherpa_onnx::OfflineRecognizer> recognizer;
+	
+	std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>> ss;
+	std::vector<sherpa_onnx::OfflineStream *> ss_pointers;
 
 public:
 	AudioProcessor(const char* filename) : filename(filename) {
@@ -67,7 +70,7 @@ public:
 		// Use espeak-ng for phonemization
 		eSpeakConfig.voice = "es";
 		
-		recognizer = std::make_unique<>(config)
+		recognizer = std::make_unique<sherpa_onnx::OfflineRecognizer>(config)
 		
 		initializeOpenAL();
 		loadAudioFile();

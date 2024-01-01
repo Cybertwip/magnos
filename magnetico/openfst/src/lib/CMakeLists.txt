@@ -1,6 +1,5 @@
 FILE(GLOB HEADER_FILES ../include/fst/*.h)
 
-
 add_library(fst
   compat.cc
   flags.cc
@@ -22,7 +21,4 @@ if(WIN32)
   target_link_options(fst INTERFACE /WHOLEARCHIVE:$<TARGET_LINKER_FILE:fst>)
 endif()
 
-install(TARGETS fst
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION lib)
+target_include_directories(fst PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../include)
