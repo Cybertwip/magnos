@@ -15,7 +15,7 @@ namespace sherpa_onnx {
 
 class OfflineWhisperGreedySearchDecoder : public OfflineWhisperDecoder {
 public:
-	OfflineWhisperGreedySearchDecoder(const SymbolTable& symbols,
+	OfflineWhisperGreedySearchDecoder(
 									  const OfflineWhisperModelConfig &config,
 									  OfflineWhisperModel *model)
 	: config_(config), model_(model) {}
