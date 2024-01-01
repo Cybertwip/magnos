@@ -69,7 +69,11 @@ endif()
 
 add_subdirectory(viper)
 
-add_subdirectory(whisper)
+set(SHERPA_ONNX_ENABLE_C_API ON)
+
+add_subdirectory(openfst)
+add_subdirectory(kaldi-native-fbank)
+add_subdirectory(sherpa-onnx)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
@@ -490,19 +494,15 @@ find_package(OpenAL REQUIRED)
 # Find libsndfile
 find_package(SndFile REQUIRED)
 
-add_subdirectory(FFT-cpp)
-
 # Include directories
 
-target_include_directories(FFT-cpp PRIVATE ${AIRSIM_ROOT}/AirLib/thirdparty/eigen3)
 target_include_directories(detective_test PRIVATE ${OPENAL_INCLUDE_DIR})
 target_include_directories(detective_test PRIVATE ${SNDFILE_INCLUDE_DIRS})
 
 target_link_libraries(detective_test PRIVATE detective ${_AX_CORE_LIB}  ${OPENAL_LIBRARY} ${SNDFILE_LIBRARIES})
-target_link_libraries(detective_test PRIVATE FFT-cpp)
 target_link_libraries(detective_test PRIVATE viper)
 target_link_libraries(detective_test PRIVATE AirLib ${Boost_LIBRARIES})
-target_link_libraries(detective_test PRIVATE whisper)
+target_link_libraries(detective_test PRIVATE sherpa-onnx-c-api)
 
 target_link_libraries(${PROJECT_NAME} detective)
 endif()

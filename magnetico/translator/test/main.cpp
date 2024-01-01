@@ -3,12 +3,14 @@
 #include <sndfile.h>
 #include <Eigen/Dense>
 
-#include "FFT.hpp"
 #include "mlpack.hpp"
+
 #include "phonemize.hpp"
 #include "phoneme_ids.hpp"
 #include "espeak-ng/speak_lib.h"
 #include "whisper.h"
+
+#include "librosa.h"
 
 #include <iostream>
 #include <cmath>
@@ -16,7 +18,6 @@
 #include <thread>
 #include <vector>
 #include <cstddef>
-
 
 
 constexpr int WINDOW_SIZE = 2048;  // Adjust as needed
@@ -70,9 +71,11 @@ public:
 		wparams.n_threads = 10;
 		
 		wparams.split_on_word = true;
+
+		wparams.max_len = 1;
 		
-		wparams.max_len = 10;
-		
+		wparams.print_timestamps = true;
+		wparams.print_realtime = true;
 		wparams.token_timestamps = true;
 //		wparams.speed_up = true;
 		
@@ -94,13 +97,11 @@ public:
 		std::vector<float> output(input.size());
 		
 		// Convert the buffer to floats. (before resampling)
-		const float div = (1.0f/32768.0f);
-		
 		// Normalize the values to the range [0.0, 1.0]
 		std::transform(input.begin(), input.end(), output.begin(),
-					   [&div](int16_t value) {
+					   [](int16_t value) {
 			
-			return static_cast<float>(value) * div;
+			return static_cast<float>(value) / 32767.0f;
 		});
 		
 		return output;
@@ -110,47 +111,41 @@ public:
 	std::vector<int16_t> denormalize(const std::vector<float>& input) {
 		std::vector<int16_t> output(input.size());
 		
-		const float mul = (32768.0f);
 		
 		// Denormalize the values to the original range of integers
 		std::transform(input.begin(), input.end(), output.begin(),
-					   [&mul](float value) {
+					   [](float value) {
+			int16_t tmp = static_cast<int16_t>(32767 * value);
 			
-			int32_t tmp = static_cast<int32_t>(mul * value);
-			
-			tmp = std::max( tmp, -32768 ); // CLIP < 32768
-			tmp = std::min( tmp, 32767 );  // CLIP > 32767
-
-			return tmp;
+			return static_cast<int16_t>(tmp);
 		});
 		
 		return output;
 	}
 
-
-	void trainModel(std::vector<int16_t> pcms) {
-		
-		std::vector<float> pcmf32 = normalize(pcms);
-		
-		whisper_full_parallel(ctx, wparams, pcmf32.data(), pcmf32.size(), 8);
+	void trainModel(std::vector<float> pcmf32) {
+				
+		whisper_full_parallel(ctx, wparams, pcmf32.data(), pcmf32.size(), wparams.n_threads);
 		
 		const int n_segments = whisper_full_n_segments(ctx);
 		
 		std::string text = "";
 		
 		std::vector<std::tuple<std::string, int64_t, int64_t>> recognizedSegments;
-
 		
 		for (int i = 0; i < n_segments; ++i) {
 			const std::string chain = whisper_full_get_segment_text(ctx, i);
 			
+			if(chain.empty()){
+				continue;
+			}
+						
 			const int64_t t0 = whisper_full_get_segment_t0(ctx, i);
 			const int64_t t1 = whisper_full_get_segment_t1(ctx, i);
-
+			
 			text += chain;
 			
 			recognizedSegments.emplace_back(std::make_tuple(chain, t0, t1));
-
 		}
 //		
 //		std::string text = "Para entrenar un modelo. Con rapidez, no necesitas una GPU super buena, o una MacBook. De hecho, estoy trabajando en algo sencillo. El español tiene fonemas, como ua, o paahpaah. Por ejemplo. Entonces, para generar un sintetizador de voz, le dices a la computadora ah mira, cuando yo diga agua, tu tienes que verificar que la onda de audio (pe ce emes) o salida de audio, es exactamente (o un aproximado) a la que escuchaste cuando te entrené. El primer paso es convertir audio en fonemas, eso se hace con espik ene je. Después se le pasa un entrenamiento de Machine Learning. Me llevó cierto tiempo pensar en la solución, justo ahora estoy trabajando en ello. No desesperen. Saludos.";
@@ -172,26 +167,24 @@ public:
 			phonemeIds.insert(phonemeIds.end(), singlePhonemeIds.begin(), singlePhonemeIds.end());
 		}
 		
-		data.push_back({phonemeIds, pcms});
+//		data.push_back({phonemeIds, pcms});
 		
 		for(auto& wordSet : recognizedSegments){
 			auto [text, t0, t1] = wordSet;
-			
-			int64_t finalt0 = t0 > t1 ? t1 : t0;
-			
-			int64_t finalt1 = t0 > t1 ? t0 : t1;
-			
-			int samplingRate = 16000;
+						
+			int samplingRate = sfInfo.samplerate;
 
-			int64_t sampleT0 = static_cast<int64_t>(finalt0 * 0.001 * samplingRate);
-			int64_t sampleT1 = static_cast<int64_t>(finalt1 * 0.001 * samplingRate);
+			int64_t sampleT0 = static_cast<int64_t>(t0 * 0.001 * samplingRate);
+			int64_t sampleT1 = static_cast<int64_t>(t1 * 0.001 * samplingRate);
 
 			// Ensure sampleT1 is within the range of your pcmf32 vector.
 			sampleT1 = std::min(sampleT1, static_cast<int64_t>(pcmf32.size()));
 			
 			std::vector<float> pcmChunk(pcmf32.begin() + sampleT0, pcmf32.begin() + sampleT1);
 
-			wordData.push_back({text, std::make_tuple(finalt0, finalt1), pcmChunk});
+			assert(!pcmChunk.empty());
+			
+			wordData.push_back({text, std::make_tuple(sampleT0, sampleT1), pcmChunk});
 
 		}
 		
@@ -212,6 +205,7 @@ private:
 	SF_INFO sfInfo;
 	SNDFILE* sndfile;
 	std::vector<int16_t> pcmData;
+	std::vector<float> normalPcmData;
 	ALuint buffer;
 	ALuint source;
 	ALint sourceState;
@@ -233,16 +227,15 @@ private:
 			std::exit(1);
 		}
 		
-		pcmData.resize(sfInfo.frames * sfInfo.channels);
-		sf_read_short(sndfile, &pcmData[0], sfInfo.frames * sfInfo.channels);
+		std::vector<float> normalPcmData;
+		normalPcmData.resize(sfInfo.frames * sfInfo.channels);
+		sf_read_float(sndfile, &normalPcmData[0], sfInfo.frames * sfInfo.channels);
 		sf_close(sndfile);
 		
-		trainModel(pcmData);
+		trainModel(normalPcmData);
 		
 		// Assuming all audio vectors have the same size
 			
-		
-		
 		int counter = 0;
 		
 		maxPcmSize = 0;
@@ -257,24 +250,45 @@ private:
 
 		arma::mat dataset(maxPcmSize + 2, wordData.size());
 
+
 		// Map of words to numerical labels
 		std::unordered_map<std::string, int> wordToLabel;
 		
-		for (auto& wordData : wordData) {
-			std::string word = wordData.word;
-			std::vector<float> pcm = wordData.pcm;
+		for (auto& word : wordData) {
+			std::string text = word.word;
+			std::vector<float> pcm = word.pcm;
 			
-			auto [t0, t1] = wordData.time;
+					
+			std::vector<float> specs;
+
+			int sr = sfInfo.samplerate;
+			int n_fft = 20;
+			int n_hop = 5;
+			std::string window = "hann";
+			bool center = false;
+			std::string pad_mode = "reflect";
+			float power = 2.f;
+			int n_mel = 40;
+			int fmin = 80;
+			int fmax = 7600;
+
+			std::vector<std::vector<float>> mels = librosa::Feature::melspectrogram(pcm, sr, n_fft, n_hop, window, center, pad_mode, power,n_mel, fmin, fmax);
+
+			for(auto& spec : mels){
+				specs.insert(specs.end(), spec.begin(), spec.end());
+			}
+
+			auto [t0, t1] = word.time;
 			
 			// Check if the word already has a label
-			if (wordToLabel.find(word) == wordToLabel.end()) {
+			if (wordToLabel.find(text) == wordToLabel.end()) {
 				// Assign a new label for the word
 				int label = wordToLabel.size();  // This is a simple way to assign unique labels
-				wordToLabel[word] = label;
+				wordToLabel[text] = label;
 			}
 			
 			// Get the numerical label for the word
-			int label = wordToLabel[word];
+			int label = wordToLabel[text];
 			
 			// Assuming dataset is of type arma::mat
 			dataset(0, counter) = label;
@@ -284,7 +298,7 @@ private:
 			// Assuming pcm is a vector of numerical values
 			for (size_t i = 0; i < maxPcmSize; ++i) {
 				if (i < pcm.size()) {
-					dataset(2 + i, counter) = pcm[i];
+					dataset(2 + i, counter) = specs[i];
 				} else {
 					dataset(2 + i, counter) = 0;  // Or whatever default value makes sense
 				}
@@ -298,18 +312,17 @@ private:
 
 		mlModel = std::make_unique<mlpack::FFN<mlpack::MeanSquaredError>>();
 		
-		mlModel->Add<mlpack::Linear>(32);  // Input layer to hidden layer.
+		mlModel->Add<mlpack::Linear>(2);  // Input layer to hidden layer.
 		mlModel->Add<mlpack::ReLU>();
 		// Activation function.
 		mlModel->Add<mlpack::Linear>(maxPcmSize);  // Hidden layer to output.
 
 		// Set the model to use the stochastic gradient descent optimizer.
-		ens::SGD optimizer(0.01, 1, 1000 /* Number of iterations */);
+		ens::SGD optimizer(0.01, 32, 10000);
 
 		// Train the model.
 		mlModel->Train(dataset, labels, optimizer);
 
-		
 		std::vector<std::vector<piper::Phoneme>> phonemes;
 		
 		piper::phonemize_eSpeak("Hola mundo", eSpeakConfig, phonemes);
@@ -330,17 +343,17 @@ private:
 		int64_t phonemeValue = arma::accu(arma::conv_to<arma::Row<int64_t>>::from(phonemeIds));
 
 		arma::mat input(2, 1);
-		input(0, 0) = 4;
-		input(1, 0) = 30;
+		input(0, 0) = 0;
+		input(1, 0) = 416;
 
 		arma::mat output(1, maxPcmSize);
 		mlModel->Predict(input, output);
-
-		arma::vec outputVector = arma::vectorise(output);
 		
-		std::vector<float> pcmOutput = arma::conv_to<std::vector<float>>::from(arma::vectorise(output));
 		
-		std::cout << "Output Matrix:\n" << output << std::endl;
+		// Display the decoded predictions.
+		std::cout << "Decoded Predictions: " << output << std::endl;
+		
+		std::vector<float> pcmOutput(output.begin(), output.end());
 
 		std::vector<int16_t> pcmFinal = denormalize(pcmOutput);
 
@@ -350,7 +363,7 @@ private:
 		alGenSources(1, &source);
 		alSourcei(source, AL_BUFFER, buffer);
 		
-		alSourcef(source, AL_GAIN, 5.0f);
+		alSourcef(source, AL_GAIN, 20.0f);
 
 	}
 	
@@ -381,19 +394,19 @@ private:
 			return;
 		}
 		
-		Eigen::VectorXcd fftResult = FFT(segment);
-		
-		if (fftResult.hasNaN()) {
-			std::cerr << "Error: FFT result contains NaN values." << std::endl;
-			return;
-		}
-		
-		fftResult /= segmentSize;
-		
-		double numCycles = (fftResult.size() - 1) * 2.0 * M_PI / segmentSize;
-		double power = fftResult.real().array().square().sum();
-		
-		std::cout << "Number of Wave Cycles: " << numCycles << ", Power: " << power << std::endl;
+//		Eigen::VectorXcd fftResult = FFT(segment);
+//		
+//		if (fftResult.hasNaN()) {
+//			std::cerr << "Error: FFT result contains NaN values." << std::endl;
+//			return;
+//		}
+//		
+//		fftResult /= segmentSize;
+//		
+//		double numCycles = (fftResult.size() - 1) * 2.0 * M_PI / segmentSize;
+//		double power = fftResult.real().array().square().sum();
+//		
+//		std::cout << "Number of Wave Cycles: " << numCycles << ", Power: " << power << std::endl;
 	}
 	
 	piper::eSpeakPhonemeConfig eSpeakConfig;
