@@ -65,10 +65,10 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 		tokenTimeStamps.push_back({currentTokenTimeStamp, 0.0f});
 		
 		if(s[0] == ' ') { // New word
-			
-			wordTimeStamps.push_back({t, t});
-			
 			if(!stringBuffer.empty()){
+				
+				wordTimeStamps.push_back({t, t});
+
 				words.push_back(stringBuffer);
 				wordTimeStamps.back().end = timeStampEndBuffer;
 				stringBuffer.clear();
@@ -78,6 +78,10 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 		
 		stringBuffer += s;
 		timeStampEndBuffer += t;
+	}
+	
+	if(!tokenTimeStamps.empty()){
+		tokenTimeStamps.back().end = src.timestamps.back();
 	}
 	
 	r.text = text;
