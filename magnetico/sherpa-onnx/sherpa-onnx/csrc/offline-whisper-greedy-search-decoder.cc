@@ -102,9 +102,9 @@ std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps( std::vec
 
 		tt *= n_samples_per_processor;
 		
-		int32_t tms = (1000*tt)/16000.0f;
+		int32_t tsms = (1000*tt)/SHERPA_SAMPLING_RATE;
 		
-		timestamps.push_back(tms);
+		timestamps.push_back(tsms);
 	}
 	
 	return timestamps;
