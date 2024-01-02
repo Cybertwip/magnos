@@ -80,8 +80,8 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 		timeStampEndBuffer += t;
 	}
 	
-	if(!tokenTimeStamps.empty()){
-		tokenTimeStamps.back().end = src.timestamps.back();
+	if(!wordTimeStamps.empty()){
+		wordTimeStamps.back().end = src.timestamps.back();
 	}
 	
 	r.text = text;
