@@ -13,208 +13,6 @@
 
 namespace sherpa_onnx {
 
-
-class CustomDiscreteDistribution {
-public:
-	CustomDiscreteDistribution(const std::vector<float>& probabilities)
-	: probabilities_(probabilities.begin(), probabilities.end()) {}
-	
-	int operator()(std::default_random_engine& engine) {
-		std::discrete_distribution<int> dist(probabilities_.begin(), probabilities_.end());
-		return dist(engine);
-	}
-	
-private:
-	std::vector<int> probabilities_;
-};
-
-
-struct whisper_token_data {
-	int id;
-	int tid;
-	float p;
-	float plog;
-	float pt;
-	float ptsum;
-	int placeholder1; // Add relevant type
-	int placeholder2; // Add relevant type
-	float placeholder3; // Add relevant type
-};
-
-whisper_token_data whisper_sample_token(
-										const std::vector<float>& probs,
-										const std::vector<float>& logprobs,
-										int timestamp_begin,
-										int eot,
-										bool best
-										) {
-	whisper_token_data result = {
-		0, 0, 0.0f, 0.0f, 0.0f, 0.0f, -1, -1, 0.0f
-	};
-	
-	const int n_logits = probs.size();
-	
-	// Calculate sum and max for timestamp tokens
-	{
-		float sum_ts = 0.0;
-		float max_ts = 0.0;
-		
-		for (int i = timestamp_begin; i < n_logits; i++) {
-			if (probs[i] == -INFINITY) {
-				continue;
-			}
-			
-			sum_ts += probs[i];
-			if (max_ts < probs[i]) {
-				max_ts = probs[i];
-				result.tid = i;
-			}
-		}
-		
-		result.pt    = max_ts / (sum_ts + 1e-10);
-		result.ptsum = sum_ts;
-	}
-	
-	if (best) {
-		// Best sampling
-		for (int i = 0; i < n_logits; ++i) {
-			if (result.p < probs[i]) {
-				result.id   = i;
-				result.p    = static_cast<float>(probs[i]);
-				result.plog = static_cast<float>(logprobs[i]);
-			}
-		}
-	} else {
-		// Random sampling
-		CustomDiscreteDistribution dist(probs);
-		std::default_random_engine engine; // Add a relevant random engine
-
-		result.id   = dist(engine);
-		result.p    = static_cast<float>(probs[result.id]);
-		result.plog = static_cast<float>(logprobs[result.id]);
-	}
-	
-	if (result.id >= timestamp_begin && result.id < eot) {
-		result.tid = result.id;
-		result.pt  = result.p;
-	}
-	
-	return result;
-}
-
-void maskTimestamps(std::vector<int64_t>& tokens, std::vector<float>& logits_vector, int timestamp_begin, int eot) {
-	int n_samples = tokens.size();
-	int n_logits = logits_vector.size();
-	
-	for (int k = 0; k < n_samples; ++k) {
-		int token_val = tokens[k];
-		
-		// Adjust indices to account for flattened vector
-		bool last_was_timestamp = k >= 1 && tokens[k - 1] >= timestamp_begin;
-		bool penultimate_was_timestamp = k < 2 || tokens[k - 2] >= timestamp_begin;
-		
-		if (last_was_timestamp) {
-			if (penultimate_was_timestamp) {
-				// has to be non-timestamp
-				std::fill(logits_vector.begin() + timestamp_begin, logits_vector.end(), -std::numeric_limits<float>::infinity());
-			} else {
-				// cannot be normal text tokens
-				std::fill(logits_vector.begin(), logits_vector.begin() + eot, -std::numeric_limits<float>::infinity());
-			}
-		}
-	}
-}
-
-// Assuming logits_vector is a 1D array or vector and max_token_id is the index of the selected token
-float sampleTimestampLogProb(const std::vector<float>& logits_vector, std::vector<float>& logprobs, int max_token_id, int timestamp_begin) {
-	int n_logits = logits_vector.size();
-	
-	// Assuming logits_vector contains log probabilities (logits) for each token
-	const float logit_max = *std::max_element(logits_vector.begin(), logits_vector.end());
-	
-	for (int i = 0; i < n_logits; ++i) {
-		if (logits_vector[i] > -std::numeric_limits<float>::infinity()) {
-			logprobs[i] = logits_vector[i] - logit_max;
-		} else {
-			logprobs[i] = -std::numeric_limits<float>::infinity();
-		}
-	}
-	
-	float sampled_prob = logprobs[max_token_id];
-	return sampled_prob;
-}
-std::pair<std::vector<float>, std::vector<float>> logsoftmax(std::vector<float>& logits, int32_t beg_tok){
-	
-	int32_t n_logits = logits.size();
-	
-	std::vector<float> logprobs(n_logits);
-	std::vector<float> probs(n_logits);
-	
-	
-	
-	// populate the logprobs array (log_softmax)
-	{
-		const float logit_max = *std::max_element(logits.begin(), logits.end());
-		float logsumexp = 0.0f;
-		for (int i = 0; i < n_logits; ++i) {
-			if (logits[i] > -INFINITY) {
-				logsumexp += expf(logits[i] - logit_max);
-			}
-		}
-		logsumexp = logf(logsumexp) + logit_max;
-		
-		for (int i = 0; i < n_logits; ++i) {
-			if (logits[i] > -INFINITY) {
-				logprobs[i] = logits[i] - logsumexp;
-			} else {
-				logprobs[i] = -INFINITY;
-			}
-		}
-	}
-	
-	// if sum of probability over timestamps is above any other token, sample timestamp
-	// ref: https://github.com/openai/whisper/blob/0b1ba3d46ebf7fe6f953acfd8cad62a4f851b49f/whisper/decoding.py#L431-L437
-	{
-		// logsumexp over timestamps
-		float timestamp_logprob = -INFINITY;
-		{
-			float logsumexp = 0.0f;
-			const float logprob_max = *std::max_element(logprobs.begin() + beg_tok, logprobs.end());
-			for (int i = beg_tok; i < n_logits; ++i) {
-				if (logprobs[i] > -INFINITY) {
-					logsumexp += expf(logprobs[i] - logprob_max);
-				}
-			}
-			if (logsumexp > 0.0f) {
-				timestamp_logprob = logf(logsumexp) + logprob_max;
-			}
-		}
-		
-		const float max_text_token_logprob = *std::max_element(logprobs.begin(), logprobs.begin() + beg_tok);
-		
-		if (timestamp_logprob > max_text_token_logprob) {
-			for (int i = 0; i < beg_tok; ++i) {
-				logits[i]   = -INFINITY;
-				logprobs[i] = -INFINITY;
-			}
-		}
-	}
-	
-	// compute probs
-	{
-		for (int i = 0; i < n_logits; ++i) {
-			if (logits[i] == -INFINITY) {
-				probs[i] = 0.0f;
-			} else {
-				probs[i] = expf(logprobs[i]);
-			}
-		}
-	}
-	
-	return {probs, logprobs};
-
-}
-
 template <typename T>
 std::vector<T> tensor_to_vec(const Ort::Value& tensor){
 	return std::vector(tensor.GetTensorData<T>(), tensor.GetTensorData<T>() + tensor.GetTensorTypeAndShapeInfo().GetElementCount());
@@ -273,17 +71,17 @@ int32_t OfflineWhisperGreedySearchDecoder::DetectLanguage(
 }
 
 
-std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps(std::vector<int64_t> initial_tokens, Ort::Value &cross_k, Ort::Value &cross_v) const
-{  
+std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps(std::vector<int64_t> initial_tokens, std::vector<int32_t> decoded_tokens, Ort::Value &cross_k, Ort::Value &cross_v) const
+{
 	initial_tokens.clear();
 	
 	initial_tokens.push_back(model_->SOT());
 	
-//	initial_tokens.push_back(model_->TimeStampsBeginToken());
+	//	initial_tokens.push_back(model_->TimeStampsBeginToken());
 	
 	auto memory_info =
-		Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
+	Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+	
 	int32_t batch_size = 1;
 	std::array<int64_t, 2> token_shape{
 		batch_size, static_cast<int64_t>(initial_tokens.size())};
@@ -306,97 +104,59 @@ std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps(std::vect
 	
 	cross_k = std::move(std::get<3>(decoder_out));
 	cross_v = std::move(std::get<4>(decoder_out));
-
+	
 	*(std::get<5>(decoder_out).GetTensorMutableData<int64_t>()) =
 	initial_tokens.size();
 	
-	const auto &logits = std::get<0>(decoder_out);
-	const float *p_logits = logits.GetTensorData<float>();
+	auto logits_vector = tensor_to_vec<float>(std::get<0>(decoder_out));
 	
-	auto logits_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
-	int32_t vocab_size = logits_shape[2];
-	
-	const float *p_start = p_logits + (logits_shape[1] - 1) * vocab_size;
-	
-	int32_t max_token_id = static_cast<int32_t>(
-												std::distance(p_start, std::max_element(p_start, p_start + vocab_size)));
-	int32_t n_text_ctx = model_->TextCtx();
-	
-	bool in_timestamps = false;
 	std::vector<float> timestamps;
 	
-	for (int32_t i = 0; i < n_text_ctx; ++i) {
-		if (max_token_id == model_->EOT()) {
-			break;
-		}
+	float t_beg = 0;
+	
+	float total_distance = 0;
+	
+	for(auto max_token_id : decoded_tokens){
 		
-		std::array<int64_t, 2> token_shape{1, 1};
-		Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
-															  model_->Allocator(), token_shape.data(), token_shape.size());
-		
-		auto tokens_vector = tensor_to_vec<int64_t>(tokens);
-		
-		int64_t *p_tokens = tokens.GetTensorMutableData<int64_t>();
-		p_tokens[0] = max_token_id;
-		
-		decoder_out = model_->ForwardDecoder(std::move(tokens),
-											 std::move(std::get<1>(decoder_out)),
-											 std::move(std::get<2>(decoder_out)),
-											 std::move(cross_k),
-											 std::move(cross_v),
-											 std::move(std::get<5>(decoder_out)));
-		
-		cross_k = std::move(std::get<3>(decoder_out));
-		cross_v = std::move(std::get<4>(decoder_out));
-		
-		int64_t *p_offset =
-		std::get<5>(decoder_out).GetTensorMutableData<int64_t>();
-		
-		*p_offset += 1;
-		
-		const auto &logits = std::get<0>(decoder_out);
-		auto logits_vector = tensor_to_vec<float>(logits);
-		
-		// Get the actual token value based on max_token_id
-		
-		
-		if (max_token_id >= model_->TimeStampsBeginToken()) {
-			float this_logit = logits_vector[max_token_id];
-			timestamps.push_back(this_logit);
-		}
-		
-		// Handle the actual token value (actual_token) as needed
-		
-		// Check if the next token is the EndTimeStampsToken
-		if (max_token_id == model_->NoTimeStampsToken()) {
-			// End of timestamps
-			in_timestamps = false;
-		}
-		
-		// Use actual_token or perform additional processing based on your needs
-		
-		// Update max_token_id for the next iteration
-		max_token_id = static_cast<int64_t>(
-											std::distance(logits_vector.begin(),
-														  std::max_element(logits_vector.begin(),
-																		   logits_vector.begin() + vocab_size)));
+		total_distance += std::abs(max_token_id - model_->TimeStampsBeginToken());
 	}
+	
+	for(auto max_token_id : decoded_tokens){
+		
+		int distance = std::abs(max_token_id - model_->TimeStampsBeginToken());
 
+		float tt = t_beg + distance;
+		
+		t_beg = tt;
+		
+		float target_percentage = tt / total_distance;
+
+		tt = target_percentage;
+		
+		const int n_samples_per_processor = 30 * 16000;
+
+		tt *= n_samples_per_processor;
+		
+		int32_t tms = (1000*tt)/16000.0f;
+		
+		timestamps.push_back(tms);
+	}
+	
 	return timestamps;
 	
-
-//	
-//	const int offset_samples = (16000*1)/1000;
-//	const int n_samples_per_processor = (30 * 16000 - offset_samples)/1;
-//
-//	const int64_t offset_t = (int64_t) 1/10.0;
-//
-//	int64_t t0 += 100 * ((i + 1) * n_samples_per_processor) / 16000 + offset_t;
-//	int64_t t1 += 100 * ((i + 1) * n_samples_per_processor) / 16000 + offset_t;
-//	
-//	
-
-//	auto t0 = 0 + 2*(tokens_cur.front().tid - model_->TimeStampsBeginToken());
+	
+	//
+	//	const int offset_samples = (16000*1)/1000;
+	//	const int n_samples_per_processor = (30 * 16000 - offset_samples)/1;
+	//
+	//	const int64_t offset_t = (int64_t) 1/10.0;
+	//
+	//	int64_t t0 += 100 * ((i + 1) * n_samples_per_processor) / 16000 + offset_t;
+	//	int64_t t1 += 100 * ((i + 1) * n_samples_per_processor) / 16000 + offset_t;
+	//
+	//
+	
+	//	auto t0 = 0 + 2*(tokens_cur.front().tid - model_->TimeStampsBeginToken());
 }
 
 std::vector<OfflineWhisperDecoderResult>
@@ -442,10 +202,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 		}
 	}
 	
-	
-	auto timestamps = DetectTimeStamps(initial_tokens, cross_k, cross_v);
-	
-  	initial_tokens.push_back(model_->NoTimeStampsToken());
+	initial_tokens.push_back(model_->NoTimeStampsToken());
 	
 	int32_t batch_size = 1;
 	std::array<int64_t, 2> token_shape{
@@ -469,6 +226,10 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 	
 	*(std::get<5>(decoder_out).GetTensorMutableData<int64_t>()) =
 	initial_tokens.size();
+	
+	cross_k = std::move(std::get<3>(decoder_out));
+	cross_v = std::move(std::get<4>(decoder_out));
+	
 	
 	const auto &logits = std::get<0>(decoder_out);
 	const float *p_logits = logits.GetTensorData<float>();
@@ -501,9 +262,13 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 		decoder_out = model_->ForwardDecoder(std::move(tokens),
 											 std::move(std::get<1>(decoder_out)),
 											 std::move(std::get<2>(decoder_out)),
-											 std::move(std::get<3>(decoder_out)),
-											 std::move(std::get<4>(decoder_out)),
+											 std::move(cross_k),
+											 std::move(cross_v),
 											 std::move(std::get<5>(decoder_out)));
+		
+		
+		cross_k = std::move(std::get<3>(decoder_out));
+		cross_v = std::move(std::get<4>(decoder_out));
 		
 		int64_t *p_offset =
 		std::get<5>(decoder_out).GetTensorMutableData<int64_t>();
@@ -516,11 +281,15 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 		max_token_id = static_cast<int64_t>(std::distance(p_logits, std::max_element(p_logits, p_logits + vocab_size)));
 	}
 	
+	
+	auto timestamps = DetectTimeStamps(initial_tokens, predicted_tokens, cross_k, cross_v);
+	
+	
 	std::vector<OfflineWhisperDecoderResult> ans(1);
 	
 	ans[0].tokens = std::move(predicted_tokens);
 	ans[0].timestamps = std::move(timestamps);
-
+	
 	return ans;
 }
 

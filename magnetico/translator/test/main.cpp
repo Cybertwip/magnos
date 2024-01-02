@@ -175,8 +175,8 @@ public:
 						
 			int samplingRate = sampling_rate;
 
-			int64_t sampleT0 = static_cast<int64_t>(t0 * 0.001 * samplingRate);
-			int64_t sampleT1 = static_cast<int64_t>(t1 * 0.001 * samplingRate);
+			int64_t sampleT0 = static_cast<int64_t>(t0 * samplingRate);
+			int64_t sampleT1 = static_cast<int64_t>(t1 * samplingRate);
 
 			// Ensure sampleT1 is within the range of your pcmf32 vector.
 			sampleT1 = std::min(sampleT1, static_cast<int64_t>(pcmf32.size()));
@@ -335,7 +335,7 @@ private:
 
 		arma::mat input(2, 1);
 		input(0, 0) = 0;
-		input(1, 0) = 416;
+		input(1, 0) = 16000;
 
 		arma::mat output(1, maxPcmSize);
 		mlModel->Predict(input, output);
