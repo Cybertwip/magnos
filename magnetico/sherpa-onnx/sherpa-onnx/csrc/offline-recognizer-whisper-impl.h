@@ -40,6 +40,10 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 	float timeStampEndBuffer = 0;
 	float previousTokenTimeStamp = 0;
 	float currentTokenTimeStamp  = 0;
+
+	float previousWordTimeStamp = 0;
+	float currentWordTimeStamp  = 0;
+	
 	std::vector<TimeStamp> wordTimeStamps;
 	std::vector<TimeStamp> tokenTimeStamps;
 
@@ -54,23 +58,26 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 		const auto &s = sym_table[i];
 		text += s;
 		r.tokens.push_back(s);
-		
-		previousTokenTimeStamp = currentTokenTimeStamp;
-		currentTokenTimeStamp = t;
+
 		
 		if(!tokenTimeStamps.empty()){
 			tokenTimeStamps.back().end = currentTokenTimeStamp;
 		}
+		
+		previousTokenTimeStamp = currentTokenTimeStamp;
+		currentTokenTimeStamp = t;
+		
+		tokenTimeStamps.push_back({previousTokenTimeStamp, currentTokenTimeStamp});
 
-		tokenTimeStamps.push_back({currentTokenTimeStamp, 0.0f});
 		
 		if(s[0] == ' ') { // New word
 			if(!stringBuffer.empty()){
+				previousWordTimeStamp = currentWordTimeStamp;
+				currentWordTimeStamp = timeStampEndBuffer;
 				
-				wordTimeStamps.push_back({t, t});
+				wordTimeStamps.push_back({previousWordTimeStamp, currentWordTimeStamp});
 
 				words.push_back(stringBuffer);
-				wordTimeStamps.back().end = timeStampEndBuffer;
 				stringBuffer.clear();
 				timeStampEndBuffer = 0.0f;
 			}
