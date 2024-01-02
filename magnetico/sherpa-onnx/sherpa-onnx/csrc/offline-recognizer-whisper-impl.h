@@ -34,20 +34,57 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 	r.tokens.reserve(src.tokens.size());
 	
 	std::string text;
-	for (auto i : src.tokens) {
+	
+	std::vector<std::string> words;
+	std::string stringBuffer;
+	float timeStampEndBuffer = 0;
+	float previousTokenTimeStamp = 0;
+	float currentTokenTimeStamp  = 0;
+	std::vector<TimeStamp> wordTimeStamps;
+	std::vector<TimeStamp> tokenTimeStamps;
+
+	for(int index = 0; index < src.tokens.size(); ++index){
+		auto i = src.tokens[index];
+		auto t = src.timestamps[index];
+	
 		if (!sym_table.contains(i)) {
 			continue;
 		}
-		
+				
 		const auto &s = sym_table[i];
 		text += s;
 		r.tokens.push_back(s);
+		
+		previousTokenTimeStamp = currentTokenTimeStamp;
+		currentTokenTimeStamp = t;
+		
+		if(!tokenTimeStamps.empty()){
+			tokenTimeStamps.back().end = currentTokenTimeStamp;
+		}
+
+		tokenTimeStamps.push_back({currentTokenTimeStamp, 0.0f});
+		
+		if(s[0] == ' ') { // New word
+			
+			wordTimeStamps.push_back({t, t});
+			
+			if(!stringBuffer.empty()){
+				words.push_back(stringBuffer);
+				wordTimeStamps.back().end = timeStampEndBuffer;
+				stringBuffer.clear();
+				timeStampEndBuffer = 0.0f;
+			}
+		}
+		
+		stringBuffer += s;
+		timeStampEndBuffer += t;
 	}
 	
 	r.text = text;
-	
+	r.words = words;
+	r.tokenTimeStamps = tokenTimeStamps;
+	r.wordTimeStamps = wordTimeStamps;
 	r.timestamps = src.timestamps;
-	
 	return r;
 }
 
