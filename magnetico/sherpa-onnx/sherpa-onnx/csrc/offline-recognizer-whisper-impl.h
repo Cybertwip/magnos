@@ -38,15 +38,12 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 	std::vector<std::string> words;
 	std::string stringBuffer;
 	float timeStampEndBuffer = 0;
-	float previousTokenTimeStamp = 0;
-	float currentTokenTimeStamp  = 0;
+	float previousTokenTimeStamp = 0.0f;
+	float currentTokenTimeStamp  = 0.0f;
 
-	float previousWordTimeStamp = 0;
-	float currentWordTimeStamp  = 0;
-	
 	std::vector<TimeStamp> wordTimeStamps;
 	std::vector<TimeStamp> tokenTimeStamps;
-
+	
 	for(int index = 0; index < src.tokens.size(); ++index){
 		auto i = src.tokens[index];
 		auto t = src.timestamps[index];
@@ -58,7 +55,6 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 		const auto &s = sym_table[i];
 		text += s;
 		r.tokens.push_back(s);
-
 		
 		if(!tokenTimeStamps.empty()){
 			tokenTimeStamps.back().end = currentTokenTimeStamp;
@@ -72,19 +68,24 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 		
 		if(s[0] == ' ') { // New word
 			if(!stringBuffer.empty()){
-				previousWordTimeStamp = currentWordTimeStamp;
-				currentWordTimeStamp = timeStampEndBuffer;
+				if(!wordTimeStamps.empty()){
+					
+					wordTimeStamps.push_back({wordTimeStamps.back().end, 0.0f});
+
+				} else {
+					wordTimeStamps.push_back({0.0f, 0.0f});
+				}
 				
-				wordTimeStamps.push_back({previousWordTimeStamp, currentWordTimeStamp});
+				assert(!tokenTimeStamps.empty());
+				
+				wordTimeStamps.back().end = tokenTimeStamps.back().end;
 
 				words.push_back(stringBuffer);
 				stringBuffer.clear();
-				timeStampEndBuffer = 0.0f;
 			}
 		}
 		
 		stringBuffer += s;
-		timeStampEndBuffer += t;
 	}
 	
 	if(!wordTimeStamps.empty()){
