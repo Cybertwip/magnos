@@ -13,6 +13,9 @@
 
 namespace sherpa_onnx {
 
+static const int WHISPER_NUMBER_OF_SAMPLES = 30;
+static const int SHERPA_SAMPLING_RATE = 16000;
+
 template <typename T>
 std::vector<T> tensor_to_vec(const Ort::Value& tensor){
 	return std::vector(tensor.GetTensorData<T>(), tensor.GetTensorData<T>() + tensor.GetTensorTypeAndShapeInfo().GetElementCount());
@@ -117,7 +120,6 @@ std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps(std::vect
 	float total_distance = 0;
 	
 	for(auto max_token_id : decoded_tokens){
-		
 		total_distance += std::abs(max_token_id - model_->TimeStampsBeginToken());
 	}
 	
@@ -133,7 +135,7 @@ std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps(std::vect
 
 		tt = target_percentage;
 		
-		const int n_samples_per_processor = 30 * 16000;
+		const int n_samples_per_processor = WHISPER_NUMBER_OF_SAMPLES * SHERPA_SAMPLING_RATE;
 
 		tt *= n_samples_per_processor;
 		
@@ -145,18 +147,6 @@ std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps(std::vect
 	return timestamps;
 	
 	
-	//
-	//	const int offset_samples = (16000*1)/1000;
-	//	const int n_samples_per_processor = (30 * 16000 - offset_samples)/1;
-	//
-	//	const int64_t offset_t = (int64_t) 1/10.0;
-	//
-	//	int64_t t0 += 100 * ((i + 1) * n_samples_per_processor) / 16000 + offset_t;
-	//	int64_t t1 += 100 * ((i + 1) * n_samples_per_processor) / 16000 + offset_t;
-	//
-	//
-	
-	//	auto t0 = 0 + 2*(tokens_cur.front().tid - model_->TimeStampsBeginToken());
 }
 
 std::vector<OfflineWhisperDecoderResult>
