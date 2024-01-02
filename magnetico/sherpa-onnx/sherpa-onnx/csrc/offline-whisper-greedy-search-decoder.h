@@ -25,8 +25,7 @@ public:
 	
 	int32_t DetectLanguage(Ort::Value &cross_k,         // NOLINT
 						   Ort::Value &cross_v) const;  // NOLINT
-	std::vector<float> DetectTimeStamps(std::vector<int64_t> initial_tokens, std::vector<int32_t> decoded_tokens,
-										Ort::Value &cross_k, Ort::Value &cross_v) const;
+	std::vector<float> DetectTimeStamps(std::vector<int32_t> decoded_tokens) const;
 private:
 	OfflineWhisperModelConfig config_;
 	OfflineWhisperModel *model_;  // not owned

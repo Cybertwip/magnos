@@ -21,7 +21,6 @@ std::vector<T> tensor_to_vec(const Ort::Value& tensor){
 	return std::vector(tensor.GetTensorData<T>(), tensor.GetTensorData<T>() + tensor.GetTensorTypeAndShapeInfo().GetElementCount());
 }
 
-
 int32_t OfflineWhisperGreedySearchDecoder::DetectLanguage(
 														  Ort::Value &cross_k, Ort::Value &cross_v) const
 {  // NOLINT
@@ -74,44 +73,8 @@ int32_t OfflineWhisperGreedySearchDecoder::DetectLanguage(
 }
 
 
-std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps(std::vector<int64_t> initial_tokens, std::vector<int32_t> decoded_tokens, Ort::Value &cross_k, Ort::Value &cross_v) const
+std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps( std::vector<int32_t> decoded_tokens) const
 {
-	initial_tokens.clear();
-	
-	initial_tokens.push_back(model_->SOT());
-	
-	//	initial_tokens.push_back(model_->TimeStampsBeginToken());
-	
-	auto memory_info =
-	Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-	
-	int32_t batch_size = 1;
-	std::array<int64_t, 2> token_shape{
-		batch_size, static_cast<int64_t>(initial_tokens.size())};
-	
-	Ort::Value tokens = Ort::Value::CreateTensor(
-												 memory_info, initial_tokens.data(), initial_tokens.size(),
-												 token_shape.data(), token_shape.size());
-	
-	std::array<int64_t, 1> offset_shape{1};
-	Ort::Value offset = Ort::Value::CreateTensor<int64_t>(
-														  model_->Allocator(), offset_shape.data(), offset_shape.size());
-	*(offset.GetTensorMutableData<int64_t>()) = 0;
-	
-	auto self_kv_cache = model_->GetInitialSelfKVCache();
-	
-	auto decoder_out = model_->ForwardDecoder(
-											  std::move(tokens), std::move(self_kv_cache.first),
-											  std::move(self_kv_cache.second), std::move(cross_k), std::move(cross_v),
-											  std::move(offset));
-	
-	cross_k = std::move(std::get<3>(decoder_out));
-	cross_v = std::move(std::get<4>(decoder_out));
-	
-	*(std::get<5>(decoder_out).GetTensorMutableData<int64_t>()) =
-	initial_tokens.size();
-	
-	auto logits_vector = tensor_to_vec<float>(std::get<0>(decoder_out));
 	
 	std::vector<float> timestamps;
 	
@@ -272,7 +235,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 	}
 	
 	
-	auto timestamps = DetectTimeStamps(initial_tokens, predicted_tokens, cross_k, cross_v);
+	auto timestamps = DetectTimeStamps(predicted_tokens);
 	
 	
 	std::vector<OfflineWhisperDecoderResult> ans(1);
