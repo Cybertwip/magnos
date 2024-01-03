@@ -33,8 +33,6 @@ double NegativeLogLikelihoodType<MatType>::Forward(
   ElemType lossSum = 0;
   for (size_t i = 0; i < prediction.n_cols; ++i)
   {
-	  printf("%f\n", target(i));
-	  printf("%i\n", prediction.n_rows);
     Log::Assert(target(i) >= 0 && target(i) < prediction.n_rows,
         "Target class out of range.");
 

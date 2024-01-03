@@ -39,6 +39,20 @@ LinearType<MatType, RegularizerType>::LinearType(
   weights.set_size(WeightSize(), 1);
 }
 
+
+template<typename MatType, typename RegularizerType>
+LinearType<MatType, RegularizerType>::LinearType(
+												 const size_t inSize,
+												 const size_t outSize,
+												 RegularizerType regularizer) :
+Layer<MatType>(),
+inSize(inSize), // This will be computed in ComputeOutputDimensions().
+outSize(outSize),
+regularizer(regularizer)
+{
+	weights.set_size(WeightSize(), 1);
+}
+
 // Copy constructor.
 template<typename MatType, typename RegularizerType>
 LinearType<MatType, RegularizerType>::LinearType(const LinearType& layer) :

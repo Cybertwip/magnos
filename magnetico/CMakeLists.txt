@@ -69,6 +69,10 @@ endif()
 
 add_subdirectory(viper)
 
+add_subdirectory(librosapp/kissfft)
+
+add_subdirectory(stk)
+
 set(SHERPA_ONNX_ENABLE_C_API ON)
 
 add_subdirectory(openfst)
@@ -76,6 +80,7 @@ add_subdirectory(kaldifst)
 add_subdirectory(kaldi-decoder)
 add_subdirectory(kaldi-native-fbank)
 add_subdirectory(sherpa-onnx)
+
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
@@ -450,12 +455,13 @@ translator/detective/RoadEngine.cpp
 )
 
 target_include_directories(detective PUBLIC
-   translator/detective
+   ${CMAKE_CURRENT_LIST_DIR}translator/detective
    ${AIRSIM_ROOT}/AirLib/thirdparty/eigen3
    ${Boost_INCLUDE_DIRS}
    ${_AX_ROOT}/thirdparty/stb
    ${ONNXRUNTIME_INCLUDE_DIRS}
    ${PCL_INCLUDE_DIRS}
+   ${CMAKE_CURRENT_LIST_DIR}/librosapp/LBFGSpp/include
 )
 
 
@@ -500,11 +506,14 @@ find_package(SndFile REQUIRED)
 
 target_include_directories(detective_test PRIVATE ${OPENAL_INCLUDE_DIR})
 target_include_directories(detective_test PRIVATE ${SNDFILE_INCLUDE_DIRS})
+target_include_directories(detective_test PRIVATE librosapp)
 
 target_link_libraries(detective_test PRIVATE detective ${_AX_CORE_LIB}  ${OPENAL_LIBRARY} ${SNDFILE_LIBRARIES})
 target_link_libraries(detective_test PRIVATE viper)
 target_link_libraries(detective_test PRIVATE AirLib ${Boost_LIBRARIES})
 target_link_libraries(detective_test PRIVATE sherpa-onnx-c-api)
+target_link_libraries(detective_test PRIVATE kissfft)
+target_link_libraries(detective_test PRIVATE stk)
 
 target_link_libraries(${PROJECT_NAME} detective)
 endif()

@@ -16,7 +16,7 @@
 namespace sherpa_onnx {
 
 struct TimeStamp {
-	float begin;
+	float start;
 	float end;
 };
 
