@@ -73,6 +73,11 @@ add_subdirectory(librosapp/kissfft)
 
 add_subdirectory(stk)
 
+
+set(JUCE_MODULES_ONLY ON CACHE INTERNAL "JUCE_MODULES_ONLY")
+
+add_subdirectory(JUCE)
+
 set(SHERPA_ONNX_ENABLE_C_API ON)
 
 add_subdirectory(openfst)
@@ -481,6 +486,10 @@ target_link_libraries(detective PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libp
 # Define the "translator" executable
 add_executable(detective_test
 translator/test/main.cpp
+translator/test/AudioProcessor.hpp
+translator/test/AudioProcessor.cpp
+translator/test/MagicalAudio.hpp
+translator/test/MagicalAudio.cpp
 )
 
 target_include_directories(detective_test PRIVATE
@@ -514,6 +523,14 @@ target_link_libraries(detective_test PRIVATE AirLib ${Boost_LIBRARIES})
 target_link_libraries(detective_test PRIVATE sherpa-onnx-c-api)
 target_link_libraries(detective_test PRIVATE kissfft)
 target_link_libraries(detective_test PRIVATE stk)
+
+target_link_libraries(detective_test
+    PRIVATE
+        juce::juce_core
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_warning_flags)
+
 
 target_link_libraries(${PROJECT_NAME} detective)
 endif()

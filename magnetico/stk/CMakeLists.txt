@@ -129,7 +129,7 @@ endif()
 #========================================#
 if(BUILD_STATIC)
     add_library(stk STATIC ${STK_SRC} )
-    target_include_directories(stk PRIVATE include PUBLIC $<INSTALL_INTERFACE:include>)
+    target_include_directories(stk PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
     set_target_properties(stk PROPERTIES PUBLIC_HEADER "${LIBSTK_HEADERS}")
     list(APPEND STK_TARGETS stk)
 endif()
@@ -137,7 +137,7 @@ endif()
 if(BUILD_SHARED)
     add_library(stk_SHARED SHARED ${STK_SRC})
     set_target_properties(stk_SHARED PROPERTIES OUTPUT_NAME stk) # rename the shared library name
-    target_include_directories(stk_SHARED PRIVATE include PUBLIC $<INSTALL_INTERFACE:include>)
+    target_include_directories(stk_SHARED PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
     set_target_properties(stk_SHARED PROPERTIES PUBLIC_HEADER "${LIBSTK_HEADERS}")
     list(APPEND STK_TARGETS stk_SHARED)
 endif()
@@ -153,15 +153,3 @@ if(COMPILE_PROJECTS)
     add_subdirectory(projects/effects)
     add_subdirectory(projects/ragamatic)
 endif()
-
-#========================================#
-#========= Install ======================#
-#========================================#
-
-install(TARGETS ${STK_TARGETS} EXPORT stk-config
-	LIBRARY DESTINATION lib
-	ARCHIVE DESTINATION lib
-	RUNTIME DESTINATION bin
-	PUBLIC_HEADER DESTINATION include/stk)
-
-install(EXPORT stk-config DESTINATION lib/cmake/stk)

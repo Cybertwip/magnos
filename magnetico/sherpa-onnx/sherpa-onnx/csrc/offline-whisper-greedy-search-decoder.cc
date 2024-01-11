@@ -7,14 +7,38 @@
 #include <algorithm>
 #include <utility>
 #include <random>
+#include <iostream>
+#include <deque>
+
+#include <vector>
+#include <numeric>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
 
-static const int WHISPER_NUMBER_OF_SAMPLES = 30;
-static const int SHERPA_SAMPLING_RATE = 16000;
+
+// Function to find peaks in a 1D array
+template <typename T>
+std::vector<int> findPeaks(const std::vector<T>& data, T threshold, int minDistance) {
+	std::vector<int> peaks;
+	
+	for (int i = 1; i < data.size() - 1; ++i) {
+		if (data[i] > threshold && data[i] > data[i - 1] && data[i] > data[i + 1]) {
+			peaks.push_back(i);
+			i += minDistance; // Skip the next minDistance elements to avoid nearby peaks
+		}
+	}
+	
+	return peaks;
+}
+
+static const float WHISPER_NUMBER_OF_SAMPLES = 30;
+static const float SHERPA_SAMPLING_RATE = 16000;
+static const float WHISPER_HOP_LENGTH = 160;
+static const float AUDIO_SAMPLES_PER_TOKEN = WHISPER_HOP_LENGTH * 2;
+static const float AUDIO_TIME_PER_TOKEN = AUDIO_SAMPLES_PER_TOKEN / SHERPA_SAMPLING_RATE;
 
 template <typename T>
 std::vector<T> tensor_to_vec(const Ort::Value& tensor){
@@ -76,38 +100,96 @@ int32_t OfflineWhisperGreedySearchDecoder::DetectLanguage(
 std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps( std::vector<int32_t> decoded_tokens) const
 {
 	
-	std::vector<float> timestamps;
+	std::deque<float> timestamps;
 	
 	float t_beg = 0;
 	
 	float total_distance = 0;
 	
-	for(auto max_token_id : decoded_tokens){
-		total_distance += std::abs(max_token_id - model_->TimeStampsBeginToken());
-	}
+	std::deque<float> distances;
+	
 	
 	for(auto max_token_id : decoded_tokens){
+		float distance = max_token_id;
+		total_distance += distance;
 		
-		int distance = std::abs(max_token_id - model_->TimeStampsBeginToken());
-
+		distances.push_back(distance);
+	}
+	
+	bool initial = true;
+	
+	t_beg = distances[1] - distances[0];
+	
+	for(auto distance : distances){
+		
 		float tt = t_beg + distance;
 		
 		t_beg = tt;
-		
+
 		float target_percentage = tt / total_distance;
-
-		tt = target_percentage;
 		
-		const int n_samples_per_processor = WHISPER_NUMBER_OF_SAMPLES * SHERPA_SAMPLING_RATE;
-
-		tt *= n_samples_per_processor;
+		tt *= AUDIO_TIME_PER_TOKEN;
 		
-		int32_t tsms = (1000*tt)/SHERPA_SAMPLING_RATE;
+//		const int n_samples_per_processor = WHISPER_NUMBER_OF_SAMPLES * SHERPA_SAMPLING_RATE;
+		
+//		tt = tt * n_samples_per_processor;
+		
+		int32_t tsms = (100ll*tt)/SHERPA_SAMPLING_RATE;
 		
 		timestamps.push_back(tsms);
 	}
 	
-	return timestamps;
+	// shift timestamps
+	//	timestamps.pop_front();
+	
+	return std::vector<float>(timestamps.begin(), timestamps.end());
+}
+
+
+
+std::vector<float> OfflineWhisperGreedySearchDecoder::DetectTimeStamps(std::vector<float> cross_k, std::vector<float> cross_v, std::vector<int32_t> decoded_tokens) const
+{
+	// Calculate attention scores
+	std::vector<float> attentionScores(cross_k.size());
+	std::transform(cross_k.begin(), cross_k.end(), cross_v.begin(), attentionScores.begin(), std::multiplies<float>());
+	
+	// Smooth the attention scores (optional, for better peak detection)
+	std::vector<float> smoothedScores(attentionScores.size());
+	for (int i = 0; i < attentionScores.size(); ++i) {
+		smoothedScores[i] = std::accumulate(attentionScores.begin() + std::max(0, i - 2),
+											attentionScores.begin() + std::min(static_cast<int>(attentionScores.size()), i + 3),
+											0.0f) / 5.0f;  // Simple moving average (adjust as needed)
+	}
+	
+	// Find peaks in attention scores
+	float threshold = 0.5f;  // Adjust as needed
+	int minDistance = 10;    // Adjust as needed
+	std::vector<int> peaks;
+	
+	auto decoded_peaks = findPeaks(smoothedScores, threshold, minDistance);
+	size_t counter = 0;
+	for(int32_t decoded_token : decoded_tokens){
+		peaks.push_back(decoded_peaks[counter++]);
+	}
+	
+	// Analyze peaks to estimate word boundaries
+	std::vector<int> wordBoundaries = peaks;
+	std::vector<int> wordLengths;
+	for (size_t i = 0; i < wordBoundaries.size() - 1; ++i) {
+		wordLengths.push_back(wordBoundaries[i + 1] - wordBoundaries[i]);
+	}
+	
+	std::cout << "Estimated word boundaries: ";
+	for (int boundary : wordBoundaries) {
+		std::cout << boundary << " ";
+	}
+	std::cout << "\nEstimated word lengths: ";
+	for (int length : wordLengths) {
+		std::cout << length << " ";
+	}
+	std::cout << std::endl;
+	
+	return {};
 	
 	
 }
@@ -155,7 +237,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 		}
 	}
 	
-	initial_tokens.push_back(model_->NoTimeStampsToken());
+//	initial_tokens.push_back(model_->TimeStampsBeginToken());
 	
 	int32_t batch_size = 1;
 	std::array<int64_t, 2> token_shape{
@@ -183,7 +265,6 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 	cross_k = std::move(std::get<3>(decoder_out));
 	cross_v = std::move(std::get<4>(decoder_out));
 	
-	
 	const auto &logits = std::get<0>(decoder_out);
 	const float *p_logits = logits.GetTensorData<float>();
 	
@@ -192,19 +273,72 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 	
 	const float *p_start = p_logits + (logits_shape[1] - 1) * vocab_size;
 	
+	// Calculate softmax to get probabilities
+	std::vector<float> probabilities(vocab_size);
+	for (int i = 0; i < vocab_size; ++i) {
+		probabilities[i] = std::exp(p_logits[i]);
+	}
+	float sum = std::accumulate(probabilities.begin(), probabilities.end(), 0.0);
+	for (int i = 0; i < vocab_size; ++i) {
+		probabilities[i] /= sum;
+	}
+	
+	// Calculate log probabilities
+	std::vector<float> log_probs(vocab_size);
+	for (int i = 0; i < vocab_size; ++i) {
+		log_probs[i] = std::log(probabilities[i]);
+	}
+	const float *p_log_probs =
+	log_probs.data();
+	
+	int32_t num_frames = static_cast<int32_t>(logits_shape[1]);
+	
+	
 	int32_t max_token_id = static_cast<int32_t>(
 												std::distance(p_start, std::max_element(p_start, p_start + vocab_size)));
 	
+
+	auto max_token_tt = static_cast<int64_t>(std::distance(
+													  static_cast<const float *>(p_log_probs),
+													  std::max_element(
+																	   static_cast<const float *>(p_log_probs),
+																	   static_cast<const float *>(p_log_probs) + vocab_size)));
+	p_log_probs += 1;
+
 	int32_t n_text_ctx = model_->TextCtx();
+	int blank_id_ = 0;
+	int prev_id = -1;
 	
 	std::vector<int32_t> predicted_tokens;
+	std::vector<int32_t> predicted_timestamps;
+	std::vector<float> timestamps;
+	float distance = 0.0f;
+	
+	
 	for (int32_t i = 0; i < n_text_ctx; ++i) {
 		if (max_token_id == model_->EOT()) {
 			break;
 		}
 		
-		predicted_tokens.push_back(max_token_id);
+		if(max_token_id != model_->TimeStampsBeginToken()){
+			predicted_tokens.push_back(max_token_id);
+		}
 		
+		if (max_token_tt != blank_id_ && max_token_tt != prev_id && max_token_tt != model_->TimeStampsBeginToken()) {
+			int64_t time = max_token_tt;
+			std::cout << "Id: " << max_token_tt << std::endl;
+			std::cout << "Time: " << time << std::endl;
+			
+			distance += time;
+			
+			predicted_timestamps.push_back(time);
+						
+			std::cout << "Distance: " << distance << std::endl;
+			
+			prev_id = max_token_tt;
+
+		}
+
 		std::array<int64_t, 2> token_shape{1, 1};
 		Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
 															  model_->Allocator(), token_shape.data(), token_shape.size());
@@ -232,16 +366,33 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 		const float *p_logits = logits.GetTensorData<float>();
 		
 		max_token_id = static_cast<int64_t>(std::distance(p_logits, std::max_element(p_logits, p_logits + vocab_size)));
+	
+	
+		max_token_tt = static_cast<int64_t>(std::distance(
+														   static_cast<const float *>(p_log_probs),
+														   std::max_element(
+																			static_cast<const float *>(p_log_probs),
+																			static_cast<const float *>(p_log_probs) + vocab_size)));
+
+		p_log_probs += 1;
+
+		
 	}
 	
+	auto cross_k_vector = tensor_to_vec<float>(cross_k);
+	auto cross_v_vector = tensor_to_vec<float>(cross_v);
 	
-	auto timestamps = DetectTimeStamps(predicted_tokens);
+	//	auto _ = DetectTimeStamps(cross_k_vector, cross_v_vector, predicted_tokens);
+	//	auto timestamps = DetectTimeStamps(predicted_tokens);
 	
 	
 	std::vector<OfflineWhisperDecoderResult> ans(1);
 	
+	timestamps = DetectTimeStamps(predicted_timestamps);
+
 	ans[0].tokens = std::move(predicted_tokens);
 	ans[0].timestamps = std::move(timestamps);
+	
 	
 	return ans;
 }

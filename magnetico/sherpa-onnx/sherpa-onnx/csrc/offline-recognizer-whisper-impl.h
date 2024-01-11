@@ -37,13 +37,35 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 	
 	std::vector<std::string> words;
 	std::string stringBuffer;
-	float timeStampEndBuffer = 0;
-	float previousTokenTimeStamp = 0.0f;
-	float currentTokenTimeStamp  = 0.0f;
-
+	std::string wordBuffer;
+	
+	bool previousSubWord = false;
+	bool processingWord = false;
+	
 	std::vector<TimeStamp> wordTimeStamps;
 	std::vector<TimeStamp> tokenTimeStamps;
 	
+	
+	auto insertTimeStamp = [&wordTimeStamps](float timestamp){
+		
+		if(wordTimeStamps.empty()){
+						
+			wordTimeStamps.push_back({timestamp, 0.0});
+
+		} else {
+			
+			wordTimeStamps.back().end = timestamp;
+			
+			wordTimeStamps.push_back({
+				wordTimeStamps.back().end,
+				0.0f
+			});
+		}
+	};
+	
+	float currentWordTimestamp = 0.0f;
+	float previousWordTimestamp = 0.0f;
+
 	for(int index = 0; index < src.tokens.size(); ++index){
 		auto i = src.tokens[index];
 		auto t = src.timestamps[index];
@@ -57,35 +79,55 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 		r.tokens.push_back(s);
 		
 		if(!tokenTimeStamps.empty()){
-			tokenTimeStamps.back().end = currentTokenTimeStamp;
+			tokenTimeStamps.back().end = t;
+			tokenTimeStamps.push_back({tokenTimeStamps.back().end, 0.0f});
+		} else {
+			tokenTimeStamps.push_back({0.0f, t});
 		}
-		
-		previousTokenTimeStamp = currentTokenTimeStamp;
-		currentTokenTimeStamp = t;
-		
-		tokenTimeStamps.push_back({previousTokenTimeStamp, currentTokenTimeStamp});
 
-		
 		if(s[0] == ' ') { // New word
-			if(!stringBuffer.empty()){
-				if(!wordTimeStamps.empty()){
-					
-					wordTimeStamps.push_back({wordTimeStamps.back().end, 0.0f});
+			currentWordTimestamp = t;
+			
+			insertTimeStamp(currentWordTimestamp);
 
+			if(index + 1 >= src.tokens.size()){
+				wordBuffer += s;
+				stringBuffer += wordBuffer;
+				wordBuffer.clear();
+			} else {
+				auto next_i = src.tokens[index + 1];
+
+				const auto &next = sym_table[next_i];
+
+				if(next[0] == ' '){
+					if(wordBuffer.empty()){
+						wordBuffer += s;
+						stringBuffer += wordBuffer;
+						wordBuffer.clear();
+					} else {
+						stringBuffer += wordBuffer;
+						wordBuffer.clear();
+						wordBuffer += s;
+					}
 				} else {
-					wordTimeStamps.push_back({0.0f, 0.0f});
+					if(wordBuffer[0] == ' '){
+						stringBuffer += wordBuffer;
+						wordBuffer.clear();
+					}
+					wordBuffer += s;
 				}
-				
-				assert(!tokenTimeStamps.empty());
-				
-				wordTimeStamps.back().end = tokenTimeStamps.back().end;
-
-				words.push_back(stringBuffer);
-				stringBuffer.clear();
 			}
+
+		} else {
+			wordBuffer += s;
 		}
 		
-		stringBuffer += s;
+		if(!stringBuffer.empty()){
+			
+			words.push_back(stringBuffer);
+			
+			stringBuffer.clear();
+		}
 	}
 	
 	if(!wordTimeStamps.empty()){
