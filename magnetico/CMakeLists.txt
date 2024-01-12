@@ -537,3 +537,10 @@ target_link_libraries(detective_test
 
 target_link_libraries(${PROJECT_NAME} detective)
 endif()
+
+if(APPLE)
+
+set_target_properties(MagnosSimulator PROPERTIES 
+                      XCODE_GENERATE_SCHEME TRUE
+                      XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/Content)
+endif()
