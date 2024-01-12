@@ -14,7 +14,6 @@ if (ZLIB_FOUND)
 endif (ZLIB_FOUND)
 
 set(CMAKE_MACOSX_RPATH 1)
-set(CMAKE_CXX_STANDARD 11)
 
 if (WIN32)
   add_definitions(/bigobj)

@@ -35,9 +35,6 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
-set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 option(BUILD_SHARED_LIBS "Whether to build shared libraries" OFF)

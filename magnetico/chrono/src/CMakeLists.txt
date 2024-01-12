@@ -119,22 +119,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "PGI")
     endif()
 endif()
 
-if(CH_ENFORCE_CXX11)
-    message(STATUS "Enforce C++11")
-	  set(CMAKE_CXX_STANDARD 11)
-    set(CHRONO_CXX_STANDARD 11)
-else()
-    message(STATUS "C++14 compiler support:  ${CH_CXX14}")
-    message(STATUS "C++17 compiler support:  ${CH_CXX17}")
-
-    if(CH_CXX17)
-      set(CMAKE_CXX_STANDARD 17)
-      set(CHRONO_CXX_STANDARD 17)
-    elseif(CH_CXX14)
-      set(CMAKE_CXX_STANDARD 14)
-      set(CHRONO_CXX_STANDARD 14)
-    endif()
-endif()
+set(CHRONO_CXX_STANDARD 20)
 
 #-----------------------------------------------------------------------------
 # Allow user to enable whole program optimization (MSVC only)

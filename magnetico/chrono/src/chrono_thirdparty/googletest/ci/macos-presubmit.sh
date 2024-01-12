@@ -40,7 +40,7 @@ for cmake_off_on in OFF ON; do
   BUILD_DIR=$(mktemp -d build_dir.XXXXXXXX)
   cd ${BUILD_DIR}
   time cmake ${GTEST_ROOT} \
-    -DCMAKE_CXX_STANDARD=11 \
+    -DCMAKE_CXX_STANDARD=20 \
     -Dgtest_build_samples=ON \
     -Dgtest_build_tests=ON \
     -Dgmock_build_tests=ON \

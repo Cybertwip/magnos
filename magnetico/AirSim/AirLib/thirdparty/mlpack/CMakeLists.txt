@@ -99,10 +99,6 @@ if(BUILD_TESTS)
     enable_testing()
 endif()
 
-# Set required standard to C++14.
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Ensure that GCC is new enough, if the compiler is GCC.
 if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
   message(FATAL_ERROR "GCC version (${CMAKE_CXX_COMPILER_VERSION}) is too old! 5.x or newer is required.")
@@ -156,7 +152,6 @@ endif ()
 
 # If we are using MSVC, we need /bigobj.
 if (MSVC)
-  set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /Zm200 /Zc:__cplusplus")
 endif ()
 

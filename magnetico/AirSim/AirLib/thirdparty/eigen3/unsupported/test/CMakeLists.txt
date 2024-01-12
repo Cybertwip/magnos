@@ -170,8 +170,6 @@ if(EIGEN_TEST_CXX11)
   endif(EIGEN_TEST_SYCL)
   # It should be safe to always run these tests as there is some fallback code for
   # older compiler that don't support cxx11.
-  set(CMAKE_CXX_STANDARD 11)
-
   ei_add_test(cxx11_eventcount "-pthread" "${CMAKE_THREAD_LIBS_INIT}")
   ei_add_test(cxx11_runqueue "-pthread" "${CMAKE_THREAD_LIBS_INIT}")
   ei_add_test(cxx11_non_blocking_thread_pool "-pthread" "${CMAKE_THREAD_LIBS_INIT}")
@@ -240,13 +238,6 @@ if(CUDA_FOUND AND EIGEN_TEST_CUDA)
   set(EIGEN_CUDA_RELAXED_CONSTEXPR "--expt-relaxed-constexpr")
   if (${CUDA_VERSION} STREQUAL "7.0")
     set(EIGEN_CUDA_RELAXED_CONSTEXPR "--relaxed-constexpr")
-  endif()
-
-  if( (NOT EIGEN_TEST_CXX11) OR (CMAKE_VERSION VERSION_LESS 3.3))
-    set(EIGEN_CUDA_CXX11_FLAG "-std=c++11")
-  else()
-    # otherwise the flag has already been added because of the above set(CMAKE_CXX_STANDARD 11)
-    set(EIGEN_CUDA_CXX11_FLAG "")
   endif()
 
   set(CUDA_NVCC_FLAGS  "${EIGEN_CUDA_CXX11_FLAG} ${EIGEN_CUDA_RELAXED_CONSTEXPR} -arch compute_${EIGEN_CUDA_COMPUTE_ARCH} -Xcudafe \"--display_error_number\" ${CUDA_NVCC_FLAGS}")

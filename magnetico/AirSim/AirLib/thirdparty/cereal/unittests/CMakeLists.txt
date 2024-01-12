@@ -87,9 +87,7 @@ if(NOT MSVC)
   endforeach()
 endif(NOT MSVC)
 
-if(CMAKE_CXX_STANDARD GREATER 14)
-  add_subdirectory(cpp17)
-endif()
+add_subdirectory(cpp17)
 
 if(Boost_FOUND)
   add_subdirectory(boost)

@@ -51,11 +51,6 @@ endif()
 set(CMAKE_INSTALL_RPATH ${kaldifst_rpath_origin})
 set(CMAKE_BUILD_RPATH ${kaldifst_rpath_origin})
 
-
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
-endif()
-
 message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")
 set(CMAKE_CXX_EXTENSIONS OFF)
 

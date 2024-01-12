@@ -7,10 +7,6 @@ project(ensmallen
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake")
 
-# Set required C++ standard to C++11.
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Extract version from sources.
 set(ENSMALLEN_VERSION_FILE_NAME "${PROJECT_SOURCE_DIR}/include/ensmallen_bits/ens_version.hpp")
 

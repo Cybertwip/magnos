@@ -55,10 +55,6 @@ else()
   set(Protobuf_USE_STATIC_LIBS ON)
 endif()
 
-if(NOT DEFINED CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
-
 include(GNUInstallDirs)
 
 set(ONNX_ROOT ${PROJECT_SOURCE_DIR})
