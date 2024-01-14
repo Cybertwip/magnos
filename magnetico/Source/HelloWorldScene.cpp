@@ -24,6 +24,7 @@
  ****************************************************************************/
 
 #include "HelloWorldScene.h"
+#include "BallisticGameState.h"
 #include "BasicCarGameState.h"
 #include "RocketGameState.h"
 #include "WheelGameState.h"
@@ -72,7 +73,7 @@ bool HelloWorld::init()
 	
 	// Enable mouse input (optional, if not already enabled)
 	_director->getOpenGLView()->setCursorVisible(true);
-	this->currentGameState = BasicCarGameState::create();
+	this->currentGameState = BallisticGameState::create();
 	this->addChild(currentGameState);
 
 	currentGameState->setup(_defaultCamera);

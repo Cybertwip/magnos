@@ -1,4 +1,4 @@
-#include "BasicCarGameState.h"
+#include "BallisticGameState.h"
 
 #include "components/Magnos.hpp"
 #include "components/EVEngine.hpp"
@@ -10,11 +10,6 @@
 #include "imgui/imgui_internal.h"
 
 namespace{
-// Current to Voltage conversion
-float currentToVoltage(float current, float resistance = 4.0f) {
-	return current * resistance;
-}
-
 float mpsToKmph(float speedMps) {
 	return speedMps * 3.6;
 }
@@ -23,11 +18,11 @@ float mpsToKmph(float speedMps) {
 USING_NS_AX;
 
 
-BasicCarGameState::BasicCarGameState() {
+BallisticGameState::BallisticGameState() {
 	// Initialize private members and resources specific to the car simulation
 }
 
-bool BasicCarGameState::init() {
+bool BallisticGameState::init() {
 	//////////////////////////////
 	// 1. super init first
 	if (!Node::init())
@@ -35,9 +30,20 @@ bool BasicCarGameState::init() {
 		return false;
 	}
 	
+	auto mesh = createCuboid(0.5, 0.5, 2);
+
+	_ballistic = ax::MeshRenderer::create();
 	
-	car = Car::create();
-	this->addChild(car);
+	_ballistic->setRotation3D(Vec3(0, 90.0f, 0));
+	
+	_ballistic->addMesh(mesh);
+	
+	mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+	_ballistic->setMaterial(mesh->getMaterial());
+	_ballistic->setTexture("anger.jpg");
+	_ballistic->setColor(ax::Color3B::WHITE);
+		
+	this->addChild(_ballistic);
 	
 	auto director = Director::getInstance();
 	
@@ -63,11 +69,22 @@ bool BasicCarGameState::init() {
 	planeRenderer->setPositionY(-1.25f / 2 - 0.3f);
 	this->addChild(planeRenderer);
 	
+	
+	// Initialize ballistic velocity
+	ballisticVelocity = Vec3(initialSpeed * cosf(launchAngle), initialSpeed * sinf(launchAngle), 0.0f);
+
+	// Initialize explosion particle system
+	explosionParticle = PUParticleSystem3D::create("scripts/explosionSystem.pu"); // Use the filename of your particle system
+//	explosionParticle->stopParticleSystem();  // Initially stop the particle system
+	explosionParticle->startParticleSystem();
+	explosionParticle->pauseParticleSystem();
+	this->addChild(explosionParticle);
+
 	return true;
 	
 }
 
-void BasicCarGameState::setup(ax::Camera* defaultCamera){
+void BallisticGameState::setup(ax::Camera* defaultCamera){
 	_defaultCamera = defaultCamera;
 	
 	_defaultCamera->setNearPlane(0.01f);
@@ -80,7 +97,7 @@ void BasicCarGameState::setup(ax::Camera* defaultCamera){
 	_defaultCamera->lookAt(Vec3(0, 0, 0));
 }
 
-void BasicCarGameState::onMouseMove(Event* event)
+void BallisticGameState::onMouseMove(Event* event)
 {
 	EventMouse* e = static_cast<EventMouse*>(event);
 	// Get the cursor delta since the last frame
@@ -96,11 +113,8 @@ void BasicCarGameState::onMouseMove(Event* event)
 }
 
 
-void BasicCarGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
+void BallisticGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 {
-	if(car->isCalibrating()){
-		return;
-	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = true;
@@ -123,13 +137,8 @@ void BasicCarGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 	}
 }
 
-void BasicCarGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
+void BallisticGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 {
-
-	if(car->isCalibrating()){
-		return;
-	}
-	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = false;
 	}
@@ -145,45 +154,83 @@ void BasicCarGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 	
 }
 
-void BasicCarGameState::update(float) {
+void BallisticGameState::update(float) {
 	float totalDelta = Settings::fixed_delta;
-	
-	bool anyDataCollectionMode = car->isCollecting();
+	float deltaTime = totalDelta;
+			
+	if(accelerate){
+		ballisticPosition = Vec3(0.0f, 0.0f, 0.0f);
+		ballisticVelocity = Vec3(initialSpeed * cosf(launchAngle), initialSpeed * sinf(launchAngle), 0.0f);
 		
-	if(accelerate || anyDataCollectionMode){
-		
-		car->getEngine()->setEngineConsumption(400);
-		
-		car->accelerate(0.5f); // @TODO throttle
+		_ballistic->setVisible(true);
+		explosionParticle->startParticleSystem();
+		explosionParticle->pauseParticleSystem();
 
 	} else {
-		car->getEngine()->setEngineConsumption(0);
-
-		car->liftPedal();
 	}
-	
-	car->update(totalDelta);
-	
+		
 	if(steer){
-		car->steer(steerAngle);
+
 	} else {
-		car->steer(0);
 	}
 	
 	if(brake){
-		float brakePedalInput = 1.0f; // Adjust as needed
-		car->brake(brakePedalInput);
 	} else {
-		float brakePedalInput = 0; // Adjust as needed
-		car->brake(brakePedalInput);
 	}
 	
-	if(!anyDataCollectionMode){
-		car->updateMotion(totalDelta);
-	}
+	Vec3 initialPosition = ballisticPosition;
+	Vec3 initialVelocity = ballisticVelocity;
+	
+	// Calculate the new position based on ballistic trajectory
+	float newX = initialPosition.x + initialVelocity.x * deltaTime;
+	float newY = initialPosition.y + initialVelocity.y * deltaTime + 0.5f * gravity * deltaTime * deltaTime;
+	float newZ = initialPosition.z + initialVelocity.z * deltaTime;
+	
+	ballisticPosition = Vec3(newX, newY, newZ);
+	
+	// Calculate the new velocity based on gravity
+	ballisticVelocity.x = initialVelocity.x;
+	ballisticVelocity.y = initialVelocity.y + gravity * deltaTime;
+	ballisticVelocity.z = initialVelocity.z;
+	
+	// Assuming center of mass offset from the _ballistic's position
+	Vec3 centerOfMassOffset = Vec3(-1.0f, 0.0f, 0.0f);  // Adjust as needed
+	
+	// Calculate the rotation angles based on the trajectory
+	float horizontalRotation = atan2(ballisticVelocity.y, ballisticVelocity.x);
+	float verticalRotation = atan2(ballisticVelocity.z, sqrt((ballisticVelocity.x * ballisticVelocity.x) + (ballisticVelocity.y * ballisticVelocity.y)));
+	float degreesHorizontal = AX_RADIANS_TO_DEGREES(horizontalRotation);
+	float degreesVertical = AX_RADIANS_TO_DEGREES(verticalRotation);
+	
+	// Set the new rotation angles of the ballistic object
+	_ballistic->setRotation3D(Vec3(degreesVertical, 90.0f, -degreesHorizontal));
+	
+	explosionParticle->setPosition3D(ballisticPosition);
+	
+	explosionParticle->setScale(20);
+
+	// Check for collision with the plane
+	if (ballisticPosition.y <= 0.0f) {
+		// Trigger explosion effect or handle collision logic here
 		
-	// Get the car's position
-	Vec3 carPosition = car->getPosition3D();
+		
+		// Stop the ballistic object
+		ballisticVelocity = Vec3::ZERO;
+		
+//		explosionParticle->stopParticleSystem();
+		explosionParticle->resumeParticleSystem();
+
+
+		_ballistic->setVisible(false);
+//		// For simplicity, let's just reset the position and velocity
+	} else {
+		// Set the new position of the ballistic object
+		_ballistic->setPosition3D(ballisticPosition);
+	}
+
+
+	// Get the ballistic's position
+	Vec3 ballisticPosition = _ballistic->getPosition3D();
 	
 	// Calculate new camera rotation angles based on normalized cursor deltas
 	horizontalAngle += cursorDeltaX * sensitivity;
@@ -208,83 +255,23 @@ void BasicCarGameState::update(float) {
 	Vec3 cameraOffset(horizontalOffset, cameraHeight + verticalOffset, depthOffset);
 	
 	// Calculate the new camera position
-	Vec3 newPosition = carPosition + cameraOffset;
+	Vec3 newPosition = ballisticPosition + cameraOffset;
 	
 	// Set the camera's new position and look-at point
 	_defaultCamera->setPosition3D(newPosition);
-	_defaultCamera->lookAt(carPosition);
+	_defaultCamera->lookAt(ballisticPosition);
 	
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;
 	
 }
 
-void BasicCarGameState::renderUI() {
+void BallisticGameState::renderUI() {
 	ImGui::SetNextWindowPos(ImVec2(120, 60), ImGuiCond_FirstUseEver);
 	
-	ImGui::Begin("Engine");
-	
-	
-	
-	float laserOutput = 0;
-	float laserInput = 0;
-	
-	for(auto laserNode : car->getEngine()->getLasers()){
-		laserOutput += laserNode->getGuiMeasure();
-		laserInput += laserNode->getVoltageInput();
-	}
-	
-	float coilInput = 0;
-	for(auto magnos : car->getEngine()->getGimbals()){
-		coilInput += currentToVoltage(magnos->getCoilSystem().current * Settings::fixed_delta, Settings::circuit_resistance);
-	}
-	
-	auto status = car->getEngine()->getMagnosFeedback().status;
-	
-	ImGui::Text("Status=%s", status.c_str());
-	
-	ImGui::Text("Input Voltage=%.2f",  car->getEngine()->isCalibrating() ? 0 : inputAverageFilter.filter(laserInput + coilInput));
-	
-	ImGui::Text("Base + Gain Voltage=%.4f",
-				outputAverageFilter.filter(car->getEngine()->getMagnosFeedback().baseEMF + car->getEngine()->getMagnosFeedback().EMF + laserOutput));
-	
-	ImGui::Text("Consumption (VDC)=%.2f",  car->getEngine()->isCalibrating() ? 0 : engineAverageFilter.filter( car->getEngine()->getEngineConsumption()));
-	
+	ImGui::Begin("Ballistic");
 	
 	ImGui::End();
 	
-	ImGui::SetNextWindowPos(ImVec2(960, 60), ImGuiCond_FirstUseEver);
-	
-	ImGui::Begin("Car");
-	
-	
-	static float battery = 0;
-	static float acceleration = 0;
-	static float speed = 0;
-	static float laser = 0;
-	
-	static float counter = 0;
-	
-	int cycles_per_collection = Settings::fixed_update / Settings::fps;
-
-	counter += Settings::fixed_delta;
-	
-	if(counter >= 1.0f / (float)cycles_per_collection){
-		counter = 0;
-		battery = 0;
-		battery = car->getEngine()->getBatteryVoltage();
-		acceleration = car->getAcceleration();
-		speed = car->getSpeed();
-		laser = 0;
-		for(auto laserNode : car->getEngine()->getLasers()){
-			laser += laserNode->getGuiMeasure();
-		}
-	}
-	
-	ImGui::Text("Battery Voltage=%.2f", battery);
-	ImGui::Text("Accel m/s^2=%.2f", acceleration);
-	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
-	ImGui::Text("Laser v/s=%.2f", laser);
-	ImGui::End();
 	
 }
