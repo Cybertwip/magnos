@@ -10,7 +10,7 @@
 class EVEngine;
 class LaserNode;
 
-class Car : public ax::Node {
+class Aircraft : public ax::Node {
 private:
 	std::shared_ptr<EVEngine> engine_;
 	ax::Node* carBody;
@@ -30,13 +30,24 @@ private:
 	float carOrientation = 0;
 	float brakePower = 0;
 	
+	bool shouldLift;
+	bool isOnTrack;
+	
+	float carRoll = 0.0f;
+	float carPitch = 0.0f;
+	
+	ax::Vec3 ballisticVelocity;
+	
+	// Add this function to your Plane class
+	ax::Vec3 getForwardVector() const;
+
 //	ax::Node* innerNode;
 //	ax::Node* middleNode;
 //	ax::Node* outerNode;
 	
 public:
-	Car();
-	virtual ~Car();
+	Aircraft();
+	virtual ~Aircraft();
 	
 	bool anyLaserStatusOn();
 	
@@ -44,6 +55,7 @@ public:
 	float getSpeed() const;
 	void charge(float amountl, float delta);
 	void brake(float amount);
+	void lift(bool isLifting);
 	void steer(float angle); // Function to set the steering angle
 	void liftPedal();
 	void accelerate(float value);
@@ -57,7 +69,7 @@ public:
 	
 	void update(float dt) override;
 
-	CREATE_FUNC(Car);
+	CREATE_FUNC(Aircraft);
 	
 	ax::Node* rearLeftWheel;
 	ax::Node* rearRightWheel;

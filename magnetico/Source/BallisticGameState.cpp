@@ -3,7 +3,7 @@
 #include "components/Magnos.hpp"
 #include "components/EVEngine.hpp"
 #include "components/Laser.hpp"
-#include "Car.h"
+#include "Plane.h"
 #include "Utils3d.h"
 
 #include "ImGui/ImGuiPresenter.h"
@@ -30,21 +30,22 @@ bool BallisticGameState::init() {
 		return false;
 	}
 	
-	auto mesh = createCuboid(0.5, 0.5, 2);
-
-	_ballistic = ax::MeshRenderer::create();
+//	_ballistic = ax::MeshRenderer::create();
 	
-	_ballistic->setRotation3D(Vec3(0, 90.0f, 0));
+//	_ballistic->setRotation3D(Vec3(0, 90.0f, 0));
 	
-	_ballistic->addMesh(mesh);
+//	_ballistic->addMesh(mesh);
 	
-	mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-	_ballistic->setMaterial(mesh->getMaterial());
-	_ballistic->setTexture("anger.jpg");
-	_ballistic->setColor(ax::Color3B::WHITE);
-		
+//	mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+//	_ballistic->setMaterial(mesh->getMaterial());
+//	_ballistic->setTexture("anger.jpg");
+//	_ballistic->setColor(ax::Color3B::WHITE);
+//		
+//	this->addChild(_ballistic);
+	
+	_ballistic = Aircraft::create();
 	this->addChild(_ballistic);
-	
+
 	auto director = Director::getInstance();
 	
 	director->setClearColor(Color4F(0.0f, 0.0f, 1.0f, 1.0f));
@@ -115,9 +116,16 @@ void BallisticGameState::onMouseMove(Event* event)
 
 void BallisticGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 {
+	if(_ballistic->isCalibrating()){
+		return;
+	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = true;
+	}
+	
+	if(code == EventKeyboard::KeyCode::KEY_UP_ARROW){
+		lift = true;
 	}
 	
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
@@ -139,10 +147,19 @@ void BallisticGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 
 void BallisticGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 {
+	
+	if(_ballistic->isCalibrating()){
+		return;
+	}
+	
 	if(code == EventKeyboard::KeyCode::KEY_SPACE){
 		accelerate = false;
 	}
 	
+	if(code == EventKeyboard::KeyCode::KEY_UP_ARROW){
+		lift = false;
+	}
+
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
 		steer = false;
 		steerAngle = 0;
@@ -156,81 +173,50 @@ void BallisticGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 
 void BallisticGameState::update(float) {
 	float totalDelta = Settings::fixed_delta;
-	float deltaTime = totalDelta;
-			
-	if(accelerate){
-		ballisticPosition = Vec3(0.0f, 0.0f, 0.0f);
-		ballisticVelocity = Vec3(initialSpeed * cosf(launchAngle), initialSpeed * sinf(launchAngle), 0.0f);
+	
+	bool anyDataCollectionMode = _ballistic->isCollecting();
+	
+	if(accelerate || anyDataCollectionMode){
 		
-		_ballistic->setVisible(true);
-		explosionParticle->startParticleSystem();
-		explosionParticle->pauseParticleSystem();
-
+		_ballistic->getEngine()->setEngineConsumption(400);
+		
+		_ballistic->accelerate(0.1f); // @TODO throttle
+		
 	} else {
-	}
+		_ballistic->getEngine()->setEngineConsumption(0);
 		
+		_ballistic->liftPedal();
+	}
+	
+	_ballistic->update(totalDelta);
+	
+	if(lift){
+		_ballistic->lift(true);
+	} else {
+		_ballistic->lift(false);
+	}
+	
 	if(steer){
-
+		_ballistic->steer(steerAngle);
 	} else {
+		_ballistic->steer(0);
 	}
+	
 	
 	if(brake){
+		float brakePedalInput = 1.0f; // Adjust as needed
+		_ballistic->brake(brakePedalInput);
 	} else {
+		float brakePedalInput = 0; // Adjust as needed
+		_ballistic->brake(brakePedalInput);
 	}
 	
-	Vec3 initialPosition = ballisticPosition;
-	Vec3 initialVelocity = ballisticVelocity;
-	
-	// Calculate the new position based on ballistic trajectory
-	float newX = initialPosition.x + initialVelocity.x * deltaTime;
-	float newY = initialPosition.y + initialVelocity.y * deltaTime + 0.5f * gravity * deltaTime * deltaTime;
-	float newZ = initialPosition.z + initialVelocity.z * deltaTime;
-	
-	ballisticPosition = Vec3(newX, newY, newZ);
-	
-	// Calculate the new velocity based on gravity
-	ballisticVelocity.x = initialVelocity.x;
-	ballisticVelocity.y = initialVelocity.y + gravity * deltaTime;
-	ballisticVelocity.z = initialVelocity.z;
-	
-	// Assuming center of mass offset from the _ballistic's position
-	Vec3 centerOfMassOffset = Vec3(-1.0f, 0.0f, 0.0f);  // Adjust as needed
-	
-	// Calculate the rotation angles based on the trajectory
-	float horizontalRotation = atan2(ballisticVelocity.y, ballisticVelocity.x);
-	float verticalRotation = atan2(ballisticVelocity.z, sqrt((ballisticVelocity.x * ballisticVelocity.x) + (ballisticVelocity.y * ballisticVelocity.y)));
-	float degreesHorizontal = AX_RADIANS_TO_DEGREES(horizontalRotation);
-	float degreesVertical = AX_RADIANS_TO_DEGREES(verticalRotation);
-	
-	// Set the new rotation angles of the ballistic object
-	_ballistic->setRotation3D(Vec3(degreesVertical, 90.0f, -degreesHorizontal));
-	
-	explosionParticle->setPosition3D(ballisticPosition);
-	
-	explosionParticle->setScale(20);
-
-	// Check for collision with the plane
-	if (ballisticPosition.y <= 0.0f) {
-		// Trigger explosion effect or handle collision logic here
-		
-		
-		// Stop the ballistic object
-		ballisticVelocity = Vec3::ZERO;
-		
-//		explosionParticle->stopParticleSystem();
-		explosionParticle->resumeParticleSystem();
-
-
-		_ballistic->setVisible(false);
-//		// For simplicity, let's just reset the position and velocity
-	} else {
-		// Set the new position of the ballistic object
-		_ballistic->setPosition3D(ballisticPosition);
+	if(!anyDataCollectionMode){
+		_ballistic->updateMotion(totalDelta);
 	}
-
-
-	// Get the ballistic's position
-	Vec3 ballisticPosition = _ballistic->getPosition3D();
+	
+	// Get the car's position
+	Vec3 carPosition = _ballistic->getPosition3D();
 	
 	// Calculate new camera rotation angles based on normalized cursor deltas
 	horizontalAngle += cursorDeltaX * sensitivity;
@@ -255,11 +241,11 @@ void BallisticGameState::update(float) {
 	Vec3 cameraOffset(horizontalOffset, cameraHeight + verticalOffset, depthOffset);
 	
 	// Calculate the new camera position
-	Vec3 newPosition = ballisticPosition + cameraOffset;
+	Vec3 newPosition = carPosition + cameraOffset;
 	
 	// Set the camera's new position and look-at point
 	_defaultCamera->setPosition3D(newPosition);
-	_defaultCamera->lookAt(ballisticPosition);
+	_defaultCamera->lookAt(carPosition);
 	
 	cursorDeltaX = 0;
 	cursorDeltaY = 0;

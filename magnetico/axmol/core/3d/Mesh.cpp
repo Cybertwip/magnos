@@ -269,6 +269,9 @@ Mesh* Mesh::create(const std::vector<float>& vertices,
     auto mesh = create("", indexData);
     mesh->setIndexFormat(indices.format());
 
+	mesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
+
+	mesh->setTexture("gray.jpg");
     return mesh;
 }
 

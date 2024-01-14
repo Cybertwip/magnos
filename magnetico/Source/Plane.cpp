@@ -1,16 +1,20 @@
-#include "Car.h"
+#include "Plane.h"
 #include "components/Magnos.hpp"
 #include "components/EVEngine.hpp"
 #include "components/Laser.hpp"
 #include "Utils3d.h"
 
-Car::Car() : acceleration(0.0f), maxSpeed(116.0f), friction(0.001f), maxSteeringAngle(15) {
+Aircraft::Aircraft() : acceleration(0.0f), maxSpeed(128.0f), friction(0.001f), maxSteeringAngle(15) {
 	// Create car's body, gear box, and gimbals
 	std::vector<ax::Node*> wheelsContainer;
 	
-	float carDimension = 1.25f;
+	float planeLength = 1.25f; // Replace with your desired dimensions
+	float wingWidth = 1.0f;
+	float tailHeight = 0.5f;
+	float wheelRadius = 0.2f;
+	float wheelWidth = 0.1f;
 	
-	carBody = createCarWithWheels(carDimension, 0.1f, 0.2f, wheelsContainer);
+	carBody = createAircraft(planeLength, wingWidth, tailHeight, wheelRadius, wheelWidth, wheelsContainer);
 	
 	frontLeftWheel = wheelsContainer[0];
 	frontRightWheel = wheelsContainer[1];
@@ -45,141 +49,39 @@ Car::Car() : acceleration(0.0f), maxSpeed(116.0f), friction(0.001f), maxSteering
 	
 	engine_->setPosition3D(msr::airlib::Vector3r(0, 0, 0));
 	engine_->init(ax::FileUtils::getInstance()->getWritablePath());
-//
-//	auto magnos = engine_->getGimbals()[0];
-//
-//	auto innerNode = ax::Node::create();
-//
-//	for(auto child : magnos->innerNode->getChildren()){
-//		auto cube = ax::MeshRenderer::create();
-//
-//		auto cubeMesh = createCube(0.01f);
-//
-//		cube->addMesh(cubeMesh);
-//
-//		cubeMesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-//
-//		cube->setTexture("gray.jpg");
-//
-//		innerNode->addChild(cube);
-//
-//		cube->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
-//	}
-//
-//	auto middleNode = ax::Node::create();
-//
-//
-//	for(auto child : magnos->middleNode->getChildren()){
-//		auto cube = ax::MeshRenderer::create();
-//
-//		auto cubeMesh = createCube(0.01f);
-//
-//		cube->addMesh(cubeMesh);
-//
-//		cubeMesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-//
-//		cube->setTexture("gray.jpg");
-//
-//		middleNode->addChild(cube);
-//
-//		cube->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
-//	}
-//
-//	auto outerNode = ax::Node::create();
-//
-//	for(auto child : magnos->outerNode->getChildren()){
-//		auto cube = ax::MeshRenderer::create();
-//
-//		auto cubeMesh = createCube(0.01f);
-//
-//		cube->addMesh(cubeMesh);
-//
-//		cubeMesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-//
-//		cube->setTexture("gray.jpg");
-//
-//		outerNode->addChild(cube);
-//
-//		cube->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
-//	}
-//
-//	this->innerNode = innerNode;
-//	this->middleNode = middleNode;
-//	this->outerNode = outerNode;
-//
-//	this->addChild(innerNode);
-//	this->addChild(middleNode);
-//	this->addChild(outerNode);
+	
+	ballisticVelocity = ax::Vec3(0 * cosf(0), 0 * sinf(0), 0.0f);
 
-//	for(auto child : magnos->middleNode->getChildren()){
-//		auto cube = ax::MeshRenderer::create();
-//
-//		auto cubeMesh = createCube(0.01f);
-//
-//		cube->addMesh(cubeMesh);
-//
-//		cubeMesh->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-//
-//		cube->setTexture("gray.jpg");
-//
-//		this->addChild(cube);
-//
-//		cube->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
-//	}
-	
-	
 }
 
-Car::~Car() {
+Aircraft::~Aircraft() {
 	// Release any allocated resources
 	// ...
 }
 
-void Car::update(float dt){
-//
-//	auto magnos = engine_->getGimbals()[0];
-//
-//	for(size_t i = 0; i<magnos->innerNode->getChildren().size(); ++i){
-//
-//		auto child = magnos->innerNode->getChildren()[i];
-//
-//		this->innerNode->getChildren().at(i)->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
-//	}
-//
-//
-//	for(size_t i = 0; i<magnos->middleNode->getChildren().size(); ++i){
-//
-//		auto child = magnos->middleNode->getChildren()[i];
-//
-//		this->middleNode->getChildren().at(i)->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
-//	}
-//
-//
-//	for(size_t i = 0; i<magnos->outerNode->getChildren().size(); ++i){
-//
-//		auto child = magnos->outerNode->getChildren()[i];
-//
-//		this->outerNode->getChildren().at(i)->setPosition3D(ax::Vec3(child->getPosition3D().x(), child->getPosition3D().y(), child->getPosition3D().z()));
-//	}
-
+void Aircraft::update(float dt){
 	engine_->setPosition3D(msr::airlib::Vector3r(this->getWorldPosition3D().x, this->getWorldPosition3D().y, this->getWorldPosition3D().z));
 	engine_->update(dt);
 }
 
-float Car::getSpeed() const{
+float Aircraft::getSpeed() const{
 	return speed;
 }
 
-float Car::getAcceleration() const{
+float Aircraft::getAcceleration() const{
 	return acceleration;
 }
 
-void Car::steer(float angle) {
+void Aircraft::lift(bool isLifting){
+	shouldLift = isLifting;
+}
+
+void Aircraft::steer(float angle) {
 	// Clamp the steering angle within the valid range
 	steeringAngle = std::min(std::max(angle, -maxSteeringAngle), maxSteeringAngle);
 }
 
-bool Car::isCalibrating(){
+bool Aircraft::isCalibrating(){
 	bool calibrating = false;
 	
 	for(auto magnos : engine_->getGimbals()){
@@ -194,8 +96,7 @@ bool Car::isCalibrating(){
 	return calibrating;
 }
 
-
-bool Car::isCollecting(){
+bool Aircraft::isCollecting(){
 	bool collecting = false;
 	
 	for(auto magnos : engine_->getGimbals()){
@@ -210,7 +111,7 @@ bool Car::isCollecting(){
 	return collecting;
 }
 
-bool Car::anyLaserStatusOn(){
+bool Aircraft::anyLaserStatusOn(){
 	bool lasersOn = false;
 	
 	for(auto laser : engine_->getLasers()){
@@ -224,7 +125,7 @@ bool Car::anyLaserStatusOn(){
 	return lasersOn;
 }
 
-void Car::brake(float brakePedalInput) {
+void Aircraft::brake(float brakePedalInput) {
 	// Calculate the braking force based on brake pedal input
 	float maxBrakeForce = 50000.0f; // Adjust for realism
 	float brakingForce = maxBrakeForce * brakePedalInput;
@@ -243,7 +144,7 @@ void Car::brake(float brakePedalInput) {
 	}
 }
 
-void Car::liftPedal(){
+void Aircraft::liftPedal(){
 	if(acceleration > 0){
 		acceleration = 0;
 	}
@@ -251,15 +152,13 @@ void Car::liftPedal(){
 	engine_->decelerate();
 }
 
-void Car::accelerate(float throttle) {
+void Aircraft::accelerate(float throttle) {
 	auto powerDrawn = engine_->accelerate(throttle);
 	
 	// Define Tesla car properties (example values)
-//	const float maxVoltage = 400.0f; // Maximum voltage output in volts
 	const float maxVoltage = 40.0f; // Maximum voltage output in volts
 
-//	const float maxAcceleration = 2.00f; // Maximum acceleration in m/s^2
-	const float maxAcceleration = 8.0f; // Maximum acceleration in m/s^2
+	const float maxAcceleration = 32.0f; // Maximum acceleration in m/s^2
 	
 	// Scale the voltage input to acceleration based on Tesla car properties
 	acceleration += (powerDrawn / maxVoltage) * maxAcceleration;
@@ -274,7 +173,7 @@ void Car::accelerate(float throttle) {
 	}
 }
 
-void Car::applyFriction() {
+void Aircraft::applyFriction() {
 	// Apply friction to slow down the car's speed
 	if (acceleration > 0.0f) {
 		// Apply friction when accelerating forward
@@ -297,13 +196,18 @@ void Car::applyFriction() {
 		acceleration = -maxSpeed;
 	}
 }
+// Add this function to your Plane class
+ax::Vec3 Aircraft::getForwardVector() const {
+	// Assuming the forward direction is along the negative z-axis
+	return -ax::Vec3(std::sin(carOrientation), 0.0f, -std::cos(carOrientation));
+}
 
-void Car::updateMotion(float deltaTime) {
+void Aircraft::updateMotion(float deltaTime) {
 	applyFriction();
-		
+	
 	// Calculate the car's new speed based on acceleration and time
 	float newSpeed = speed + acceleration * deltaTime;
-	
+
 	// Limit the speed to the maximum allowed
 	if (newSpeed > maxSpeed) {
 		newSpeed = maxSpeed;
@@ -313,7 +217,7 @@ void Car::updateMotion(float deltaTime) {
 	
 	// Apply braking force to decelerate the car
 	float brakingForce = brakePower; // Use positive acceleration for braking
-		
+	
 	// Calculate the new speed after braking
 	newSpeed -= brakingForce * deltaTime;
 	
@@ -321,7 +225,7 @@ void Car::updateMotion(float deltaTime) {
 	if (newSpeed < 0.0f) {
 		newSpeed = 0.0f;
 	}
-
+	
 	
 	// Calculate the car's new position based on the updated speed
 	ax::Vec3 newPosition = this->getPosition3D();
@@ -331,19 +235,19 @@ void Car::updateMotion(float deltaTime) {
 	
 	// Calculate lateral movement (sideways movement) along the x-axis
 	float lateralMovementX = newSpeed * std::sin(carOrientation) * deltaTime;
-
+	
 	// Update the car's position
 	newPosition.x += linearMovementX;
 	newPosition.z += lateralMovementX;
-
-	// Update the car's position
-	this->setPosition3D(newPosition);
+	
+	
+	float steeringDamping = 0.1;
 	
 	// Calculate the change in orientation (yaw) based on the steering angle
 	float yawChange = newSpeed * std::tan(steeringAngle) * deltaTime;
 	
 	// Update the car's orientation (yaw)
-	carOrientation += yawChange;
+	carOrientation += yawChange * steeringDamping;
 	
 	// Ensure the carOrientation stays within a valid range (e.g., between 0 and 2 * PI)
 	carOrientation = std::fmod(carOrientation, 2 * M_PI);
@@ -351,8 +255,68 @@ void Car::updateMotion(float deltaTime) {
 		carOrientation += 2 * M_PI;
 	}
 	
-	this->setRotation3D(ax::Vec3(this->getRotation3D().x, AX_RADIANS_TO_DEGREES(-carOrientation), this->getRotation3D().z));
+	//	// Create a quaternion for the existing orientation (carOrientation)
+	ax::Quaternion rotationQuatYaw;
+	rotationQuatYaw.set(ax::Vec3(0, 1, 0), -carOrientation); // Rotate around the y-axis for yaw
 
+
+	// Define gravitational force (adjust as needed)
+	float gravityForce = 9.8f;
+	
+	
+	// Assuming center of mass offset from the _ballistic's position
+	ax::Vec3 centerOfMassOffset = ax::Vec3(0.0f, 0.0f, 0.0f); // Adjust as needed
+	
+	// Calculate the pitch change based on the vertical velocity and gravity
+	float verticalVelocity = ballisticVelocity.y;
+	float gravityEffectPitch = gravityForce * centerOfMassOffset.x;
+	float pitchChange = atan2(verticalVelocity, newSpeed) - gravityEffectPitch * deltaTime;
+
+
+	ax::Quaternion rotationQuatPitch;
+	rotationQuatPitch.set(ax::Vec3(0, 0, 1), pitchChange); // Rotate around the x-axis for pitch
+
+	
+	// Update the position based on the ballistic velocity
+	newPosition.x += ballisticVelocity.x * deltaTime;
+	newPosition.y += ballisticVelocity.y * deltaTime;
+	newPosition.z += ballisticVelocity.z * deltaTime;
+	
+	ballisticVelocity.y -= gravityForce * deltaTime;
+
+	
+	// Check if the object has landed (reached or below ground level)
+	if (newPosition.y <= 0) {
+		newPosition.y = 0;
+		ballisticVelocity = ax::Vec3(); // Stop the ballistic motion when landed
+	}
+
+	// Apply lifting force when shouldLift is true
+	if (shouldLift) {
+		float liftForce = 0.1f; // Adjust for realism
+		float lift = liftForce * newSpeed * newSpeed * deltaTime;
+		
+		float dampingFactor = 0.1f;
+		
+		// Apply gravity to the lifting force
+		float gravityEffect = gravityForce * deltaTime;
+		lift -= gravityEffect;
+		
+		lift *= dampingFactor;
+		
+		ballisticVelocity.y += lift;
+		
+	}
+	
+
+	ax::Quaternion newRotationQuat = rotationQuatYaw * rotationQuatPitch;
+
+	// Set the new rotation quaternion
+	this->setRotationQuat(newRotationQuat);
+
+	
+	// Update the car's position
+	this->setPosition3D(newPosition);
 	
 	// Calculate angular velocity for each wheel
 	float wheelRadius = 0.2f; // Adjust the wheel radius as needed
@@ -383,13 +347,14 @@ void Car::updateMotion(float deltaTime) {
 	
 	rearLeftWheel->setRotation3D(rearLeftWheel->getRotation3D() + ax::Vec3(0, 0, AX_RADIANS_TO_DEGREES(baseAngularVelocity)));
 	rearRightWheel->setRotation3D(rearRightWheel->getRotation3D() + ax::Vec3(0, 0, AX_RADIANS_TO_DEGREES(baseAngularVelocity)));
-
+	
 	rearSuspension->setRotation3D(rearRightWheel->getRotation3D() + ax::Vec3(0, 0, AX_RADIANS_TO_DEGREES(baseAngularVelocity)));
-
+	
 	// Update the car's speed
 	speed = newSpeed;
 }
 
-std::shared_ptr<EVEngine> Car::getEngine() {
+
+std::shared_ptr<EVEngine> Aircraft::getEngine() {
 	return engine_;
 }

@@ -4,11 +4,13 @@
 
 #include "extensions/Particle3D/PU/PUParticleSystem3D.h"
 
+class Aircraft;
+
 class BallisticGameState : public GameState {
 private:
 	
 	ax::Camera* _defaultCamera;
-	ax::MeshRenderer* _ballistic;
+	Aircraft* _ballistic;
 	
 	float sensitivity = 0.01f;
 	float cursorDeltaX = 0;
@@ -26,6 +28,7 @@ private:
 	bool brake = false;
 	bool accelerate = false;
 	bool steer = false;
+	bool lift = false;
 	
 	float steerAngle = 0;
 	
