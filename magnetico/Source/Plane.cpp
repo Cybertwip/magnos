@@ -11,8 +11,8 @@ Aircraft::Aircraft() : acceleration(0.0f), maxSpeed(128.0f), friction(0.001f), m
 	float planeLength = 1.25f; // Replace with your desired dimensions
 	float wingWidth = 1.0f;
 	float tailHeight = 0.5f;
-	float wheelRadius = 0.2f;
-	float wheelWidth = 0.1f;
+	float wheelRadius = 0.1f;
+	float wheelWidth = 0.2f;
 	
 	carBody = createAircraft(planeLength, wingWidth, tailHeight, wheelRadius, wheelWidth, wheelsContainer);
 	
@@ -72,8 +72,12 @@ float Aircraft::getAcceleration() const{
 	return acceleration;
 }
 
-void Aircraft::lift(bool isLifting){
-	shouldLift = isLifting;
+void Aircraft::pitch(float amount){
+	pitchAmount = amount;
+}
+
+void Aircraft::roll(float amount){
+	rollAmount = amount;
 }
 
 void Aircraft::steer(float angle) {
@@ -199,7 +203,7 @@ void Aircraft::applyFriction() {
 // Add this function to your Plane class
 ax::Vec3 Aircraft::getForwardVector() const {
 	// Assuming the forward direction is along the negative z-axis
-	return -ax::Vec3(std::sin(carOrientation), 0.0f, -std::cos(carOrientation));
+	return -ax::Vec3(std::sin(planeYaw), 0.0f, -std::cos(planeYaw));
 }
 
 void Aircraft::updateMotion(float deltaTime) {
@@ -207,12 +211,20 @@ void Aircraft::updateMotion(float deltaTime) {
 	
 	// Calculate the car's new speed based on acceleration and time
 	float newSpeed = speed + acceleration * deltaTime;
+	
+	// Calculate the car's new position based on the updated speed
+	ax::Vec3 newPosition = this->getPosition3D();
+	
+//	ballisticVelocity = ax::Vec3(0, 0, 0);
 
-	// Limit the speed to the maximum allowed
-	if (newSpeed > maxSpeed) {
-		newSpeed = maxSpeed;
-	} else if (newSpeed < -maxSpeed) {
-		newSpeed = -maxSpeed;
+	if(newPosition.y <= 0){
+		ballisticVelocity.x = newSpeed * std::cos(planeYaw) * std::cos(planePitch);
+		ballisticVelocity.y = newSpeed * std::sin(planePitch);
+		ballisticVelocity.z = newSpeed * std::sin(planeYaw) * std::cos(planePitch);
+	} else {
+		ballisticVelocity.x = newSpeed * std::cos(planeYaw) * std::cos(planePitch);
+		ballisticVelocity.y = newSpeed * std::sin(planePitch);
+		ballisticVelocity.z = newSpeed * std::sin(planeYaw) * std::cos(planePitch);
 	}
 	
 	// Apply braking force to decelerate the car
@@ -226,77 +238,41 @@ void Aircraft::updateMotion(float deltaTime) {
 		newSpeed = 0.0f;
 	}
 	
-	
-	// Calculate the car's new position based on the updated speed
-	ax::Vec3 newPosition = this->getPosition3D();
-	
-	// Calculate linear movement (forward movement) along the x-axis
-	float linearMovementX = newSpeed * std::cos(carOrientation) * deltaTime;
-	
-	// Calculate lateral movement (sideways movement) along the x-axis
-	float lateralMovementX = newSpeed * std::sin(carOrientation) * deltaTime;
+//	// Calculate linear movement (forward movement) along the x-axis
+//	float linearMovementX = newSpeed * std::cos(planeOrientation) * deltaTime;
+//	
+//	// Calculate lateral movement (sideways movement) along the x-axis
+//	float lateralMovementX = newSpeed * std::sin(planeOrientation) * deltaTime;
 	
 	// Update the car's position
-	newPosition.x += linearMovementX;
-	newPosition.z += lateralMovementX;
+//	newPosition.x += linearMovementX;
+//	newPosition.z += lateralMovementX;
 	
 	
 	float steeringDamping = 0.1;
 	
 	// Calculate the change in orientation (yaw) based on the steering angle
-	float yawChange = newSpeed * std::tan(steeringAngle) * deltaTime;
-	
-	// Update the car's orientation (yaw)
-	carOrientation += yawChange * steeringDamping;
-	
-	// Ensure the carOrientation stays within a valid range (e.g., between 0 and 2 * PI)
-	carOrientation = std::fmod(carOrientation, 2 * M_PI);
-	if (carOrientation < 0.0f) {
-		carOrientation += 2 * M_PI;
+	if(newPosition.y <= 0){
+		float yawChange = newSpeed * std::tan(steeringAngle) * deltaTime;
+		
+		// Update the car's orientation (yaw)
+		planeYaw += yawChange * steeringDamping;
 	}
-	
-	//	// Create a quaternion for the existing orientation (carOrientation)
-	ax::Quaternion rotationQuatYaw;
-	rotationQuatYaw.set(ax::Vec3(0, 1, 0), -carOrientation); // Rotate around the y-axis for yaw
+		
 
-
+	// Assuming rollAmount is a member variable indicating the desired roll
 	// Define gravitational force (adjust as needed)
 	float gravityForce = 9.8f;
-	
-	
-	// Assuming center of mass offset from the _ballistic's position
-	ax::Vec3 centerOfMassOffset = ax::Vec3(0.0f, 0.0f, 0.0f); // Adjust as needed
-	
-	// Calculate the pitch change based on the vertical velocity and gravity
-	float verticalVelocity = ballisticVelocity.y;
-	float gravityEffectPitch = gravityForce * centerOfMassOffset.x;
-	float pitchChange = atan2(verticalVelocity, newSpeed) - gravityEffectPitch * deltaTime;
-
-
-	ax::Quaternion rotationQuatPitch;
-	rotationQuatPitch.set(ax::Vec3(0, 0, 1), pitchChange); // Rotate around the x-axis for pitch
 
 	
-	// Update the position based on the ballistic velocity
-	newPosition.x += ballisticVelocity.x * deltaTime;
-	newPosition.y += ballisticVelocity.y * deltaTime;
-	newPosition.z += ballisticVelocity.z * deltaTime;
-	
-	ballisticVelocity.y -= gravityForce * deltaTime;
-
-	
-	// Check if the object has landed (reached or below ground level)
-	if (newPosition.y <= 0) {
-		newPosition.y = 0;
-		ballisticVelocity = ax::Vec3(); // Stop the ballistic motion when landed
-	}
-
 	// Apply lifting force when shouldLift is true
-	if (shouldLift) {
-		float liftForce = 0.1f; // Adjust for realism
-		float lift = liftForce * newSpeed * newSpeed * deltaTime;
+	float lift = 0.0f;
+	
+	if (pitchAmount != 0.0f && newSpeed != 0.0f) {
+		float liftForce = 0.1f * -pitchAmount; // Adjust for realism
+		lift = liftForce * newSpeed * newSpeed * deltaTime;
 		
-		float dampingFactor = 0.1f;
+		float dampingFactor = 0.25f;
 		
 		// Apply gravity to the lifting force
 		float gravityEffect = gravityForce * deltaTime;
@@ -304,20 +280,158 @@ void Aircraft::updateMotion(float deltaTime) {
 		
 		lift *= dampingFactor;
 		
-		ballisticVelocity.y += lift;
+		// Calculate the pitch angle based on the lift and new speed
 		
+		// Calculate the desired pitch angle based on the lift and new speed
+		float targetPitch = std::atan(lift / newSpeed);
+		
+		// Gradually adjust the pitch towards the target
+		float pitchChange = (targetPitch - planePitch) * dampingFactor;
+		planePitch += pitchChange;
+
+	}
+
+	float rollAngularVelocity = 0.0f;
+	float rollAcceleration = 0.0f;
+	
+	if (rollAmount != 0.0f && newSpeed != 0.0f) {
+		
+		// Assuming you have these member variables in your Aircraft class
+		const float airDragCoefficientRoll = 0.5f;
+		const float rollInertia = 100.0f;
+		
+		// Additional coefficients and variables
+		const float wingInfluenceRoll = 0.01f; // Adjust as needed
+		
+		// Calculate the roll torque based on the roll amount and wing influence
+		const float rollTorque = wingInfluenceRoll * newSpeed * newSpeed * rollAmount;
+		
+		// Calculate the roll acceleration based on the roll torque and roll inertia
+		rollAcceleration = rollTorque / rollInertia;
+				
+		// Apply air drag to the roll (optional, for more realism)
+		rollAcceleration *= (1 - (airDragCoefficientRoll * deltaTime));
+				
+		rollAngularVelocity = rollAcceleration * deltaTime;
+		
+		// Update the angular velocity
+		planeRoll += rollAngularVelocity;
 	}
 	
+	
+	
+	// Create a quaternion for the existing orientation (carRoll)
+	ax::Quaternion rotationQuatRoll;
+	rotationQuatRoll.set(ax::Vec3(1, 0, 0), planeRoll); // Rotate around the x-axis for roll
+	
+	
+	//	// Create a quaternion for the existing orientation (carOrientation)
+	ax::Quaternion rotationQuatYaw;
+	rotationQuatYaw.set(ax::Vec3(0, 1, 0), -planeYaw); // Rotate around the y-axis for yaw
+	
+	// Assuming center of mass offset from the _ballistic's position
+	ax::Vec3 centerOfMassOffset = ax::Vec3(0.0f, 0.0f, 0.0f); // Adjust as needed
+	
+	
+	// Calculate the pitch change based on the vertical velocity and gravity
+	float verticalVelocity = ballisticVelocity.y;
+	float gravityEffectPitch = gravityForce * centerOfMassOffset.x;
+	float pitchChange = atan2(verticalVelocity, newSpeed) - gravityEffectPitch * deltaTime;
+	
+	
+	ax::Quaternion rotationQuatPitch;
+	rotationQuatPitch.set(ax::Vec3(0, 0, 1), pitchChange); // Rotate around the x-axis for pitch
+	
+	// Update the angular velocity based on the new roll
+//	ballisticVelocity.x += rollAngularVelocity;
+//	ballisticVelocity.z += rollAcceleration;
+		
+	
+	float rollFactor = std::sin(planeRoll);
+	
+	// Calculate the lateral components based on roll and direction to center
+	float pitchFactor = std::sin(planePitch);
+	
+	
+	ax::Quaternion newRotationQuat = rotationQuatYaw * rotationQuatPitch * rotationQuatRoll;
+		
+	// Calculate forward, up, and right vectors based on the rotated coordinate system
+	ax::Vec3 forward = newRotationQuat * ax::Vec3(0, 0, 1);
+	ax::Vec3 up = newRotationQuat * ax::Vec3(0, 1, 0);
+	ax::Vec3 right = newRotationQuat * ax::Vec3(1, 0, 0);
 
-	ax::Quaternion newRotationQuat = rotationQuatYaw * rotationQuatPitch;
+	float lateralX = rollFactor * right.x + pitchFactor * right.x;
+	float lateralZ = rollFactor * right.z + pitchFactor * right.z;
+
+	float centripetalForceCoefficient = -100.0f; // Adjust as needed
+	float centripetalForce = -rollFactor * centripetalForceCoefficient;
+
+	// Calculate the radius of the circular path based on the centripetal force and speed
+	// Assume the mass of the plane is 1 for simplicity
+	if (speed != 0.0f && rollFactor != 0.0f) {
+		// Calculate the radius of the circular path based on the centripetal force and speed
+		// Assume the mass of the plane is 1 for simplicity
+		float radius = speed * speed / std::abs(centripetalForce);
+		
+		// Calculate the angular velocity
+		float angularVelocity = speed / radius;
+		
+		// Update the yaw based on the angular velocity and the direction of the centripetal force
+		planeYaw += std::copysign(angularVelocity, centripetalForce) * deltaTime;
+	}
+
+
+	// Update the ballistic velocity based on roll for circular motion
+	ballisticVelocity.x += (lateralX) * deltaTime;
+	ballisticVelocity.y += lift - gravityForce * deltaTime;  // Combine lift and gravity
+	ballisticVelocity.z += (lateralZ) * deltaTime;
 
 	// Set the new rotation quaternion
 	this->setRotationQuat(newRotationQuat);
 
+	// Update the position based on the ballistic velocity
+	newPosition.x += ballisticVelocity.x * deltaTime;
+	newPosition.y += ballisticVelocity.y * deltaTime;
+	newPosition.z += ballisticVelocity.z * deltaTime;
 	
+	// Check if the object has landed (reached or below ground level)
+	if (newPosition.y <= 0) {
+		newPosition.y = 0;
+		
+		if(ballisticVelocity.y <= 0){
+			ballisticVelocity.y = 0;
+		}
+	}
+	
+	if(ballisticVelocity.y <= 0){
+//		ballisticVelocity.y = 0;
+	}
+	
+	if(ballisticVelocity.x > maxSpeed){
+		ballisticVelocity.x = maxSpeed;
+	}
+	if(ballisticVelocity.y > maxSpeed){
+		ballisticVelocity.y = maxSpeed;
+	}
+	if(ballisticVelocity.z > maxSpeed){
+		ballisticVelocity.z = maxSpeed;
+	}
+	
+	if(ballisticVelocity.x < -maxSpeed){
+		ballisticVelocity.x = -maxSpeed;
+	}
+	if(ballisticVelocity.y < -maxSpeed){
+		ballisticVelocity.y = -maxSpeed;
+	}
+	if(ballisticVelocity.z < -maxSpeed){
+		ballisticVelocity.z = -maxSpeed;
+	}
+
+
 	// Update the car's position
 	this->setPosition3D(newPosition);
 	
+
 	// Calculate angular velocity for each wheel
 	float wheelRadius = 0.2f; // Adjust the wheel radius as needed
 	float baseAngularVelocity = newSpeed / wheelRadius * deltaTime;
@@ -351,6 +465,9 @@ void Aircraft::updateMotion(float deltaTime) {
 	rearSuspension->setRotation3D(rearRightWheel->getRotation3D() + ax::Vec3(0, 0, AX_RADIANS_TO_DEGREES(baseAngularVelocity)));
 	
 	// Update the car's speed
+	
+	newSpeed = ballisticVelocity.length();
+
 	speed = newSpeed;
 }
 

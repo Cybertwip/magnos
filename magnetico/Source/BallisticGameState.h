@@ -29,9 +29,12 @@ private:
 	bool accelerate = false;
 	bool steer = false;
 	bool lift = false;
-	
+	bool roll = false;
+
 	float steerAngle = 0;
-	
+	float liftAmount = 0;
+	float rollAmount = 0;
+
 	// Ballistic simulation parameters
 	const float gravity = -9.8f;  // Acceleration due to gravity (adjust as needed)
 	const float launchAngle = AX_DEGREES_TO_RADIANS(45.0f);  // Launch angle (adjust as needed)

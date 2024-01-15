@@ -27,15 +27,16 @@ private:
 	float rotationAngle = 0;
 	float speed = 0;
 	float mass = 1500;
-	float carOrientation = 0;
 	float brakePower = 0;
 	
-	bool shouldLift;
+	float pitchAmount;
+	float rollAmount;
 	bool isOnTrack;
 	
-	float carRoll = 0.0f;
-	float carPitch = 0.0f;
-	
+	float planeRoll = 0.0f;
+	float planePitch = 0.0f;
+	float planeYaw = 0.0f;
+
 	ax::Vec3 ballisticVelocity;
 	
 	// Add this function to your Plane class
@@ -55,7 +56,8 @@ public:
 	float getSpeed() const;
 	void charge(float amountl, float delta);
 	void brake(float amount);
-	void lift(bool isLifting);
+	void pitch(float amount);
+	void roll(float amount);
 	void steer(float angle); // Function to set the steering angle
 	void liftPedal();
 	void accelerate(float value);

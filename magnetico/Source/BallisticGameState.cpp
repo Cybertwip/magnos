@@ -126,21 +126,37 @@ void BallisticGameState::onKeyPressed(EventKeyboard::KeyCode code, Event*)
 	
 	if(code == EventKeyboard::KeyCode::KEY_UP_ARROW){
 		lift = true;
+		liftAmount = 1.0f;
 	}
-	
+
+	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
+		lift = true;
+		liftAmount = -1.0f;
+	}
+
+	if(code == EventKeyboard::KeyCode::KEY_LEFT_ARROW){
+		roll = true;
+		rollAmount = -1.0f;
+	}
+
 	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
+		roll = true;
+		rollAmount = 1.0f;
+	}
+
+	if(code == EventKeyboard::KeyCode::KEY_D){
 		steer = true;
 		steerAngle = -6;
 	}
 	
 	
-	if(code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
+	if(code ==  EventKeyboard::KeyCode::KEY_A){
 		steer = true;
 		steerAngle = 6;
 	}
 	
 	
-	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
+	if(code == EventKeyboard::KeyCode::KEY_S){
 		brake = true;
 	}
 }
@@ -156,16 +172,22 @@ void BallisticGameState::onKeyReleased(EventKeyboard::KeyCode code, Event*)
 		accelerate = false;
 	}
 	
-	if(code == EventKeyboard::KeyCode::KEY_UP_ARROW){
+	if(code == EventKeyboard::KeyCode::KEY_UP_ARROW || code ==  EventKeyboard::KeyCode::KEY_DOWN_ARROW){
 		lift = false;
+		liftAmount = 0.0f;
 	}
 
-	if(code == EventKeyboard::KeyCode::KEY_RIGHT_ARROW || code ==  EventKeyboard::KeyCode::KEY_LEFT_ARROW){
+	if(code == EventKeyboard::KeyCode::KEY_LEFT_ARROW || code ==  EventKeyboard::KeyCode::KEY_RIGHT_ARROW){
+		roll = false;
+		rollAmount = 0.0f;
+	}
+
+	if(code == EventKeyboard::KeyCode::KEY_D || code ==  EventKeyboard::KeyCode::KEY_A){
 		steer = false;
 		steerAngle = 0;
 	}
 	
-	if(code == EventKeyboard::KeyCode::KEY_DOWN_ARROW){
+	if(code == EventKeyboard::KeyCode::KEY_S){
 		brake = false;
 	}
 	
@@ -191,17 +213,22 @@ void BallisticGameState::update(float) {
 	_ballistic->update(totalDelta);
 	
 	if(lift){
-		_ballistic->lift(true);
+		_ballistic->pitch(liftAmount);
 	} else {
-		_ballistic->lift(false);
+		_ballistic->pitch(0.0f);
 	}
-	
+
+	if(roll){
+		_ballistic->roll(rollAmount);
+	} else {
+		_ballistic->roll(0.0f);
+	}
+
 	if(steer){
 		_ballistic->steer(steerAngle);
 	} else {
 		_ballistic->steer(0);
 	}
-	
 	
 	if(brake){
 		float brakePedalInput = 1.0f; // Adjust as needed
