@@ -472,16 +472,11 @@ target_include_directories(detective PUBLIC
    ${CMAKE_CURRENT_LIST_DIR}/librosapp/LBFGSpp/include
 )
 
-# Set C++ standard and other compiler options if necessary
-set_target_properties(detective PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
-
 target_compile_definitions(detective PUBLIC MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/" ${PCL_DEFINITIONS})
 
 target_link_libraries(detective PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB} ${PCL_LIBRARIES})
+
+target_link_libraries(${APP_NAME} detective) 
 
 # Define the "translator" executable
 add_executable(detective_test
@@ -494,13 +489,6 @@ translator/test/MagicalAudio.cpp
 
 target_include_directories(detective_test PRIVATE
    translator/test
-)
-
-# Set C++ standard and other compiler options if necessary
-set_target_properties(detective_test PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
 )
 
 target_compile_definitions(detective_test PRIVATE MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
