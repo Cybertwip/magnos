@@ -464,7 +464,7 @@ translator/detective/RoadEngine.cpp
 )
 
 target_include_directories(detective PUBLIC
-   ${CMAKE_CURRENT_LIST_DIR}translator/detective
+   ${CMAKE_CURRENT_LIST_DIR}/translator/detective
    ${AIRSIM_ROOT}/AirLib/thirdparty/eigen3
    ${Boost_INCLUDE_DIRS}
    ${_AX_ROOT}/thirdparty/stb
@@ -533,7 +533,7 @@ endif()
 
 if(APPLE)
 
-set_target_properties(MagnosSimulator PROPERTIES 
+set_target_properties(${APP_NAME} PROPERTIES 
                       XCODE_GENERATE_SCHEME TRUE
                       XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/Content)
 endif()
