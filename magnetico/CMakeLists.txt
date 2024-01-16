@@ -536,6 +536,14 @@ target_link_libraries(detective_test
 
 
 target_link_libraries(${PROJECT_NAME} detective)
+
+if(APPLE)
+
+set_target_properties(detective_test PROPERTIES 
+                      XCODE_GENERATE_SCHEME TRUE
+                      XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/translator/data)
+endif()
+
 endif()
 
 if(APPLE)
