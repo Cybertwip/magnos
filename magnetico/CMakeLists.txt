@@ -74,6 +74,9 @@ add_subdirectory(viper)
 
 add_subdirectory(librosapp/kissfft)
 
+target_include_directories(kissfft PUBLIC librosapp/kissfft)
+
+
 add_subdirectory(stk)
 
 
