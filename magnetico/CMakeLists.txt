@@ -4,7 +4,7 @@ if(MSVC)
     set(CMAKE_SYSTEM_VERSION 10.0)
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -74,7 +74,7 @@ add_subdirectory(viper)
 
 add_subdirectory(librosapp/kissfft)
 
-target_include_directories(kissfft PUBLIC librosapp/kissfft)
+target_include_directories(kissfft PUBLIC ${CMAKE_CURRENT_LIST_DIR}/librosapp/kissfft)
 
 
 add_subdirectory(stk)
@@ -452,8 +452,6 @@ get_target_property(ONNXRUNTIME_INCLUDE_DIRS onnxruntime::onnxruntime INTERFACE_
 # You can print or use them as needed.
 message("ONNX Runtime Include Directories: ${ONNXRUNTIME_INCLUDE_DIRS}")
 
-find_package(PCL REQUIRED)
-
 add_library(detective
 translator/detective/MLUtils.cpp
 translator/detective/StbUtils.cpp
@@ -471,12 +469,8 @@ target_include_directories(detective PUBLIC
    ${Boost_INCLUDE_DIRS}
    ${_AX_ROOT}/thirdparty/stb
    ${ONNXRUNTIME_INCLUDE_DIRS}
-   ${PCL_INCLUDE_DIRS}
    ${CMAKE_CURRENT_LIST_DIR}/librosapp/LBFGSpp/include
 )
-
-
-target_link_directories(detective PUBLIC ${PCL_LIBRARY_DIRS})
 
 # Set C++ standard and other compiler options if necessary
 set_target_properties(detective PROPERTIES

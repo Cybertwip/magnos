@@ -40,12 +40,12 @@ call kfc_cleanup.
  */
 
 /*forward complex FFT */
-void KISS_FFT_API kfc_fft(int nfft, const kiss_fft_cpx * fin,kiss_fft_cpx * fout);
+void kfc_fft(int nfft, const kiss_fft_cpx * fin,kiss_fft_cpx * fout);
 /*reverse complex FFT */
-void KISS_FFT_API kfc_ifft(int nfft, const kiss_fft_cpx * fin,kiss_fft_cpx * fout);
+void kfc_ifft(int nfft, const kiss_fft_cpx * fin,kiss_fft_cpx * fout);
 
 /*free all cached objects*/
-void KISS_FFT_API kfc_cleanup(void);
+void kfc_cleanup(void);
 
 #ifdef __cplusplus
 }

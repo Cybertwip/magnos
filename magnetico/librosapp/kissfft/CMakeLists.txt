@@ -103,14 +103,6 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
 endif()
 
 #
-# Add GNUInstallDirs for GNU infrastructure before target)include_directories
-#
-
-if(CMAKE_SYSTEM_NAME MATCHES "^(Linux|kFreeBSD|GNU)$" AND NOT CMAKE_CROSSCOMPILING)
-    include(GNUInstallDirs)
-endif()
-
-#
 # Declare kissfft library ( libkissfft.a / libkissfft-${KISSFFT_DATATYPE}.so.${MAKEFILE_EXTRACTED_VERSION} )
 #
 

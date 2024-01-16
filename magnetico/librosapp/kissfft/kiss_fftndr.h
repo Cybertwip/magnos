@@ -9,7 +9,6 @@
 #ifndef KISS_NDR_H
 #define KISS_NDR_H
 
-#include "kiss_fft.h"
 #include "kiss_fftr.h"
 #include "kiss_fftnd.h"
 
@@ -20,7 +19,7 @@ extern "C" {
 typedef struct kiss_fftndr_state *kiss_fftndr_cfg;
 
 
-kiss_fftndr_cfg KISS_FFT_API kiss_fftndr_alloc(const int *dims,int ndims,int inverse_fft,void*mem,size_t*lenmem);
+kiss_fftndr_cfg kiss_fftndr_alloc(const int *dims,int ndims,int inverse_fft,void*mem,size_t*lenmem);
 /*
  dims[0] must be even
 
@@ -28,7 +27,7 @@ kiss_fftndr_cfg KISS_FFT_API kiss_fftndr_alloc(const int *dims,int ndims,int inv
 */
 
 
-void KISS_FFT_API kiss_fftndr(
+void kiss_fftndr(
         kiss_fftndr_cfg cfg,
         const kiss_fft_scalar *timedata,
         kiss_fft_cpx *freqdata);
@@ -37,7 +36,7 @@ void KISS_FFT_API kiss_fftndr(
  output freqdata has dims[0] X dims[1] X ... X  dims[ndims-1]/2+1 complex points
 */
 
-void KISS_FFT_API kiss_fftndri(
+void kiss_fftndri(
         kiss_fftndr_cfg cfg,
         const kiss_fft_cpx *freqdata,
         kiss_fft_scalar *timedata);

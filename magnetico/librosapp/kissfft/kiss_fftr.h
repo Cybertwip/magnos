@@ -10,6 +10,7 @@
 #define KISS_FTR_H
 
 #include "kiss_fft.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,7 +27,7 @@ extern "C" {
 typedef struct kiss_fftr_state *kiss_fftr_cfg;
 
 
-kiss_fftr_cfg KISS_FFT_API kiss_fftr_alloc(int nfft,int inverse_fft,void * mem, size_t * lenmem);
+kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem, size_t * lenmem);
 /*
  nfft must be even
 
@@ -34,13 +35,13 @@ kiss_fftr_cfg KISS_FFT_API kiss_fftr_alloc(int nfft,int inverse_fft,void * mem, 
 */
 
 
-void KISS_FFT_API kiss_fftr(kiss_fftr_cfg cfg,const kiss_fft_scalar *timedata,kiss_fft_cpx *freqdata);
+void kiss_fftr(kiss_fftr_cfg cfg,const kiss_fft_scalar *timedata,kiss_fft_cpx *freqdata);
 /*
  input timedata has nfft scalar points
  output freqdata has nfft/2+1 complex points
 */
 
-void KISS_FFT_API kiss_fftri(kiss_fftr_cfg cfg,const kiss_fft_cpx *freqdata,kiss_fft_scalar *timedata);
+void kiss_fftri(kiss_fftr_cfg cfg,const kiss_fft_cpx *freqdata,kiss_fft_scalar *timedata);
 /*
  input freqdata has  nfft/2+1 complex points
  output timedata has nfft scalar points
