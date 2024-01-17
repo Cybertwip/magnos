@@ -1,7 +1,7 @@
 #include "MagicalAudio.hpp"
 
 int main(int argc, char** argv) {
-	const char* filename = "./onepiece16k.wav";
+	const char* filename = "./training.wav";
 	MagicalAudio magicalAudio(filename);
 	magicalAudio.processAudio();
 
