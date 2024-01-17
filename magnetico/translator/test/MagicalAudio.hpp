@@ -9,6 +9,7 @@
 #include "sherpa-onnx/csrc/wave-writer.h"
 #include "sherpa-onnx/csrc/resample.h"
 #include "FileLoop.h"
+#include "MagicalWhisper.hpp"
 #include <filesystem>
 #include <cassert>
 #include <chrono>
@@ -64,4 +65,7 @@ private:
     void playAudio(std::vector<int16_t>& pcm, int sampling_rate, int channels);
 
     void cleanup();
+	
+	std::unique_ptr<MagicalWhisper> magicalWhisper;
+
 };

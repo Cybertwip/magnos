@@ -342,6 +342,9 @@ def main():
         model = whisper.load_model(filename)
     else:
         model = whisper.load_model(name)
+        if model == "tiny":
+            model.set_alignment_heads(b"ABzY8bu8Lr0{>%RKn9Fp%m@SkK7Kt=7ytkO")
+
     print(model.dims)
 
     print(

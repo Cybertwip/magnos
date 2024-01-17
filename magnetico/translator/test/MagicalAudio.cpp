@@ -80,6 +80,9 @@ public:
 }
 
 MagicalAudio::MagicalAudio(const char *filename) : filename(filename) {
+	
+	magicalWhisper = std::make_unique<MagicalWhisper>("./ggml-tiny.bin");
+	
     std::filesystem::path dataPath = "/opt/homebrew/share";
     std::string espeakDataPath =
         std::filesystem::absolute(
@@ -140,19 +143,23 @@ std::vector<MagicalAudio::WordSet> MagicalAudio::splitPcm(std::vector<float> pcm
     std::string text = "";
     std::vector<std::tuple<std::string, int64_t, int64_t>> recognizedSegments;
 
-    auto s = recognizer->CreateStream();
-    s->AcceptWaveform(sampling_rate, pcmf32.data(), pcmf32.size());
-
-    ss.push_back(std::move(s));
-    ss_pointers.push_back(ss.back().get());
-
-    recognizer->DecodeStreams(ss_pointers.data(), ss_pointers.size());
-
-    auto result = ss_pointers.back()->GetResult();
-
+	
+	auto result = magicalWhisper->processAudio(pcmf32);
+//    auto s = recognizer->CreateStream();
+//    s->AcceptWaveform(sampling_rate, pcmf32.data(), pcmf32.size());
+//
+//    ss.push_back(std::move(s));
+//    ss_pointers.push_back(ss.back().get());
+//
+//    recognizer->DecodeStreams(ss_pointers.data(), ss_pointers.size());
+//
+//    auto result = ss_pointers.back()->GetResult();
+	
+	
+	
     for (uint32_t i = 0; i < result.words.size(); ++i) {
         auto word = result.words[i];
-        auto timestamp = result.wordTimeStamps[i];
+        auto timestamp = result.timestamps[i];
 
         recognizedSegments.push_back({word, timestamp.start, timestamp.end});
     }

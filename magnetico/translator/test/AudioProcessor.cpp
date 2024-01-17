@@ -9,7 +9,7 @@ AudioProcessor::AudioProcessor(const char *filename) : filename(filename) {
     config.model_config.whisper.task = "transcribe";
     config.model_config.whisper.encoder = "./tiny-encoder.onnx";
     config.model_config.whisper.decoder = "./tiny-decoder.onnx";
-    config.model_config.tokens = "tiny-tokens.txt";
+    config.model_config.tokens = "./tiny-tokens.txt";
     config.decoding_method = "greedy_search";
     config.model_config.whisper.language = "es";
     config.model_config.whisper.tail_paddings = 300;

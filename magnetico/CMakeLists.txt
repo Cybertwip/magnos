@@ -79,6 +79,7 @@ target_include_directories(kissfft PUBLIC ${CMAKE_CURRENT_LIST_DIR}/librosapp/ki
 
 add_subdirectory(stk)
 
+add_subdirectory(whisper)
 
 set(JUCE_MODULES_ONLY ON CACHE INTERNAL "JUCE_MODULES_ONLY")
 
@@ -365,12 +366,6 @@ endif()
 
 ax_setup_app_props(${APP_NAME})
 
-set_target_properties(${APP_NAME} PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
-
 #Translator
 
 # Add any include directories if required
@@ -385,13 +380,6 @@ add_executable(translator
     translator/src/model_parser.hpp
     translator/src/onnx_pb.h
     translator/src/onnx_to_mlpack.hpp
-)
-
-# Set C++ standard and other compiler options if necessary
-set_target_properties(translator PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
 )
 
 target_include_directories(AirLib PRIVATE
@@ -485,6 +473,8 @@ translator/test/AudioProcessor.hpp
 translator/test/AudioProcessor.cpp
 translator/test/MagicalAudio.hpp
 translator/test/MagicalAudio.cpp
+translator/test/MagicalWhisper.hpp
+translator/test/MagicalWhisper.cpp
 )
 
 target_include_directories(detective_test PRIVATE
@@ -511,6 +501,7 @@ target_link_libraries(detective_test PRIVATE AirLib ${Boost_LIBRARIES})
 target_link_libraries(detective_test PRIVATE sherpa-onnx-c-api)
 target_link_libraries(detective_test PRIVATE kissfft)
 target_link_libraries(detective_test PRIVATE stk)
+target_link_libraries(detective_test PRIVATE whisper)
 
 target_link_libraries(detective_test
     PRIVATE

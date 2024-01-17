@@ -237,7 +237,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 		}
 	}
 	
-//	initial_tokens.push_back(model_->TimeStampsBeginToken());
+//	initial_tokens.push_back(model_-> NoTimeStampsToken());
 	
 	int32_t batch_size = 1;
 	std::array<int64_t, 2> token_shape{
@@ -267,7 +267,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 	
 	const auto &logits = std::get<0>(decoder_out);
 	const float *p_logits = logits.GetTensorData<float>();
-	
+		
 	auto logits_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
 	int32_t vocab_size = logits_shape[2];
 	
@@ -326,15 +326,15 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 		
 		if (max_token_tt != blank_id_ && max_token_tt != prev_id && max_token_tt != model_->TimeStampsBeginToken()) {
 			int64_t time = max_token_tt;
-			std::cout << "Id: " << max_token_tt << std::endl;
-			std::cout << "Time: " << time << std::endl;
+//			std::cout << "Id: " << max_token_tt << std::endl;
+//			std::cout << "Time: " << time << std::endl;
 			
 			distance += time;
 			
 			predicted_timestamps.push_back(time);
 						
-			std::cout << "Distance: " << distance << std::endl;
-			
+//			std::cout << "Distance: " << distance << std::endl;
+//			
 			prev_id = max_token_tt;
 
 		}
@@ -382,8 +382,11 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
 	auto cross_k_vector = tensor_to_vec<float>(cross_k);
 	auto cross_v_vector = tensor_to_vec<float>(cross_v);
 	
-	//	auto _ = DetectTimeStamps(cross_k_vector, cross_v_vector, predicted_tokens);
-	//	auto timestamps = DetectTimeStamps(predicted_tokens);
+//	
+//	for(auto ts : predicted_timestamps){
+//		std::cout << "Time: " << ts / SHERPA_SAMPLING_RATE << std::endl;
+//
+//	}
 	
 	
 	std::vector<OfflineWhisperDecoderResult> ans(1);

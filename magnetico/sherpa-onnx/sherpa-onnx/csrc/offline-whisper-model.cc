@@ -169,7 +169,6 @@ private:
 		SHERPA_ONNX_READ_META_DATA(transcribe_, "transcribe");
 		SHERPA_ONNX_READ_META_DATA(is_multilingual_, "is_multilingual");
 		SHERPA_ONNX_READ_META_DATA(no_timestamps_, "no_timestamps");
-		SHERPA_ONNX_READ_META_DATA(timesamps_begin_, "timestamp_begin");
 		SHERPA_ONNX_READ_META_DATA(no_speech_, "no_speech");
 		SHERPA_ONNX_READ_META_DATA_VEC(sot_sequence_, "sot_sequence");
 		
