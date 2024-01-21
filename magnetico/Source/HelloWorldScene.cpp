@@ -73,7 +73,7 @@ bool HelloWorld::init()
 	
 	// Enable mouse input (optional, if not already enabled)
 	_director->getOpenGLView()->setCursorVisible(true);
-	this->currentGameState = BallisticGameState::create();
+	this->currentGameState = BasicCarGameState::create();
 	this->addChild(currentGameState);
 
 	currentGameState->setup(_defaultCamera);

@@ -2,6 +2,7 @@
 #include "components/Magnos.hpp"
 #include "components/Battery.hpp"
 #include "components/Laser.hpp"
+#include "components/LitoElectric.hpp"
 
 float EVEngine::max_voltage = 400;
 
@@ -73,6 +74,9 @@ void EVEngine::init(const std::string& writablePath){
 	for(int i = 0; i<Settings::number_of_lasers; ++i){
 		lasers_.push_back(std::make_shared<Laser>(0.02f, true, 0.1f, 0.0f, 5000));
 	}
+	
+	piezoPairs_.push_back({std::make_shared<Laser>(0.02f, true, 0.1f, 0.0f, 5000000), std::make_shared<LitoElectric>(1000, 1000, 1, 10000.0f)});
+
 }
 
 bool EVEngine::isCalibrating(){
@@ -109,7 +113,7 @@ void EVEngine::update(float){
 	}
 			
 	if(Settings::enable_lasers){
-		float laserVoltage = Settings::desired_laser_voltage * Settings::number_of_lasers;
+		float laserVoltage = Settings::desired_laser_voltage * Settings::number_of_lasers * piezoPairs_.size();
 		float powerDraw = (laserVoltage / (float)(Settings::number_of_gimbals)) * Settings::fixed_delta;
 		
 		float totalPowerDrawn = 0;
@@ -234,6 +238,10 @@ void EVEngine::update(float){
 			}
 			
 			battery_->charge(voltsToCurrent(storedPower, Settings::circuit_resistance) / Settings::fixed_delta, Settings::fixed_delta);
+		}
+		
+		for(auto piezoPair : piezoPairs_){
+			battery_->charge(voltsToCurrent(piezoPair.second->applyLaser(piezoPair.first->getFrequency(), Settings::fixed_delta), Settings::fixed_delta), Settings::fixed_delta);
 		}
 		
 	}

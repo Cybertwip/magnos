@@ -3,6 +3,7 @@
 
 #include "ggml.h"
 
+#include <vector>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -102,6 +103,11 @@ extern "C" {
         int64_t t0;        // start time of the token
         int64_t t1;        //   end time of the token
 
+        // dtw token-level timestamp data
+        // do not use if you haven't computed token-level timestamps with dtw
+        // (I think) roughly corresponds to the moment in audio in which the token was output
+        int64_t t_dtw;
+
         float vlen;        // voice length of the token
     } whisper_token_data;
 
@@ -143,6 +149,33 @@ extern "C" {
         enum whisper_gretype type;
         uint32_t             value; // Unicode code point or rule ID
     } whisper_grammar_element;
+
+    enum whisper_alignment_heads_preset {
+        WHISPER_AHEADS_NONE,
+        WHISPER_AHEADS_N_TOP_MOST,  // All heads from the N-top-most text-layers
+        WHISPER_AHEADS_CUSTOM,
+        WHISPER_AHEADS_TINY_EN,
+        WHISPER_AHEADS_TINY,
+        WHISPER_AHEADS_BASE_EN,
+        WHISPER_AHEADS_BASE,
+        WHISPER_AHEADS_SMALL_EN,
+        WHISPER_AHEADS_SMALL,
+        WHISPER_AHEADS_MEDIUM_EN,
+        WHISPER_AHEADS_MEDIUM,
+        WHISPER_AHEADS_LARGE_V1,
+        WHISPER_AHEADS_LARGE_V2,
+        WHISPER_AHEADS_LARGE_V3,
+    };
+
+	typedef struct whisper_ahead {
+		int n_text_layer;
+		int n_head;
+	} whisper_ahead;
+
+	typedef struct whisper_aheads {
+		size_t n_heads;
+		const whisper_ahead * heads;
+	} whisper_aheads;
 
     // Various functions for loading a ggml whisper model.
     // Allocate (almost) all memory needed for the model.
@@ -455,6 +488,19 @@ extern "C" {
         bool  split_on_word;    // split on word rather than on token (when used with max_len)
         int   max_tokens;       // max tokens per segment (0 = no limit)
 
+        // FIXME: not sure if the way dtw_n_top_most and dtw_custom are structured is comfortable?
+        // [EXPERIMENTAL] DTW-based token-level timestamps
+        bool dtw_token_timestamps;
+        enum whisper_alignment_heads_preset dtw_ah_preset;
+
+        struct {
+            int n;
+        } dtw_n_top_most;
+
+        struct {
+            whisper_aheads aheads;
+        } dtw_custom;
+
         // [EXPERIMENTAL] speed-up techniques
         // note: these can significantly reduce the quality of the output
         bool speed_up;          // speed-up the audio by 2x using Phase Vocoder
@@ -577,6 +623,11 @@ extern "C" {
     WHISPER_API int64_t whisper_full_get_segment_t1           (struct whisper_context * ctx, int i_segment);
     WHISPER_API int64_t whisper_full_get_segment_t1_from_state(struct whisper_state * state, int i_segment);
 
+	// Get the segment duration
+	WHISPER_API int64_t whisper_full_get_segment_dtw0(struct whisper_context * ctx, int i_segment);
+
+	WHISPER_API int64_t whisper_full_get_segment_dtw1(struct whisper_context * ctx, int i_segment);
+
     // Get whether the next segment is predicted as a speaker turn
     WHISPER_API bool whisper_full_get_segment_speaker_turn_next(struct whisper_context * ctx, int i_segment);
     WHISPER_API bool whisper_full_get_segment_speaker_turn_next_from_state(struct whisper_state * state, int i_segment);
@@ -588,6 +639,9 @@ extern "C" {
     // Get number of tokens in the specified segment
     WHISPER_API int whisper_full_n_tokens           (struct whisper_context * ctx, int i_segment);
     WHISPER_API int whisper_full_n_tokens_from_state(struct whisper_state * state, int i_segment);
+
+	std::vector<whisper_token_data> whisper_full_tokens(struct whisper_context * ctx, int i_segment);
+
 
     // Get the token text of the specified token in the specified segment
     WHISPER_API const char * whisper_full_get_token_text           (struct whisper_context * ctx, int i_segment, int i_token);
@@ -617,6 +671,10 @@ extern "C" {
     // Control logging output; default behavior is to print to stderr
 
     WHISPER_API void whisper_log_set(ggml_log_callback log_callback, void * user_data);
+
+    // test dtw
+    //WHISPER_API void whisper_test_dtw(float* in, size_t in_ne0, size_t in_ne1, int32_t **out, size_t *out_ne0, size_t *out_ne1);
+    //WHISPER_API void whisper_test_dtw_timestamp_funcs(float* in, size_t in_ne0, size_t in_ne1, size_t in_ne2, float **out, size_t *out_ne0, size_t *out_ne1, size_t *out_ne2);
 
 #ifdef __cplusplus
 }

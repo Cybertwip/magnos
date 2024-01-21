@@ -82,8 +82,18 @@ def draw_simulation(screen, iron_thickness_mm, velocity, shake_count, voltage, b
     # Draw alternators (for visualization purposes)
     alternator_size = 5
     for i in range(int(iron_thickness_mm / alternator_size)):
-        pygame.draw.rect(screen, (0, 0, 255), (width / 2 - iron_thickness_mm / 2 + i * alternator_size, height / 2 - alternator_size / 2, alternator_size, alternator_size))
+        displacement_y = velocity * 1000
 
+        pygame.draw.rect(
+            screen,
+            (0, 0, 255),
+            (
+                width / 2 - iron_thickness_mm / 2 + i * alternator_size,
+                height / 2 - alternator_size / 2 + displacement_y,
+                alternator_size,
+                alternator_size,
+            ),
+        )
     # Draw yellow circle representing brightness
     pygame.draw.circle(screen, brightness_color, (width / 2, height / 2), brightness_radius)
 
@@ -133,25 +143,39 @@ buffer = pygame.Surface((width, height))
 
 
 # Main loop
+# Main loop
 running = True
+voltage_values = []
+update_interval_sec = 1
+current_time = 0
+average_voltage = 0
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                if shake_button_rect.collidepoint(event.pos):
-                    voltage, velocity = simulator.shake(simulation_duration_sec, circuit_resistance_ohms)
-                    brightness_radius = int((voltage / 100.0) * 50)  # Adjust 1000.0 to match the maximum voltage
 
-                elif photonize_button_rect.collidepoint(event.pos):
 
-                    brightness_radius = int((voltage / 1000.0) * 50)  # Adjust 1000.0 to match the maximum voltage
 
-                    voltage, velocity = photon_simulator.photonize(simulation_duration_sec, photon_frequency_thz, circuit_resistance_ohms)
+    voltage, velocity = simulator.shake(simulation_duration_sec, circuit_resistance_ohms)
+
+    # voltage, velocity = photon_simulator.photonize(simulation_duration_sec, photon_frequency_thz, circuit_resistance_ohms)
+
+    voltage_values.append(voltage)
+
+    current_time += 1 / 60  # 60 frames per second
+
+    if current_time >= update_interval_sec:
+        # Calculate average voltage for the last 2 seconds
+        average_voltage = sum(voltage_values) / len(voltage_values)
+        voltage_values = []  # Reset the voltage values for the next interval
+        current_time = 0
+
+    brightness_radius = int((voltage / 100.0) * 50)  # Adjust 1000.0 to match the maximum voltage
 
     # Draw the simulation
-    draw_simulation(buffer, iron_thickness_mm, abs(velocity), simulator.shake_count, voltage, brightness_radius)
+    draw_simulation(buffer, iron_thickness_mm, abs(velocity), simulator.shake_count, average_voltage, brightness_radius)
+
 
     # Draw the buffer to the screen
     screen.blit(buffer, (0, 0))

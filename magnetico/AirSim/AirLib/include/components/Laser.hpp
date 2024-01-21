@@ -31,6 +31,8 @@ public:
 	// Get the focal length of the lens
 	float getFocalLength() const;
 	
+	float getFrequency() const;
+	
 	// Set the voltage input
 	void setVoltageInput(float voltage);
 	

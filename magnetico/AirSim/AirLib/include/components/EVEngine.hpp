@@ -5,6 +5,7 @@
 #include "common/Common.hpp"
 
 class Laser;
+class LitoElectric;
 class Magnos;
 class RechargeableBattery;
 
@@ -41,6 +42,10 @@ public:
 		return this->lasers_;
 	}
 
+	std::vector<std::pair<std::shared_ptr<Laser>, std::shared_ptr<LitoElectric>>>  getPiezoPairs() const {
+		return this->piezoPairs_;
+	}
+
 	std::shared_ptr<RechargeableBattery> getBattery() const {
 		return this->battery_;
 	}
@@ -51,6 +56,7 @@ public:
 private:
 	std::vector<std::shared_ptr<Magnos>> gimbals_;
 	std::vector<std::shared_ptr<Laser>> lasers_;
+	std::vector<std::pair<std::shared_ptr<Laser>, std::shared_ptr<LitoElectric>>> piezoPairs_;
 	std::shared_ptr<RechargeableBattery> battery_;
 	bool accelerating_;
 	EVFeedback feedback_;

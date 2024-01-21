@@ -3,6 +3,7 @@
 #include "components/Magnos.hpp"
 #include "components/EVEngine.hpp"
 #include "components/Laser.hpp"
+#include "components/LitoElectric.hpp"
 #include "Car.h"
 #include "Utils3d.h"
 
@@ -262,7 +263,8 @@ void BasicCarGameState::renderUI() {
 	static float acceleration = 0;
 	static float speed = 0;
 	static float laser = 0;
-	
+	static float piezo = 0;
+
 	static float counter = 0;
 	
 	int cycles_per_collection = Settings::fixed_update / Settings::fps;
@@ -276,8 +278,13 @@ void BasicCarGameState::renderUI() {
 		acceleration = car->getAcceleration();
 		speed = car->getSpeed();
 		laser = 0;
+		piezo = 0;
 		for(auto laserNode : car->getEngine()->getLasers()){
 			laser += laserNode->getGuiMeasure();
+		}
+
+		for(auto piezoNode : car->getEngine()->getPiezoPairs()){
+			piezo += piezoNode.second->applyLaser(piezoNode.first->getFrequency(), Settings::fixed_delta);
 		}
 	}
 	
@@ -285,6 +292,7 @@ void BasicCarGameState::renderUI() {
 	ImGui::Text("Accel m/s^2=%.2f", acceleration);
 	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
 	ImGui::Text("Laser v/s=%.2f", laser);
+	ImGui::Text("Piezo v/s=%.2f", piezo);
 	ImGui::End();
 	
 }

@@ -6,6 +6,11 @@
 
 
 namespace viper {
+int64_t millisecondsToSamples(int64_t milliseconds, int samplingRate) {
+	float seconds = static_cast<float>(milliseconds) / 1000.0f;
+	int64_t numberOfSamples = static_cast<int64_t>(seconds * samplingRate);
+	return numberOfSamples;
+}
 
 class PitchYIN {
 private:
@@ -81,7 +86,7 @@ public:
 
 MagicalAudio::MagicalAudio(const char *filename) : filename(filename) {
 	
-	magicalWhisper = std::make_unique<MagicalWhisper>("./ggml-tiny.bin");
+	magicalWhisper = std::make_unique<MagicalWhisper>("./ggml-medium.bin");
 	
     std::filesystem::path dataPath = "/opt/homebrew/share";
     std::string espeakDataPath =
@@ -107,7 +112,9 @@ MagicalAudio::MagicalAudio(const char *filename) : filename(filename) {
 	
 //	auto textToSpeechSamples = speechify(normalAudioPcm, wordData, samplingRate);
 
-	auto audio = denormalize(wordData[7].pcm);
+	size_t index = 29;
+	printf("\nSampled Word:%s\n", wordData[index].word.c_str());
+	auto audio = denormalize(wordData[index].pcm);
     playAudio(audio, samplingRate, 1);
 }
 
@@ -155,12 +162,14 @@ std::vector<MagicalAudio::WordSet> MagicalAudio::splitPcm(std::vector<float> pcm
 //
 //    auto result = ss_pointers.back()->GetResult();
 	
-	
-	
-    for (uint32_t i = 0; i < result.words.size(); ++i) {
+	for (uint32_t i = 0; i < result.words.size(); ++i) {
         auto word = result.words[i];
         auto timestamp = result.timestamps[i];
 
+		if(word.empty()){
+			continue;
+		}
+		
         recognizedSegments.push_back({word, timestamp.start, timestamp.end});
     }
 
@@ -171,7 +180,7 @@ std::vector<MagicalAudio::WordSet> MagicalAudio::splitPcm(std::vector<float> pcm
         int64_t sampleT1 = static_cast<int64_t>(t1);
         sampleT1 = std::min(sampleT1, static_cast<int64_t>(pcmf32.size()));
 
-        std::vector<float> pcmChunk(pcmf32.begin() + static_cast<int64_t>(sampleT0 * 0.001 * sampling_rate), pcmf32.begin() + static_cast<int64_t>(sampleT1 * 0.001 * sampling_rate));
+        std::vector<float> pcmChunk(pcmf32.begin() + static_cast<int64_t>(viper::millisecondsToSamples(sampleT0, sampling_rate)), pcmf32.begin() + static_cast<int64_t>(viper::millisecondsToSamples(sampleT1, sampling_rate)));
 
         assert(!pcmChunk.empty());
 
