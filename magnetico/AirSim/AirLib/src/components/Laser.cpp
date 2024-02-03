@@ -104,7 +104,7 @@ float Laser::getFocalLength() const {
 	return focalLength;
 }
 
-float Laser::getFrequency() const {
+float Laser::getFrequenncy() const {
 	return frequency;
 }
 
