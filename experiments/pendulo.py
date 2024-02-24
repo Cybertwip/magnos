@@ -1,12 +1,11 @@
-from qiskit import Aer, QuantumCircuit, transpile, execute
-import qutip as qt
 import matplotlib.pyplot as plt
 import numpy as np 
-from qiskit import Aer, QuantumCircuit, transpile, execute
-from qiskit.visualization import plot_histogram
+import qutip as qt
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import QasmSimulator
 import matplotlib.pyplot as plt
 
-MAX_QUBITS = 1024  # This should be a number high enough to accommodate all the qubits you expect to need
+MAX_QUBITS = 31  # This should be a number high enough to accommodate all the qubits you expect to need
 
 def prepare_superposition_qubits(energy, existing_circuit):
     num_new_qubits = int(energy * 10)  # Produce a number of qubits proportional to the energy
@@ -53,9 +52,10 @@ energy_from_main_loop = 2.5  # Example energy value, you'd update this from the 
 circuit = prepare_superposition_qubits(energy_from_main_loop, circuit)
 
 # Execute the circuit
-simulator = Aer.get_backend('qasm_simulator')
+simulator = QasmSimulator()
 compiled_circuit = transpile(circuit, simulator)
-result = execute(compiled_circuit, simulator, shots=shots).result()
+job = simulator.run(compiled_circuit)
+result = job.result()
 counts = result.get_counts()
 
 # If the teleportation was "successful" (just a simplification for this exercise)

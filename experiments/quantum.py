@@ -1,4 +1,5 @@
-from qiskit import Aer, QuantumCircuit, transpile, execute
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import QasmSimulator
 from qiskit.visualization import plot_histogram
 import matplotlib.pyplot as plt
 
@@ -29,9 +30,10 @@ while magnetic_field_angle != margin_of_error:
 circuit.measure(0, 0)
 
 # Execute the circuit
-simulator = Aer.get_backend('qasm_simulator')
+simulator = QasmSimulator()
 compiled_circuit = transpile(circuit, simulator)
-result = execute(compiled_circuit, simulator, shots=shots).result()
+job = simulator.run(compiled_circuit)
+result = job.result()
 counts = result.get_counts()
 
 # Visualize
