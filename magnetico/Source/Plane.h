@@ -1,0 +1,80 @@
+#pragma once
+#include "CustomNode.h"
+#include "components/Battery.hpp"
+#include "Settings.h"
+
+#include <axmol.h>
+
+#include <vector>
+
+class EVEngine;
+class LaserNode;
+
+class Aircraft : public ax::Node {
+private:
+	std::shared_ptr<EVEngine> engine_;
+	ax::Node* carBody;
+	ax::Node* engineBox;
+	ax::Node* frontLeftWheel;
+	ax::Node* frontRightWheel;
+	
+	// Member variables for acceleration and friction
+	float acceleration;
+	float maxSpeed;
+	float friction;
+	float steeringAngle;
+	float maxSteeringAngle; // Maximum steering angle in radians
+	float rotationAngle = 0;
+	float speed = 0;
+	float mass = 1500;
+	float brakePower = 0;
+	
+	float pitchAmount;
+	float rollAmount;
+	bool isOnTrack;
+	
+	float planeRoll = 0.0f;
+	float planePitch = 0.0f;
+	float planeYaw = 0.0f;
+
+	ax::Vec3 ballisticVelocity;
+	
+	// Add this function to your Plane class
+	ax::Vec3 getForwardVector() const;
+
+//	ax::Node* innerNode;
+//	ax::Node* middleNode;
+//	ax::Node* outerNode;
+	
+public:
+	Aircraft();
+	virtual ~Aircraft();
+	
+	bool anyLaserStatusOn();
+	
+	float getAcceleration() const;
+	float getSpeed() const;
+	void charge(float amountl, float delta);
+	void brake(float amount);
+	void pitch(float amount);
+	void roll(float amount);
+	void steer(float angle); // Function to set the steering angle
+	void liftPedal();
+	void accelerate(float value);
+	void applyFriction();
+	void updateMotion(float deltaTime);
+	
+	bool isCalibrating();
+	bool isCollecting();
+	
+	std::shared_ptr<EVEngine> getEngine();
+	
+	void update(float dt) override;
+
+	CREATE_FUNC(Aircraft);
+	
+	ax::Node* rearLeftWheel;
+	ax::Node* rearRightWheel;
+	ax::Node* rearSuspension;
+};
+

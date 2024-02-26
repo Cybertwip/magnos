@@ -287,6 +287,8 @@ bool MeshRenderer::init()
 {
     if (Node::init())
     {
+		setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT_NOTEX, false));
+		setTexture("gray.jpg");
         return true;
     }
     return false;

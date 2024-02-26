@@ -8,6 +8,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED true)
+
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES arm64)
     
@@ -28,7 +31,11 @@ set(AX_ENABLE_EXT_LUA NO CACHE INTERNAL "AX_ENABLE_EXT_LUA")
 
 set(APP_NAME MagnosSimulator)
 
-project(${APP_NAME})
+if(APPLE)
+    project(${APP_NAME} LANGUAGES C CXX OBJCXX)
+else()
+    project(${APP_NAME} LANGUAGES C CXX)
+endif()
 
 set(MAGNOS_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} CACHE STRING "MAGNOS_RUNTIME_OUTPUT_DIRECTORY")
 
@@ -62,6 +69,30 @@ if(BUILD_COMPONENT_DETECTIVE)
     add_subdirectory(chrono)
     find_package(Chrono COMPONENTS Vehicle)
 endif()
+
+add_subdirectory(viper)
+
+add_subdirectory(librosapp/kissfft)
+
+target_include_directories(kissfft PUBLIC ${CMAKE_CURRENT_LIST_DIR}/librosapp/kissfft)
+
+
+add_subdirectory(stk)
+
+add_subdirectory(whisper)
+
+set(JUCE_MODULES_ONLY ON CACHE INTERNAL "JUCE_MODULES_ONLY")
+
+add_subdirectory(JUCE)
+
+set(SHERPA_ONNX_ENABLE_C_API ON)
+
+add_subdirectory(openfst)
+add_subdirectory(kaldifst)
+add_subdirectory(kaldi-decoder)
+add_subdirectory(kaldi-native-fbank)
+add_subdirectory(sherpa-onnx)
+
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMake")
 
@@ -217,6 +248,7 @@ CommonTargetLink()
 target_link_libraries(${APP_NAME} AirLib)
 target_link_libraries(${APP_NAME} MavLinkCom)
 target_link_libraries(${APP_NAME} ${RPC_LIB})
+target_link_libraries(${APP_NAME} viper)
 
 if(BUILD_COMPONENT_DETECTIVE)
     target_link_libraries(${APP_NAME} ${CHRONO_LIBRARIES})  
@@ -334,12 +366,6 @@ endif()
 
 ax_setup_app_props(${APP_NAME})
 
-set_target_properties(${APP_NAME} PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
-
 #Translator
 
 # Add any include directories if required
@@ -354,13 +380,6 @@ add_executable(translator
     translator/src/model_parser.hpp
     translator/src/onnx_pb.h
     translator/src/onnx_to_mlpack.hpp
-)
-
-# Set C++ standard and other compiler options if necessary
-set_target_properties(translator PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
 )
 
 target_include_directories(AirLib PRIVATE
@@ -421,8 +440,6 @@ get_target_property(ONNXRUNTIME_INCLUDE_DIRS onnxruntime::onnxruntime INTERFACE_
 # You can print or use them as needed.
 message("ONNX Runtime Include Directories: ${ONNXRUNTIME_INCLUDE_DIRS}")
 
-find_package(PCL REQUIRED)
-
 add_library(detective
 translator/detective/MLUtils.cpp
 translator/detective/StbUtils.cpp
@@ -435,47 +452,79 @@ translator/detective/RoadEngine.cpp
 )
 
 target_include_directories(detective PUBLIC
-   translator/detective
+   ${CMAKE_CURRENT_LIST_DIR}/translator/detective
    ${AIRSIM_ROOT}/AirLib/thirdparty/eigen3
    ${Boost_INCLUDE_DIRS}
    ${_AX_ROOT}/thirdparty/stb
    ${ONNXRUNTIME_INCLUDE_DIRS}
-   ${PCL_INCLUDE_DIRS}
-)
-
-
-target_link_directories(detective PUBLIC ${PCL_LIBRARY_DIRS})
-
-# Set C++ standard and other compiler options if necessary
-set_target_properties(detective PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
+   ${CMAKE_CURRENT_LIST_DIR}/librosapp/LBFGSpp/include
 )
 
 target_compile_definitions(detective PUBLIC MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/" ${PCL_DEFINITIONS})
 
 target_link_libraries(detective PRIVATE AirLib ${Boost_LIBRARIES} protobuf::libprotobuf onnxruntime::onnxruntime onnx ${_AX_CORE_LIB} ${PCL_LIBRARIES})
 
+target_link_libraries(${APP_NAME} detective) 
+
 # Define the "translator" executable
 add_executable(detective_test
 translator/test/main.cpp
+translator/test/AudioProcessor.hpp
+translator/test/AudioProcessor.cpp
+translator/test/MagicalAudio.hpp
+translator/test/MagicalAudio.cpp
+translator/test/MagicalWhisper.hpp
+translator/test/MagicalWhisper.cpp
 )
 
 target_include_directories(detective_test PRIVATE
    translator/test
 )
 
-# Set C++ standard and other compiler options if necessary
-set_target_properties(detective_test PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
-
 target_compile_definitions(detective_test PRIVATE MODELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/translator/models/")
 
-target_link_libraries(detective_test PRIVATE detective)
+# Find OpenAL
+find_package(OpenAL REQUIRED)
+
+# Find libsndfile
+find_package(SndFile REQUIRED)
+
+# Include directories
+
+target_include_directories(detective_test PRIVATE ${OPENAL_INCLUDE_DIR})
+target_include_directories(detective_test PRIVATE ${SNDFILE_INCLUDE_DIRS})
+target_include_directories(detective_test PRIVATE librosapp)
+
+target_link_libraries(detective_test PRIVATE detective ${_AX_CORE_LIB}  ${OPENAL_LIBRARY} ${SNDFILE_LIBRARIES})
+target_link_libraries(detective_test PRIVATE viper)
+target_link_libraries(detective_test PRIVATE AirLib ${Boost_LIBRARIES})
+target_link_libraries(detective_test PRIVATE sherpa-onnx-c-api)
+target_link_libraries(detective_test PRIVATE kissfft)
+target_link_libraries(detective_test PRIVATE stk)
+target_link_libraries(detective_test PRIVATE whisper)
+
+target_link_libraries(detective_test
+    PRIVATE
+        juce::juce_core
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_warning_flags)
+
 
 target_link_libraries(${PROJECT_NAME} detective)
+
+if(APPLE)
+
+set_target_properties(detective_test PROPERTIES 
+                      XCODE_GENERATE_SCHEME TRUE
+                      XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/translator/data)
+endif()
+
+endif()
+
+if(APPLE)
+
+set_target_properties(${APP_NAME} PROPERTIES 
+                      XCODE_GENERATE_SCHEME TRUE
+                      XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/Content)
 endif()

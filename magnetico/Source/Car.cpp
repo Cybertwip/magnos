@@ -357,8 +357,6 @@ void Car::updateMotion(float deltaTime) {
 	// Calculate angular velocity for each wheel
 	float wheelRadius = 0.2f; // Adjust the wheel radius as needed
 	float baseAngularVelocity = newSpeed / wheelRadius * deltaTime;
-//	float frontLeftAngularVelocity = baseAngularVelocity * (1.0f + steeringAngle);
-//	float frontRightAngularVelocity = baseAngularVelocity * (1.0f - steeringAngle);
 	
 	// Apply rotations to the wheels
 	rotationAngle += AX_RADIANS_TO_DEGREES(baseAngularVelocity);

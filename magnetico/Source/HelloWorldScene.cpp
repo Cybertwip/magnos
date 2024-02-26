@@ -24,6 +24,7 @@
  ****************************************************************************/
 
 #include "HelloWorldScene.h"
+#include "BallisticGameState.h"
 #include "BasicCarGameState.h"
 #include "RocketGameState.h"
 #include "WheelGameState.h"

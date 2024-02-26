@@ -1,17 +1,13 @@
 #include "StbUtils.h"
 
 #include "stb_image.h"
-
 #include "stb_image_write.h"
-
 #include "stb_image_resize2.h"
 
 #include <iostream>
 
-
 static std::vector<uint8_t> output_buffer;
 static std::vector<uint8_t> input_buffer;
-
 
 Image resizeImage(Image& image, int new_width, int new_height) {
 	

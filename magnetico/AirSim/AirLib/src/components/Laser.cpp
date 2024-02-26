@@ -104,6 +104,10 @@ float Laser::getFocalLength() const {
 	return focalLength;
 }
 
+float Laser::getFrequency() const {
+	return frequency;
+}
+
 // Set the voltage input
 void Laser::setVoltageInput(float voltage) {
 	if(voltage == 0){

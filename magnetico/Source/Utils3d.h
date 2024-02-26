@@ -18,3 +18,5 @@ ax::Mesh* createTorus(float majorRadius, float minorRadius, int majorSegments, i
 ax::Mesh* createFlatDisk(float radius, float thickness, int majorSegments, int minorSegments);
 
 ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheelWidth, std::vector<ax::Node*>& suspensionContainer);
+
+ax::Node* createAircraft(float planeLength, float wingWidth, float tailHeight, float wheelRadius, float wheelWidth, std::vector<ax::Node*>& suspensionContainer);

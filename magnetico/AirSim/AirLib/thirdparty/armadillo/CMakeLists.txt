@@ -38,13 +38,6 @@ if(NOT (${CMAKE_MAJOR_VERSION} LESS 3))
   endif()
 endif()
 
-if(NOT (CMAKE_VERSION VERSION_LESS "3.1"))
-  set(CMAKE_CXX_STANDARD 11)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_EXTENSIONS OFF)
-  message(STATUS "CMAKE_CXX_STANDARD = ${CMAKE_CXX_STANDARD}")
-endif()
-
 project(armadillo CXX C)
 include(CheckIncludeFileCXX)
 include(CheckLibraryExists)

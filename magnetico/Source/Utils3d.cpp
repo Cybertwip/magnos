@@ -748,20 +748,19 @@ ax::Node* createTransmission(float width, float height, float depth) {
 
 
 // Function to create the car body
-ax::Node* createCarBody(float carDimension) {
+ax::Node* createCarBody(float carDimension, const std::string& texture = "spidey.jpg") {
 	ax::Mesh* carBodyMesh = createCuboid(carDimension, carDimension / 2, carDimension / 2);
 	
 	ax::MeshRenderer* carBody = ax::MeshRenderer::create();
 	carBody->addMesh(carBodyMesh);
 	carBody->setMaterial(ax::MeshMaterial::createBuiltInMaterial(ax::MeshMaterial::MaterialType::UNLIT, false));
-	carBody->setTexture("spidey.jpg");
+	carBody->setTexture(texture);
 	
 	carBody->setOpacity(144);
 
 	ax::Node* carBodyNode = ax::Node::create();
 	carBodyNode->addChild(carBody);
 	
-
 	return carBodyNode;
 }
 
@@ -818,8 +817,6 @@ ax::Node* createCarWindows(float carDimension, float roofHeight) {
 ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheelWidth, std::vector<ax::Node*>& suspensionContainer) {
 	// Create the car body, roof, and windows as separate meshes
 	ax::Node* carBody = createCarBody(carDimension);
-	//ax::Node* roof = createCarRoof(carDimension, 1); // You may need to define roofHeight
-	//ax::Node* windows = createCarWindows(carDimension, 0.25f);
 	
 	// Create four wheels and attach them to the car body
 	ax::Mesh* frontLeftWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
@@ -873,10 +870,92 @@ ax::Node* createCarWithWheels(float carDimension, float wheelRadius, float wheel
 	suspensionContainer.push_back(frontLeftWheel);
 
 	suspensionContainer.push_back(rearSuspension);
+	
+	return carNode;
+}
 
-	// Attach roof and windows to the car body
-	//carBody->addChild(roof);
-	//carBody->addChild(windows);
+
+ax::Node* createAircraft(float carDimension, float wingWidth, float tailHeight, float wheelRadius, float wheelWidth, std::vector<ax::Node*>& suspensionContainer) {
+	// Create the car body, roof, and windows as separate meshes
+	ax::Node* carBody = createCarBody(carDimension, "red.jpg");
+
+	// Create four wheels and attach them to the car body
+	ax::Mesh* frontLeftWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
+	ax::Mesh* frontRightWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
+	ax::Mesh* rearLeftWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
+	ax::Mesh* rearRightWheelMesh = createFlatDisk(wheelRadius, wheelWidth, 40, 20);
+	
+	ax::MeshRenderer* frontLeftWheel = ax::MeshRenderer::create();
+	ax::MeshRenderer* frontRightWheel = ax::MeshRenderer::create();
+	ax::MeshRenderer* rearLeftWheel = ax::MeshRenderer::create();
+	ax::MeshRenderer* rearRightWheel = ax::MeshRenderer::create();
+	
+	frontLeftWheel->addMesh(frontLeftWheelMesh);
+	frontRightWheel->addMesh(frontRightWheelMesh);
+	rearLeftWheel->addMesh(rearLeftWheelMesh);
+	rearRightWheel->addMesh(rearRightWheelMesh);
+	
+	
+	ax::MeshRenderer* leftWing = ax::MeshRenderer::create();
+
+	ax::Mesh* leftWingMesh = createCuboid(carDimension / 2, 0.1f, wingWidth);
+
+	leftWing->addMesh(leftWingMesh);
+	
+	leftWing->setPosition3D(ax::Vec3(0, 0, carDimension / 2 + wingWidth));
+
+	ax::MeshRenderer* rightWing = ax::MeshRenderer::create();
+	
+	ax::Mesh* rightWingMesh = createCuboid(carDimension / 2, 0.1f, wingWidth);
+	
+	rightWing->addMesh(rightWingMesh);
+	
+	rightWing->setPosition3D(ax::Vec3(0, 0, -carDimension / 2 - wingWidth));
+	
+	leftWing->setTexture("red.jpg");
+	rightWing->setTexture("red.jpg");
+
+	leftWing->setOpacity(144);
+	rightWing->setOpacity(144);
+
+	// Position the wheels relative to the car body
+	// You can adjust these positions as needed to align the wheels correctly
+	frontLeftWheel->setPosition3D(ax::Vec3(-carDimension + wheelRadius * 2.0f, -carDimension / 2, -carDimension / 2 - wheelRadius));
+	frontRightWheel->setPosition3D(ax::Vec3(carDimension - wheelRadius * 2.0f, -carDimension / 2, carDimension / 2 + wheelRadius));
+	rearLeftWheel->setPosition3D(ax::Vec3(-carDimension + wheelRadius * 2.0f, -carDimension / 2, carDimension / 2 + wheelRadius));
+	rearRightWheel->setPosition3D(ax::Vec3(carDimension - wheelRadius * 2.0f, -carDimension / 2, -carDimension / 2 - wheelRadius));
+	
+	// Create rear suspension, rear axle, and transmission
+	
+	ax::Node* rearSuspension = createRearSuspension(0.0825f, 0.0825f, carDimension / 2.0f + wheelWidth / 2.0f);
+	ax::Node* rearAxle = createRearAxle(1.0f, 0.1f, 0.1f);
+	ax::Node* transmission = createTransmission(0.18f, 0.25f, 0.2f);
+	
+	float suspensionOffset = 0.2f;
+	// Position the components relative to the car body
+	rearSuspension->setPosition3D(ax::Vec3(-carDimension +  suspensionOffset, -carDimension / 2, 0.0f));
+	rearAxle->setPosition3D(ax::Vec3(0.0f, -carDimension / 2, 0));
+	transmission->setPosition3D(ax::Vec3(-carDimension +  suspensionOffset, -carDimension / 2, 0.0f));
+	
+	// Create a container node for the entire car (body, roof, windows, wheels, and components)
+	ax::Node* carNode = ax::Node::create();
+	carNode->addChild(carBody);
+	carNode->addChild(frontLeftWheel);
+	carNode->addChild(frontRightWheel);
+	carNode->addChild(rearLeftWheel);
+	carNode->addChild(rearRightWheel);
+	carNode->addChild(rearSuspension);
+	carNode->addChild(rearAxle);
+	carNode->addChild(transmission);
+	carNode->addChild(leftWing);
+	carNode->addChild(rightWing);
+
+	suspensionContainer.push_back(rearRightWheel);
+	suspensionContainer.push_back(frontRightWheel);
+	suspensionContainer.push_back(rearLeftWheel);
+	suspensionContainer.push_back(frontLeftWheel);
+	
+	suspensionContainer.push_back(rearSuspension);
 	
 	return carNode;
 }

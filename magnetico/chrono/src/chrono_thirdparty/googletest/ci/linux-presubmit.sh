@@ -55,7 +55,7 @@ for cc in /usr/local/bin/gcc /opt/llvm/clang/bin/clang; do
       ${LINUX_LATEST_CONTAINER} \
       /bin/bash -c "
         cmake /src \
-          -DCMAKE_CXX_STANDARD=11 \
+          -DCMAKE_CXX_STANDARD=20 \
           -Dgtest_build_samples=ON \
           -Dgtest_build_tests=ON \
           -Dgmock_build_tests=ON \

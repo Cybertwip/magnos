@@ -3,6 +3,7 @@
 #include "components/Magnos.hpp"
 #include "components/EVEngine.hpp"
 #include "components/Laser.hpp"
+#include "components/LitoElectric.hpp"
 #include "Car.h"
 #include "Utils3d.h"
 
@@ -10,24 +11,11 @@
 #include "imgui/imgui_internal.h"
 
 namespace{
-float quaternionDot(const ax::Quaternion& q1, const ax::Quaternion& q2) {
-	// Manually compute the dot product
-	return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
-}
-
 // Current to Voltage conversion
 float currentToVoltage(float current, float resistance = 4.0f) {
 	return current * resistance;
 }
 
-float voltsToCurrent(float voltage, float resistance) {
-	if (resistance == 0.0f) {
-		// Avoid division by zero
-		return 0.0f;
-	}
-	
-	return voltage / resistance;
-}
 float mpsToKmph(float speedMps) {
 	return speedMps * 3.6;
 }
@@ -275,7 +263,8 @@ void BasicCarGameState::renderUI() {
 	static float acceleration = 0;
 	static float speed = 0;
 	static float laser = 0;
-	
+	static float piezo = 0;
+
 	static float counter = 0;
 	
 	int cycles_per_collection = Settings::fixed_update / Settings::fps;
@@ -289,8 +278,13 @@ void BasicCarGameState::renderUI() {
 		acceleration = car->getAcceleration();
 		speed = car->getSpeed();
 		laser = 0;
+		piezo = 0;
 		for(auto laserNode : car->getEngine()->getLasers()){
 			laser += laserNode->getGuiMeasure();
+		}
+
+		for(auto piezoNode : car->getEngine()->getPiezoPairs()){
+			piezo += piezoNode.second->applyLaser(piezoNode.first->getFrequency(), Settings::fixed_delta);
 		}
 	}
 	
@@ -298,6 +292,7 @@ void BasicCarGameState::renderUI() {
 	ImGui::Text("Accel m/s^2=%.2f", acceleration);
 	ImGui::Text("Speed km/h=%.2f", mpsToKmph(speed));
 	ImGui::Text("Laser v/s=%.2f", laser);
+	ImGui::Text("Piezo v/s=%.2f", piezo);
 	ImGui::End();
 	
 }

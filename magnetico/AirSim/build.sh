@@ -95,7 +95,7 @@ if [[ ! -d $build_dir ]]; then
 fi
 
 # Fix for Unreal/Unity using x86_64 (Rosetta) on Apple Silicon hardware.
-CMAKE_VARS=-DAIRLIB_CXX_STD="17"
+CMAKE_VARS=-DAIRLIB_CXX_STD="20"
 
 pushd $build_dir  >/dev/null
 if $debug; then

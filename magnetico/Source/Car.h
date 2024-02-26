@@ -62,7 +62,5 @@ public:
 	ax::Node* rearLeftWheel;
 	ax::Node* rearRightWheel;
 	ax::Node* rearSuspension;
-
-	
 };
 
