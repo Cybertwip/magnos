@@ -125,9 +125,9 @@ const float maxReading = 1023;
 const int numTrainSamples = 10;
 
 PIDController frequencyPIDA(0.1, 0.1, 0.05); // Increased gains for more aggressive response
-PIDController frequencyPIDB(0.1, 0.1, 0.4); // Increased gains for more aggressive response
+PIDController frequencyPIDB(0.1, 0.1, 4); // Increased gains for more aggressive response
 PIDController amplitudePIDA(0.1, 0.1, 0.1); // Reasonable gains for amplitude control
-PIDController amplitudePIDB(0.15, 0.1, 0.2); // Adjusted gains for amplitude control
+PIDController amplitudePIDB(0.15, 0.1, 2); // Adjusted gains for amplitude control
 
 
 bool tuningFrequencyA = true;
