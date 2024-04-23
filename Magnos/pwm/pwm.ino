@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <ArduinoSTL.h>
 
+#include <Stepper.h>
+
 struct DataPoint {
     double emfError;
     double desiredCurrent;
@@ -117,15 +119,15 @@ public:
 const int coilAPin = 2;
 const int coilBPin = 3;
 const int receiverPinA = A4;
-const int maxFrequencyA = 1000;
-const int maxFrequencyB = 1000;
+const int maxFrequencyA = 5000;
+const int maxFrequencyB = 5100;
 const float maxCurrent = 255;
-const float maxReading = 1023;
+const float maxReading = 640;
 
 const int numTrainSamples = 10;
 
 PIDController frequencyPIDA(0.1, 0.1, 0.05); // Increased gains for more aggressive response
-PIDController frequencyPIDB(0.1, 0.1, 4); // Increased gains for more aggressive response
+PIDController frequencyPIDB(0.1, 0.1, 0.4); // Increased gains for more aggressive response
 PIDController amplitudePIDA(0.1, 0.1, 0.1); // Reasonable gains for amplitude control
 PIDController amplitudePIDB(0.15, 0.1, 2); // Adjusted gains for amplitude control
 
@@ -136,6 +138,8 @@ bool tuningAmplitudeA = true;
 long long lastTimeA = 0;
 long long lastTimeB = 0;
 
+long long lastTimeOscillation = 0;
+
 bool stateA = false;
 bool stateB = false;
 
@@ -144,7 +148,7 @@ float thisFrequencyB = 0;
 float thisAmplitudeA = 0;
 float thisAmplitudeB = 0;
 
-const float targetCurrent = maxReading * 0.85; // Example: 75% of maximum reading
+const float targetCurrent = maxReading; // Example: 75% of maximum reading
 
 LinearRegressionModel mlFrequencyA;
 LinearRegressionModel mlFrequencyB;
@@ -167,6 +171,19 @@ float interpolate(float current, float target, float step) {
     return current;                                  // Default case (should not hit)
 }
 
+
+// Number of steps per revolution of the internal gear shaft
+int stepsPerRevolution = 2048; // Change this depending on your motor's specification
+
+// Pins connected from the motor to the driver IN1, IN2
+int motorPins[2] = {8, 9}; // Only using 2 pins for simplicity
+
+
+bool bravo = false;
+
+// Initialize the stepper library on pins 8 and 9
+Stepper myStepper(stepsPerRevolution, motorPins[0], motorPins[1]);
+
 void setup() {
 
     pinMode(coilAPin, OUTPUT);
@@ -182,6 +199,12 @@ void setup() {
 
     lastTimeA = millis();
     lastTimeB = millis();
+    lastTimeOscillation = millis();
+
+    myStepper.setSpeed(15);
+    pinMode(motorPins[0], OUTPUT);
+    pinMode(motorPins[1], OUTPUT);
+
 }
 
 void loop() {
@@ -192,6 +215,16 @@ void loop() {
     lastTime = currentTime;
 
     int currentA = analogRead(receiverPinA);
+
+    if(currentA >= maxReading){
+      bravo = true;
+      return;
+    }
+
+    if(bravo){
+      return;
+    }
+    
     float emfError = (targetCurrent - currentA) / maxReading; // Adjusted error calculation
     float desiredCurrent = ((1.0 - emfError) * maxCurrent);
 
@@ -301,6 +334,7 @@ void loop() {
       applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
       applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
+      oscillate(lastTimeOscillation, currentTime);
       // Debug output
       Serial.print(" - Reading: ");
       Serial.print(currentA);
@@ -348,15 +382,6 @@ void loop() {
 float applyFrequencyAdjustment(int pin, float frequency, float amplitude, long long &lastToggleTime, bool &pinState, long long currentTime, bool otherPinState) {
     // Convert frequency to interval in milliseconds; handle very high frequencies appropriately
     int toggleInterval = std::max(1, int(1000.0 / frequency)); // Calculate interval in ms, prevent zero division
-
-    // // Check if the other coil is active
-    // if (otherPinState) {
-    //     // If the other coil is active, ensure that this coil is inactive
-    //     pinState = false;
-    //     digitalWrite(pin, LOW); // Turn off the coil
-    //     return 0.0f; // Return 0 amplitude
-    // }
-
     // Toggle the pin if enough time has elapsed and the other coil is not active
     if (currentTime - lastToggleTime >= toggleInterval) {
         pinState = !pinState;
@@ -365,4 +390,19 @@ float applyFrequencyAdjustment(int pin, float frequency, float amplitude, long l
     }
 
     return amplitude;
+}
+
+
+// Define a function to apply frequency adjustment using PID control
+void oscillate(long long &lastTimeOscillation, long long currentTime) {
+    if (currentTime - lastTimeOscillation <= 1) {
+        myStepper.step(stepsPerRevolution);
+    } else {
+        analogWrite(motorPins[0], LOW);
+        analogWrite(motorPins[1], LOW);
+
+        if(currentTime - lastTimeOscillation >= 1000){
+          lastTimeOscillation = currentTime;
+        }
+    }
 }
