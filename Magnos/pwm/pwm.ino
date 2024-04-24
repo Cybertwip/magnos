@@ -181,7 +181,7 @@ double thisFrequencyB = 0;
 double thisAmplitudeA = 0;
 double thisAmplitudeB = 0;
 
-const double targetCurrent = maxReading * 0.85; // Example: 75% of maximum reading
+const double targetReading = maxReading * 0.95; // Example: 75% of maximum reading
 
 LinearRegressionModel mlFrequencyA;
 LinearRegressionModel mlFrequencyB;
@@ -226,8 +226,8 @@ void setup() {
     // Start auto-tuning for frequency and amplitude PID controllers
     frequencyPIDA.startAutoTuning(maxFrequencyA, 0);
     frequencyPIDB.startAutoTuning(maxFrequencyB, 0);
-    amplitudePIDA.startAutoTuning(maxReading, 0);
-    amplitudePIDB.startAutoTuning(maxReading, 0);
+    amplitudePIDA.startAutoTuning(targetReading, 0);
+    amplitudePIDB.startAutoTuning(targetReading, 0);
 
     lastTimeA = millis();
     lastTimeB = millis();
@@ -251,13 +251,12 @@ void loop() {
       return;
     }
     
-    double emfError = ((targetCurrent - currentA) / maxReading); // Adjusted error calculation
-    double desiredCurrent = (1.0 - emfError) * maxCurrent;
+    double emfError = (targetReading - currentA) / targetReading; // Adjusted error calculation
 
     frequencyPIDA.startAutoTuning(maxFrequencyA, 0);
     frequencyPIDB.startAutoTuning(maxFrequencyB, 0);
-    amplitudePIDA.startAutoTuning(maxReading, 0);
-    amplitudePIDB.startAutoTuning(maxReading, 0);
+    amplitudePIDA.startAutoTuning(targetReading, 0);
+    amplitudePIDB.startAutoTuning(targetReading, 0);
 
     // Compute PID outputs for frequency and amplitude control for coils A and B
     if(delta > 0){
@@ -306,8 +305,8 @@ void loop() {
 
         frequencyDataA.error = emfError;
         frequencyDataB.error = emfError;
-        amplitudeDataA.error = desiredCurrent;
-        amplitudeDataB.error = desiredCurrent;
+        amplitudeDataA.error = emfError;
+        amplitudeDataB.error = emfError;
 
         frequencyDataA.finalCurrent = currentA;
         frequencyDataB.finalCurrent = currentA;
