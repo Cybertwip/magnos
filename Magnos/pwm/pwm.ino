@@ -181,7 +181,7 @@ double thisFrequencyB = 0;
 double thisAmplitudeA = 0;
 double thisAmplitudeB = 0;
 
-const double targetReading = maxReading * 0.95; // Example: 75% of maximum reading
+const double targetReading = maxReading; // Example: 75% of maximum reading
 
 LinearRegressionModel mlFrequencyA;
 LinearRegressionModel mlFrequencyB;
@@ -245,13 +245,29 @@ void loop() {
     double dt = (delta) / 1000.0; // Calculate delta time in seconds
     lastTime = currentTime;
 
-    int currentA = softFilter.filter(analogRead(receiverPinA));
-
-    if(currentA >= 900){
-      return;
-    }
-    
+    int currentA = analogRead(receiverPinA);
     double emfError = (targetReading - currentA) / targetReading; // Adjusted error calculation
+
+    if(currentA >= targetReading){
+      applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
+      applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
+
+      Serial.print(" - Reading: ");
+      Serial.print(currentA);
+      Serial.print(" - Error: ");
+      Serial.print(emfError);
+      Serial.print(" - Amplitude A: ");
+      Serial.print(thisAmplitudeA);
+      Serial.print(" - Amplitude B: ");
+      Serial.print(thisAmplitudeB);
+      Serial.print(" - Frequency A: ");
+      Serial.print(thisFrequencyA);
+      Serial.print(" - Frequency B: ");
+      Serial.println(thisFrequencyB);
+
+      return;
+    } 
+    
 
     frequencyPIDA.startAutoTuning(maxFrequencyA, 0);
     frequencyPIDB.startAutoTuning(maxFrequencyB, 0);
