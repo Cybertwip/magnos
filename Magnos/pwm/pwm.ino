@@ -5,7 +5,7 @@
 
 struct DataPoint {
     double error;
-    double finalCurrent;
+    double adjustment;
 };
 
 class LinearRegressionModel {
@@ -29,8 +29,6 @@ public:
         for (const auto& point : data) {
             addData(point);
         }
-        updateModel();
-
         trained = true;
     }
 
@@ -40,13 +38,13 @@ public:
 
         n++;
         sum_x += point.error;
-        sum_y += point.finalCurrent;
+        sum_y += point.adjustment;
         
         double new_mean_x = sum_x / n;
         double new_mean_y = sum_y / n;
 
         sum_xx += (point.error - new_mean_x) * (point.error - old_mean_x);
-        sum_xy += (point.error - new_mean_x) * (point.finalCurrent - old_mean_y);
+        sum_xy += (point.error - new_mean_x) * (point.adjustment - old_mean_y);
 
         updateModel();
     }
@@ -83,7 +81,7 @@ private:
     long long prevSwitchTime = 0, oscillationStartTime = 0;
     int oscillationsCount = 0;
     double period = 0.0;
-    int calibrationSteps = 8;
+    int calibrationSteps = 4;
 
 public:
     PIDController(double kp, double ki, double kd) : kp(kp), ki(ki), kd(kd) {}
@@ -173,13 +171,13 @@ double MovingAverageFilter::filter(double inputValue) {
 const int coilAPin = 2;
 const int coilBPin = 3;
 const int receiverPinA = A4;
-const int maxFrequencyA = 32000;
-const int maxFrequencyB = 64000;
-const double maxCurrentA = 255;
-const double maxCurrentB = 200;
+double maxFrequencyA = 32000;
+double maxFrequencyB = 64000;
+double maxCurrentA = 255;
+double maxCurrentB = 200;
 const double maxReading = 1023;
 
-const int numTrainSamples = 128;
+const int numTrainSamples = 256;
 int predictionPhaseCounter = 0;
 
 PIDController frequencyPIDA(1.0, 0, 0); 
@@ -205,20 +203,10 @@ double thisAmplitudeB = 0;
 
 const double targetReading = maxReading; // Example: 75% of maximum reading
 
-LinearRegressionModel mlModel;
-
-std::vector<DataPoint> data;
-
-double clamp(double value, double min, double max) {
-    // If value is less than min, return min
-    if (value < min) return min;
-
-    // If value is greater than max, return max
-    if (value > max) return max;
-
-    // Otherwise, return the value itself
-    return value;
-}
+LinearRegressionModel frequencyModelA;
+LinearRegressionModel frequencyModelB;
+LinearRegressionModel amplitudeModelA;
+LinearRegressionModel amplitudeModelB;
 
 double interpolate(double current, double target, double step) {
     if (abs(current - target) < step) return target; // Close enough to target
@@ -246,10 +234,10 @@ void setup() {
     Serial.begin(230400); // Set baud rate to 230400 bps
 
     // Start auto-tuning for frequency and amplitude PID controllers
-    frequencyPIDA.startAutoTuning(1, 0);
-    frequencyPIDB.startAutoTuning(1, 0);
-    amplitudePIDA.startAutoTuning(1, 0);
-    amplitudePIDB.startAutoTuning(1, 0);
+    frequencyPIDA.startAutoTuning(maxFrequencyA, 0);
+    frequencyPIDB.startAutoTuning(maxFrequencyB, 0);
+    amplitudePIDA.startAutoTuning(maxCurrentA, 0);
+    amplitudePIDB.startAutoTuning(maxCurrentB, 0);
 
     lastTimeA = millis();
     lastTimeB = millis();
@@ -272,46 +260,49 @@ void loop() {
 
     int currentA = analogRead(receiverPinA);
     double emfError = (targetReading - currentA) / targetReading; // Adjusted error calculation
-
-
-    static double lowestEmfError = 1.0;
     
     if(currentA >= targetReading){
       return;
     } 
     
 
-    frequencyPIDA.startAutoTuning(1, 0);
-    frequencyPIDB.startAutoTuning(1, 0);
-    amplitudePIDA.startAutoTuning(1, 0);
-    amplitudePIDB.startAutoTuning(1, 0);
+    frequencyPIDA.startAutoTuning(maxFrequencyA, 0);
+    frequencyPIDB.startAutoTuning(maxFrequencyB, 0);
+    amplitudePIDA.startAutoTuning(maxCurrentA, 0);
+    amplitudePIDB.startAutoTuning(maxCurrentB, 0);
 
     // Compute PID outputs for frequency and amplitude control for coils A and B
     if(delta > 0){
-      double frequencyAdjustmentA = 0;
-      double frequencyAdjustmentB = 0;
-      double amplitudeAdjustmentA = 0;
-      double amplitudeAdjustmentB = 0;
       if(predictionPhaseCounter < numTrainSamples){
-        frequencyAdjustmentA = frequencyPIDA.compute((emfError * maxFrequencyA) / maxFrequencyA, dt) * maxFrequencyA;
-        frequencyAdjustmentB = frequencyPIDB.compute((emfError * maxFrequencyB) / maxFrequencyB, dt) * maxFrequencyB;
-        amplitudeAdjustmentA = amplitudePIDA.compute((emfError * maxCurrentA) / maxCurrentA, dt) * maxCurrentA;
-        amplitudeAdjustmentB = amplitudePIDB.compute((emfError * maxCurrentB) / maxCurrentB, dt) * maxCurrentB;
-        // Clamp the adjusted amplitude within the valid range
-        thisAmplitudeA = clamp(amplitudeAdjustmentA, 0.0, maxCurrentA);
-        thisAmplitudeB = clamp(amplitudeAdjustmentB, 0.0, maxCurrentB);
+        double frequencyAdjustmentA = frequencyPIDA.compute(emfError, dt) * maxFrequencyA;
+        double frequencyAdjustmentB = frequencyPIDB.compute(emfError, dt) * maxFrequencyB;
+        double amplitudeAdjustmentA = amplitudePIDA.compute(emfError, dt) * maxCurrentA;
+        double amplitudeAdjustmentB = amplitudePIDB.compute(emfError, dt) * maxCurrentB;
 
-        thisFrequencyA = clamp(frequencyAdjustmentA, 0.0, maxFrequencyA);
-        thisFrequencyB = clamp(frequencyAdjustmentB, 0.0, maxFrequencyB);
-
+        thisFrequencyA = std::max(0.0, std::min(frequencyAdjustmentA, maxFrequencyA));
+        thisFrequencyB = std::max(0.0, std::min(frequencyAdjustmentB, maxFrequencyB));
+        thisAmplitudeA = std::max(0.0, std::min(amplitudeAdjustmentA, maxCurrentA));
+        thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
 
         predictionPhaseCounter++;
 
-        Serial.print(" - P: ");
-        Serial.print(" - Reading: ");
-        Serial.print(currentA);
-        Serial.print(" - Error: ");
-        Serial.println(emfError);
+
+            Serial.print(" - T: ");
+            Serial.print(" - Reading: ");
+            Serial.print(currentA);
+            Serial.print(" - Error: ");
+            Serial.print(emfError);
+
+            Serial.print(" - FA: ");
+            Serial.print(thisFrequencyA);
+            Serial.print(" - FB: ");
+            Serial.print(thisFrequencyB);
+
+            Serial.print(" - AA: ");
+            Serial.print(thisAmplitudeA);
+            Serial.print(" - AB: ");
+            Serial.println(thisAmplitudeB);
+
         
       } else {
 
@@ -320,30 +311,37 @@ void loop() {
           predictionPhaseCounter = 0;
         }
 
-        
-        double prediction = mlModel.predict(emfError);
-
-        prediction = std::max(0.0, prediction);  // Use max to ensure non-negative without losing negative info
-
         if (targetReading > 0) {  // Ensure targetReading is positive to avoid division by zero
-            double scale_factor = prediction / targetReading;
 
-            double frequencyAdjustmentA = scale_factor * maxFrequencyA;
-            double frequencyAdjustmentB = scale_factor * maxFrequencyB;
-            double amplitudeAdjustmentA = scale_factor * maxCurrentA;
-            double amplitudeAdjustmentB = scale_factor * maxCurrentB;
+            double frequencyAdjustmentA = frequencyModelA.predict(emfError);
+            double frequencyAdjustmentB = frequencyModelB.predict(emfError);
+            double amplitudeAdjustmentA = amplitudeModelA.predict(emfError);
+            double amplitudeAdjustmentB = amplitudeModelB.predict(emfError);
 
             // Clamp the adjusted values within the valid range
-            thisAmplitudeA = clamp(amplitudeAdjustmentA, 0.0, maxCurrentA);
-            thisAmplitudeB = clamp(amplitudeAdjustmentB, 0.0, maxCurrentB);
-            thisFrequencyA = clamp(frequencyAdjustmentA, 0.0, maxFrequencyA);
-            thisFrequencyB = clamp(frequencyAdjustmentB, 0.0, maxFrequencyB);
+
+            thisFrequencyA = std::max(0.0, std::min(frequencyAdjustmentA, maxFrequencyA));
+            thisFrequencyB = std::max(0.0, std::min(frequencyAdjustmentB, maxFrequencyB));
+            thisAmplitudeA = std::max(0.0, std::min(amplitudeAdjustmentA, maxCurrentA));
+            thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
+
             
-            Serial.print(" - T: ");
+            Serial.print(" - P: ");
             Serial.print(" - Reading: ");
             Serial.print(currentA);
             Serial.print(" - Error: ");
-            Serial.println(emfError);     
+            Serial.print(emfError);
+
+            Serial.print(" - FA: ");
+            Serial.print(thisFrequencyA);
+            Serial.print(" - FB: ");
+            Serial.print(thisFrequencyB);
+
+            Serial.print(" - AA: ");
+            Serial.print(thisAmplitudeA);
+            Serial.print(" - AB: ");
+            Serial.println(thisAmplitudeB);
+
         } else {
             Serial.println("Invalid targetReading value; must be > 0");
         }
@@ -351,31 +349,12 @@ void loop() {
 
       }
 
-      if(data.size() < numTrainSamples){
-        DataPoint trainData;
-        
-        trainData.error = emfError;
-        trainData.finalCurrent = currentA;
-
-        data.push_back(trainData);
-
-      } else {
-        // The buffer is full, replace the oldest data point
-        // Since std::vector does not support pop_front, we use a different approach
-        std::rotate(data.begin(), data.begin() + 1, data.end()); // Shift left by one
-        data.back().error = emfError; // Update the last element with new data
-        data.back().finalCurrent = currentA;
-      }
-      
-      if(emfError < lowestEmfError){
-
-        if (data.size() >= numTrainSamples) {
-            mlModel.train(data);
-            data.clear(); // Clear after training
-        }
-
-        lowestEmfError = emfError;
-      }
+      if(predictionPhaseCounter < numTrainSamples){
+        frequencyModelA.addData({emfError, thisFrequencyA});
+        frequencyModelB.addData({emfError, thisFrequencyB});
+        amplitudeModelA.addData({emfError, thisAmplitudeA});
+        amplitudeModelB.addData({emfError, thisAmplitudeB});
+      } 
 
       // Apply frequency adjustments to toggle pins at calculated intervals
       applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
