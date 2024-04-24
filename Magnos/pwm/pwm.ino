@@ -4,9 +4,7 @@
 #include <Stepper.h>
 
 struct DataPoint {
-    double emfError;
-    double desiredCurrent;
-    double currentAdjustment;
+    double error;
     double finalCurrent;
 };
 
@@ -19,25 +17,32 @@ public:
     LinearRegressionModel() : intercept(0), slope(0) {}
 
     void train(const std::vector<DataPoint>& data) {
-        double sum_x = 0, sum_y = 0, sum_xx = 0, sum_xy = 0;
         int n = data.size();
+        if (n == 0) return;
 
-        if (n == 0) return;  // Prevent division by zero if no data is present
-
+        double sum_x = 0, sum_y = 0, mean_x = 0, mean_y = 0;
         for (const auto& point : data) {
-            sum_x += point.desiredCurrent;
+            sum_x += point.error;
             sum_y += point.finalCurrent;
-            sum_xx += point.desiredCurrent * point.desiredCurrent;
-            sum_xy += point.desiredCurrent * point.finalCurrent;
+        }
+        mean_x = sum_x / n;
+        mean_y = sum_y / n;
+
+        double sum_xx = 0, sum_xy = 0;
+        for (const auto& point : data) {
+            double x_i = point.error - mean_x;
+            double y_i = point.finalCurrent - mean_y;
+            sum_xx += x_i * x_i;
+            sum_xy += x_i * y_i;
         }
 
-        double denominator = n * sum_xx - sum_x * sum_x;
+        double denominator = sum_xx;
         if (denominator != 0) {
-            slope = (n * sum_xy - sum_x * sum_y) / denominator;
-            intercept = (sum_y - slope * sum_x) / n;
+            slope = sum_xy / denominator;
+            intercept = mean_y - slope * mean_x;
         } else {
-            slope = 0;  // Consider setting to NaN or handle as an error
-            intercept = 0;
+            slope = 0;  // Prevent division by zero
+            intercept = mean_y; // Or consider other fallbacks
         }
     }
 
@@ -46,22 +51,23 @@ public:
     }
 };
 
+
 class PIDController {
 private:
-    float kp, ki, kd;
-    float integral = 0.0;
-    float prev_error = 0.0;
+    double kp, ki, kd;
+    double integral = 0.0;
+    double prev_error = 0.0;
     bool autoTuning = false;
-    float relayHigh, relayLow;
+    double relayHigh, relayLow;
     long long prevSwitchTime = 0, oscillationStartTime = 0;
     int oscillationsCount = 0;
-    float period = 0.0;
+    double period = 0.0;
     int calibrationSteps = 12;
 
 public:
-    PIDController(float kp, float ki, float kd) : kp(kp), ki(ki), kd(kd) {}
+    PIDController(double kp, double ki, double kd) : kp(kp), ki(ki), kd(kd) {}
 
-    void startAutoTuning(float relayHigh, float relayLow) {
+    void startAutoTuning(double relayHigh, double relayLow) {
         if(!autoTuning){
           autoTuning = true;
         }
@@ -76,7 +82,7 @@ public:
 
     bool calibrating() { return autoTuning; }
 
-    void calibrate(float error, long long currentTime) {
+    void calibrate(double error, long long currentTime) {
         if (!autoTuning) return;
 
         bool shouldToggle = error != prev_error;
@@ -95,9 +101,9 @@ public:
         if (oscillationsCount >= calibrationSteps) {
             autoTuning = false;
             period /= (oscillationsCount - 1);
-            kp = 0.5 * (relayHigh - relayLow) / period; // More aggressive proportional gain
-            ki = 8 * kp / period;
-            kd = kp * period / 4;
+            kp = 0.6 * relayHigh / period;
+            ki = 2 * kp / period;
+            kd = kp * period / 8;
 
             // Reset for possible future re-calibration
             oscillationsCount = 0;
@@ -105,11 +111,11 @@ public:
         }
     }
 
-    float compute(float error, float dt) {
-        float p = kp * error;
+    double compute(double error, double dt) {
+        double p = kp * error;
         integral += error * dt;
-        float d = kd * (error - prev_error) / dt;
-        float output = p + ki * integral + d;
+        double d = kd * (error - prev_error) / dt;
+        double output = p + ki * integral + d;
         prev_error = error;
         return output;
     }
@@ -117,25 +123,25 @@ public:
 
 class MovingAverageFilter {
 private:
-    std::vector<float> buffer;
+    std::vector<double> buffer;
     size_t windowSize;
     
 public:
     MovingAverageFilter(size_t size);
     
-    float filter(float inputValue);
+    double filter(double inputValue);
 };
 
 MovingAverageFilter::MovingAverageFilter(size_t size) : windowSize(size) {}
 
-float MovingAverageFilter::filter(float inputValue) {
+double MovingAverageFilter::filter(double inputValue) {
     buffer.push_back(inputValue);
     if (buffer.size() > windowSize) {
         buffer.erase(buffer.begin());
     }
     
-    float sum = 0.0f;
-    for (const float& value : buffer) {
+    double sum = 0.0f;
+    for (const double& value : buffer) {
         sum += value;
     }
     return sum / buffer.size();
@@ -146,17 +152,17 @@ float MovingAverageFilter::filter(float inputValue) {
 const int coilAPin = 2;
 const int coilBPin = 3;
 const int receiverPinA = A4;
-const int maxFrequencyA = 4000;
-const int maxFrequencyB = 4300;
-const float maxCurrent = 255;
-const float maxReading = 1023;
+const int maxFrequencyA = 2600;
+const int maxFrequencyB = 3400;
+const double maxCurrent = 255;
+const double maxReading = 1023;
 
 const int numTrainSamples = 10;
 
-PIDController frequencyPIDA(0.1, 0.1, 0.05); // Increased gains for more aggressive response
-PIDController frequencyPIDB(0.1, 0.1, 0.4); // Increased gains for more aggressive response
-PIDController amplitudePIDA(0.1, 0.1, 0.1); // Reasonable gains for amplitude control
-PIDController amplitudePIDB(0.15, 0.1, 2); // Adjusted gains for amplitude control
+PIDController frequencyPIDA(1.0, 0, 0); 
+PIDController frequencyPIDB(2.0, 0, 0); 
+PIDController amplitudePIDA(1.0, 0, 0); 
+PIDController amplitudePIDB(2.0, 0, 0); 
 
 
 bool tuningFrequencyA = true;
@@ -170,12 +176,12 @@ long long lastTimeOscillation = 0;
 bool stateA = false;
 bool stateB = false;
 
-float thisFrequencyA = 0;
-float thisFrequencyB = 0;
-float thisAmplitudeA = 0;
-float thisAmplitudeB = 0;
+double thisFrequencyA = 0;
+double thisFrequencyB = 0;
+double thisAmplitudeA = 0;
+double thisAmplitudeB = 0;
 
-const float targetCurrent = maxReading * 0.85; // Example: 75% of maximum reading
+const double targetCurrent = maxReading * 0.85; // Example: 75% of maximum reading
 
 LinearRegressionModel mlFrequencyA;
 LinearRegressionModel mlFrequencyB;
@@ -185,16 +191,16 @@ LinearRegressionModel mlAmplitudeB;
 std::vector<DataPoint> dataFrequencyA, dataFrequencyB;
 std::vector<DataPoint> dataAmplitudeA, dataAmplitudeB;
 
-MovingAverageFilter softFilter(32);
+MovingAverageFilter softFilter(64);
 MovingAverageFilter softFilterFreqA(8);
 MovingAverageFilter softFilterFreqB(8);
 
 // Define the clamp function
-float clamp(float value, float min, float max) {
+double clamp(double value, double min, double max) {
     return value < min ? min : (value > max ? max : value);
 }
 
-float interpolate(float current, float target, float step) {
+double interpolate(double current, double target, double step) {
     if (abs(current - target) < step) return target; // Close enough to target
     if (current < target) return current + step;     // Increment current
     if (current > target) return current - step;     // Decrement current
@@ -232,14 +238,13 @@ void setup() {
     myStepper.setSpeed(100);
     pinMode(motorPins[0], OUTPUT);
     pinMode(motorPins[1], OUTPUT);
-
 }
 
 void loop() {
     long long currentTime = millis();
     static long long lastTime = currentTime;
     long long delta = (currentTime - lastTime); // Calculate delta time in milliseconds
-    float dt = (delta) / 1000.0; // Calculate delta time in seconds
+    double dt = (delta) / 1000.0; // Calculate delta time in seconds
     lastTime = currentTime;
 
     int currentA = softFilter.filter(analogRead(receiverPinA));
@@ -248,8 +253,8 @@ void loop() {
       return;
     }
     
-    float emfError = (targetCurrent - currentA) / maxReading; // Adjusted error calculation
-    float desiredCurrent = ((1.0 - emfError) * maxCurrent);
+    double emfError = ((targetCurrent - currentA) / maxReading); // Adjusted error calculation
+    double desiredCurrent = (1.0 - emfError) * maxCurrent;
 
     frequencyPIDA.startAutoTuning(maxFrequencyA, 0);
     frequencyPIDB.startAutoTuning(maxFrequencyB, 0);
@@ -259,40 +264,40 @@ void loop() {
     // Compute PID outputs for frequency and amplitude control for coils A and B
     if(delta > 0){
 
-      float frequencyAdjustmentA;
-      float frequencyAdjustmentB;
-      float amplitudeAdjustmentA;
-      float amplitudeAdjustmentB;
+      double frequencyAdjustmentA;
+      double frequencyAdjustmentB;
+      double amplitudeAdjustmentA;
+      double amplitudeAdjustmentB;
       if(dataFrequencyA.size() < numTrainSamples){
-        frequencyAdjustmentA = frequencyPIDA.compute(emfError, dt);
-        frequencyAdjustmentB = frequencyPIDB.compute(emfError, dt);
-        amplitudeAdjustmentA = amplitudePIDA.compute(desiredCurrent, dt);
-        amplitudeAdjustmentB = amplitudePIDB.compute(desiredCurrent, dt);
+        frequencyAdjustmentA = frequencyPIDA.compute(emfError, dt) * maxFrequencyA;
+        frequencyAdjustmentB = frequencyPIDB.compute(emfError, dt) * maxFrequencyB;
+        amplitudeAdjustmentA = amplitudePIDA.compute(emfError, dt) * maxCurrent;
+        amplitudeAdjustmentB = amplitudePIDB.compute(emfError, dt) * maxCurrent;
       } else {
         frequencyAdjustmentA = mlFrequencyA.predict(emfError);
         frequencyAdjustmentB = mlFrequencyB.predict(emfError);
-        amplitudeAdjustmentA = mlAmplitudeA.predict(desiredCurrent);
-        amplitudeAdjustmentB = mlAmplitudeB.predict(desiredCurrent);
+        amplitudeAdjustmentA = mlAmplitudeA.predict(emfError);
+        amplitudeAdjustmentB = mlAmplitudeB.predict(emfError);
       }
 
       // Smoothly adjust amplitude by adding the adjustment to the current amplitude
-      thisAmplitudeA = interpolate(thisAmplitudeA, thisAmplitudeA + amplitudeAdjustmentA, 5);
-      thisAmplitudeB = interpolate(thisAmplitudeB, thisAmplitudeB + amplitudeAdjustmentB, 5);
+      thisAmplitudeA = interpolate(thisAmplitudeA, amplitudeAdjustmentA, 1);
+      thisAmplitudeB = interpolate(thisAmplitudeB, amplitudeAdjustmentB, 1);
 
       // Clamp the adjusted amplitude within the valid range
-      thisAmplitudeA = clamp(thisAmplitudeA, 0.0f, maxCurrent);
-      thisAmplitudeB = clamp(thisAmplitudeB, 0.0f, maxCurrent);
+      thisAmplitudeA = clamp(amplitudeAdjustmentA, 0.0f, maxCurrent);
+      thisAmplitudeB = clamp(amplitudeAdjustmentB, 0.0f, maxCurrent);
 
       // Map the amplitude values to the range [0, 255]
       thisAmplitudeA = map(thisAmplitudeA, 0, maxCurrent, 0, 255);
       thisAmplitudeB = map(thisAmplitudeB, 0, maxCurrent, 0, 255);
 
-      thisFrequencyA = interpolate(thisFrequencyA, thisFrequencyA + frequencyAdjustmentA, 5);
-      thisFrequencyB = interpolate(thisFrequencyB, thisFrequencyB + frequencyAdjustmentB, 5);
+      thisFrequencyA = interpolate(thisFrequencyA, frequencyAdjustmentA, 1);
+      thisFrequencyB = interpolate(thisFrequencyB, frequencyAdjustmentB, 1);
 
 
-      thisFrequencyA = clamp(thisFrequencyA, 0.0f, maxFrequencyA);
-      thisFrequencyB = clamp(thisFrequencyB, 0.0f, maxFrequencyB);
+      thisFrequencyA = clamp(frequencyAdjustmentA, 0.0f, maxFrequencyA);
+      thisFrequencyB = clamp(frequencyAdjustmentB, 0.0f, maxFrequencyB);
 
 
       if(dataFrequencyA.size() < numTrainSamples){
@@ -301,20 +306,10 @@ void loop() {
         DataPoint amplitudeDataA;
         DataPoint amplitudeDataB;
 
-        frequencyDataA.emfError = emfError;
-        frequencyDataB.emfError = emfError;
-        amplitudeDataA.emfError = emfError;
-        amplitudeDataB.emfError = emfError;
-
-        frequencyDataA.desiredCurrent = emfError;
-        frequencyDataB.desiredCurrent = emfError;
-        amplitudeDataA.desiredCurrent = desiredCurrent;
-        amplitudeDataB.desiredCurrent = desiredCurrent;
-
-        frequencyDataA.currentAdjustment = frequencyAdjustmentA;
-        frequencyDataB.currentAdjustment = frequencyAdjustmentB;
-        amplitudeDataA.currentAdjustment = amplitudeAdjustmentA;
-        amplitudeDataB.currentAdjustment = amplitudeAdjustmentB;
+        frequencyDataA.error = emfError;
+        frequencyDataB.error = emfError;
+        amplitudeDataA.error = desiredCurrent;
+        amplitudeDataB.error = desiredCurrent;
 
         frequencyDataA.finalCurrent = currentA;
         frequencyDataB.finalCurrent = currentA;
@@ -333,29 +328,23 @@ void loop() {
         if (dataFrequencyA.size() >= numTrainSamples) {
             mlFrequencyA.train(dataFrequencyA);
             dataFrequencyA.clear(); // Clear after training
-        }
 
-        // Similarly for other models
-        if (dataFrequencyB.size() >= numTrainSamples) {
-            mlFrequencyB.train(dataFrequencyB);
-            dataFrequencyB.clear();
-        }
-
-        if (dataAmplitudeA.size() >= numTrainSamples) {
             mlAmplitudeA.train(dataAmplitudeA);
             dataAmplitudeA.clear();
-        }
 
-        if (dataAmplitudeB.size() >= numTrainSamples) {
+            mlFrequencyB.train(dataFrequencyB);
+            dataFrequencyB.clear();
+
             mlAmplitudeB.train(dataAmplitudeB);
             dataAmplitudeB.clear();
         }
+
       }
       
 
       // Apply frequency adjustments to toggle pins at calculated intervals
-      applyFrequencyAdjustment(coilAPin, softFilterFreqA.filter(thisFrequencyA), thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
-      applyFrequencyAdjustment(coilBPin, softFilterFreqB.filter(thisFrequencyB), thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
+      applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
+      applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
       oscillate(lastTimeOscillation, currentTime);
       // Debug output
@@ -402,7 +391,7 @@ void loop() {
 
 
 // Define a function to apply frequency adjustment using PID control
-float applyFrequencyAdjustment(int pin, float frequency, float amplitude, long long &lastToggleTime, bool &pinState, long long currentTime, bool otherPinState) {
+double applyFrequencyAdjustment(int pin, double frequency, double amplitude, long long &lastToggleTime, bool &pinState, long long currentTime, bool otherPinState) {
     // Convert frequency to interval in milliseconds; handle very high frequencies appropriately
     int toggleInterval = std::max(1, int(1000.0 / frequency)); // Calculate interval in ms, prevent zero division
     // Toggle the pin if enough time has elapsed and the other coil is not active
