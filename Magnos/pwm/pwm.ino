@@ -115,14 +115,41 @@ public:
     }
 };
 
+class MovingAverageFilter {
+private:
+    std::vector<float> buffer;
+    size_t windowSize;
+    
+public:
+    MovingAverageFilter(size_t size);
+    
+    float filter(float inputValue);
+};
+
+MovingAverageFilter::MovingAverageFilter(size_t size) : windowSize(size) {}
+
+float MovingAverageFilter::filter(float inputValue) {
+    buffer.push_back(inputValue);
+    if (buffer.size() > windowSize) {
+        buffer.erase(buffer.begin());
+    }
+    
+    float sum = 0.0f;
+    for (const float& value : buffer) {
+        sum += value;
+    }
+    return sum / buffer.size();
+}
+
+
 // Define constants and create PIDController instances
 const int coilAPin = 2;
 const int coilBPin = 3;
 const int receiverPinA = A4;
-const int maxFrequencyA = 5000;
-const int maxFrequencyB = 5100;
+const int maxFrequencyA = 4000;
+const int maxFrequencyB = 4300;
 const float maxCurrent = 255;
-const float maxReading = 640;
+const float maxReading = 1023;
 
 const int numTrainSamples = 10;
 
@@ -148,7 +175,7 @@ float thisFrequencyB = 0;
 float thisAmplitudeA = 0;
 float thisAmplitudeB = 0;
 
-const float targetCurrent = maxReading; // Example: 75% of maximum reading
+const float targetCurrent = maxReading * 0.85; // Example: 75% of maximum reading
 
 LinearRegressionModel mlFrequencyA;
 LinearRegressionModel mlFrequencyB;
@@ -158,6 +185,9 @@ LinearRegressionModel mlAmplitudeB;
 std::vector<DataPoint> dataFrequencyA, dataFrequencyB;
 std::vector<DataPoint> dataAmplitudeA, dataAmplitudeB;
 
+MovingAverageFilter softFilter(32);
+MovingAverageFilter softFilterFreqA(8);
+MovingAverageFilter softFilterFreqB(8);
 
 // Define the clamp function
 float clamp(float value, float min, float max) {
@@ -176,13 +206,11 @@ float interpolate(float current, float target, float step) {
 int stepsPerRevolution = 2048; // Change this depending on your motor's specification
 
 // Pins connected from the motor to the driver IN1, IN2
-int motorPins[2] = {8, 9}; // Only using 2 pins for simplicity
-
-
-bool bravo = false;
+int motorPins[4] = {8, 9, 10, 11}; // Only using 2 pins for simplicity
 
 // Initialize the stepper library on pins 8 and 9
-Stepper myStepper(stepsPerRevolution, motorPins[0], motorPins[1]);
+Stepper myStepper(stepsPerRevolution, motorPins[0], motorPins[1], motorPins[2], motorPins[3]);
+
 
 void setup() {
 
@@ -201,7 +229,7 @@ void setup() {
     lastTimeB = millis();
     lastTimeOscillation = millis();
 
-    myStepper.setSpeed(15);
+    myStepper.setSpeed(100);
     pinMode(motorPins[0], OUTPUT);
     pinMode(motorPins[1], OUTPUT);
 
@@ -214,14 +242,9 @@ void loop() {
     float dt = (delta) / 1000.0; // Calculate delta time in seconds
     lastTime = currentTime;
 
-    int currentA = analogRead(receiverPinA);
+    int currentA = softFilter.filter(analogRead(receiverPinA));
 
-    if(currentA >= maxReading){
-      bravo = true;
-      return;
-    }
-
-    if(bravo){
+    if(currentA >= 900){
       return;
     }
     
@@ -331,8 +354,8 @@ void loop() {
       
 
       // Apply frequency adjustments to toggle pins at calculated intervals
-      applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
-      applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
+      applyFrequencyAdjustment(coilAPin, softFilterFreqA.filter(thisFrequencyA), thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
+      applyFrequencyAdjustment(coilBPin, softFilterFreqB.filter(thisFrequencyB), thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
       oscillate(lastTimeOscillation, currentTime);
       // Debug output
@@ -395,13 +418,18 @@ float applyFrequencyAdjustment(int pin, float frequency, float amplitude, long l
 
 // Define a function to apply frequency adjustment using PID control
 void oscillate(long long &lastTimeOscillation, long long currentTime) {
-    if (currentTime - lastTimeOscillation <= 1) {
-        myStepper.step(stepsPerRevolution);
+    if (currentTime - lastTimeOscillation <= 5) {
+        myStepper.step(1);
     } else {
-        analogWrite(motorPins[0], LOW);
-        analogWrite(motorPins[1], LOW);
 
-        if(currentTime - lastTimeOscillation >= 1000){
+        myStepper.step(-1);
+
+        // analogWrite(motorPins[0], LOW);
+        // analogWrite(motorPins[1], LOW);
+        // analogWrite(motorPins[2], LOW);
+        // analogWrite(motorPins[3], LOW);
+
+        if(currentTime - lastTimeOscillation >= 10){
           lastTimeOscillation = currentTime;
         }
     }
