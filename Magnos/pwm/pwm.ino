@@ -62,7 +62,7 @@ private:
     long long prevSwitchTime = 0, oscillationStartTime = 0;
     int oscillationsCount = 0;
     double period = 0.0;
-    int calibrationSteps = 12;
+    int calibrationSteps = 32;
 
 public:
     PIDController(double kp, double ki, double kd) : kp(kp), ki(ki), kd(kd) {}
@@ -152,17 +152,17 @@ double MovingAverageFilter::filter(double inputValue) {
 const int coilAPin = 2;
 const int coilBPin = 3;
 const int receiverPinA = A4;
-const int maxFrequencyA = 2600;
-const int maxFrequencyB = 3400;
+const int maxFrequencyA = 12000;
+const int maxFrequencyB = 12000;
 const double maxCurrent = 255;
 const double maxReading = 1023;
 
 const int numTrainSamples = 10;
 
 PIDController frequencyPIDA(1.0, 0, 0); 
-PIDController frequencyPIDB(2.0, 0, 0); 
+PIDController frequencyPIDB(1.0, 0, 0); 
 PIDController amplitudePIDA(1.0, 0, 0); 
-PIDController amplitudePIDB(2.0, 0, 0); 
+PIDController amplitudePIDB(1.0, 0, 0); 
 
 
 bool tuningFrequencyA = true;
@@ -192,8 +192,6 @@ std::vector<DataPoint> dataFrequencyA, dataFrequencyB;
 std::vector<DataPoint> dataAmplitudeA, dataAmplitudeB;
 
 MovingAverageFilter softFilter(64);
-MovingAverageFilter softFilterFreqA(8);
-MovingAverageFilter softFilterFreqB(8);
 
 // Define the clamp function
 double clamp(double value, double min, double max) {
@@ -209,7 +207,7 @@ double interpolate(double current, double target, double step) {
 
 
 // Number of steps per revolution of the internal gear shaft
-int stepsPerRevolution = 2048; // Change this depending on your motor's specification
+int stepsPerRevolution = 4096; // Change this depending on your motor's specification
 
 // Pins connected from the motor to the driver IN1, IN2
 int motorPins[4] = {8, 9, 10, 11}; // Only using 2 pins for simplicity
@@ -407,7 +405,7 @@ double applyFrequencyAdjustment(int pin, double frequency, double amplitude, lon
 
 // Define a function to apply frequency adjustment using PID control
 void oscillate(long long &lastTimeOscillation, long long currentTime) {
-    if (currentTime - lastTimeOscillation <= 5) {
+    if (currentTime - lastTimeOscillation <= 3) {
         myStepper.step(1);
     } else {
 
@@ -418,7 +416,7 @@ void oscillate(long long &lastTimeOscillation, long long currentTime) {
         // analogWrite(motorPins[2], LOW);
         // analogWrite(motorPins[3], LOW);
 
-        if(currentTime - lastTimeOscillation >= 10){
+        if(currentTime - lastTimeOscillation >= 7){
           lastTimeOscillation = currentTime;
         }
     }
