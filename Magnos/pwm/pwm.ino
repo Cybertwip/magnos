@@ -191,7 +191,6 @@ const int numTrainSamples = 256;
 int predictionPhaseCounter = 0;
 
 PIDController frequencyPIDA(1.0, 0, 0.0); 
-PIDController frequencyPIDB(1.0, 0, 0.0); 
 PIDController amplitudePIDA(1.0, 0, 0.0); 
 PIDController amplitudePIDB(1.0, 0, 0.0); 
 
@@ -242,7 +241,6 @@ void setup() {
 
     // Start auto-tuning for frequency and amplitude PID controllers
     frequencyPIDA.startAutoTuning(maxFrequencyA, 0);
-    frequencyPIDB.startAutoTuning(maxFrequencyB, 0);
     amplitudePIDA.startAutoTuning(maxCurrentA, 0);
     amplitudePIDB.startAutoTuning(maxCurrentB, 0);
 
@@ -296,23 +294,24 @@ void loop() {
       return;
     } 
 
-    bool calibrating = frequencyPIDA.calibrating() || frequencyPIDB.calibrating() || amplitudePIDA.calibrating() || amplitudePIDB.calibrating();
+    bool calibrating = frequencyPIDA.calibrating() || amplitudePIDA.calibrating() || amplitudePIDB.calibrating();
 
     if(calibrating){
       accumulationTime += delta;
 
       frequencyPIDA.calibrate(emfError, currentTime);
-      frequencyPIDB.calibrate(emfError, currentTime);
       amplitudePIDA.calibrate(emfError, currentTime);
       amplitudePIDB.calibrate(emfError, currentTime);
 
       double frequencyAdjustmentA = frequencyPIDA.getRelayState() ? maxFrequencyA : 0;
-      double frequencyAdjustmentB = frequencyPIDB.getRelayState() ? maxFrequencyB : 0;
+
+      double thetaFrequencyB = thisFrequencyA * cos(M_PI / 4); 
+
       double amplitudeAdjustmentA = amplitudePIDA.getRelayState() ? maxCurrentA : 0;
       double amplitudeAdjustmentB = amplitudePIDB.getRelayState() ? maxCurrentA : 0;
 
       applyFrequencyAdjustment(coilAPin, frequencyAdjustmentA, amplitudeAdjustmentA, lastTimeA, stateA, currentTime, stateB);
-      applyFrequencyAdjustment(coilBPin, frequencyAdjustmentB, amplitudeAdjustmentB, lastTimeB, stateB, currentTime, stateA);
+      applyFrequencyAdjustment(coilBPin, thetaFrequencyB, amplitudeAdjustmentB, lastTimeB, stateB, currentTime, stateA);
 
       oscillationToggle = amplitudePIDA.getRelayState() ? true : false;
 
@@ -321,12 +320,13 @@ void loop() {
 
 
         double frequencyAdjustmentA = frequencyPIDA.compute(emfError, dt) * maxFrequencyA;
-        double frequencyAdjustmentB = frequencyPIDB.compute(emfError, dt) * maxFrequencyB;
+        double thetaFrequencyB = thisFrequencyA * cos(M_PI / 4); 
+
         double amplitudeAdjustmentA = amplitudePIDA.compute(emfError, dt) * maxCurrentA;
         double amplitudeAdjustmentB = amplitudePIDB.compute(emfError, dt) * maxCurrentB;
 
         thisFrequencyA = std::max(0.0, std::min(frequencyAdjustmentA, maxFrequencyA));
-        thisFrequencyB = std::max(0.0, std::min(frequencyAdjustmentB, maxFrequencyB));
+        thisFrequencyB = std::max(0.0, std::min(thetaFrequencyB, maxFrequencyB));
         thisAmplitudeA = std::max(0.0, std::min(amplitudeAdjustmentA, maxCurrentA));
         thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
 
@@ -363,11 +363,12 @@ void loop() {
             double frequencyAdjustmentB = frequencyModelB.predict(emfError);
             double amplitudeAdjustmentA = amplitudeModelA.predict(emfError);
             double amplitudeAdjustmentB = amplitudeModelB.predict(emfError);
+            double thetaFrequencyB = thisFrequencyA * cos(M_PI / 4); 
 
             // Clamp the adjusted values within the valid range
 
             thisFrequencyA = std::max(0.0, std::min(frequencyAdjustmentA, maxFrequencyA));
-            thisFrequencyB = std::max(0.0, std::min(frequencyAdjustmentB, maxFrequencyB));
+            thisFrequencyB = std::max(0.0, std::min(thetaFrequencyB, maxFrequencyB));
             thisAmplitudeA = std::max(0.0, std::min(amplitudeAdjustmentA, maxCurrentA));
             thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
 
@@ -403,6 +404,8 @@ void loop() {
       } 
 
       // Apply frequency adjustments to toggle pins at calculated intervals
+
+
       applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
       applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
