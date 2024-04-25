@@ -21,8 +21,6 @@ public:
     
     LinearRegressionModel() : intercept(0), slope(0), sum_x(0), sum_y(0), sum_xx(0), sum_xy(0), n(0), trained(false) {}
 
-
-
     void train(const std::vector<DataPoint>& data) {
         for (const auto& point : data) {
             addData(point);
@@ -177,6 +175,11 @@ MovingAverageFilter softFilter(255);
 const int coilAPin = 2;
 const int coilBPin = 3;
 const int receiverPinA = A4;
+
+
+const int magnosPinIn = A7;
+const int magnosPinOut = 12;
+
 double maxFrequencyA = 4000;
 double maxFrequencyB = 4300;
 double maxCurrentA = 255;
@@ -230,6 +233,10 @@ void setup() {
 
     pinMode(coilAPin, OUTPUT);
     pinMode(coilBPin, OUTPUT);
+
+    pinMode(magnosPinIn, INPUT);
+    pinMode(magnosPinOut, OUTPUT);
+
     pinMode(receiverPinA, INPUT);
     Serial.begin(230400); // Set baud rate to 230400 bps
 
@@ -261,6 +268,21 @@ void loop() {
     int currentA = analogRead(receiverPinA);
     double emfError = (targetReading - currentA) / targetReading; // Adjusted error calculation
     
+
+    int magnosInput = analogRead(magnosPinIn);
+
+    if(magnosInput < maxReading * 0.75){
+        analogWrite(magnosPinOut, (magnosInput / maxReading) * 255);
+        analogWrite(oscillatorPins[1], (1.0 - emfError) * 255);
+    } else {
+      analogWrite(magnosPinOut, 0);
+
+      if(oscillationToggle){
+        analogWrite(oscillatorPins[1], 255);
+      } else {
+        analogWrite(oscillatorPins[1], 64);
+      }
+    }
 
     double oscillationError = softFilter.filter(emfError);
 
@@ -385,14 +407,6 @@ void loop() {
       applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
       oscillate(lastTimeOscillation, currentTime, (1.0 - oscillationError) * 2048,  (oscillationError) * 512);
-    }
-
-
-
-    if(oscillationToggle){
-      analogWrite(oscillatorPins[1], 255);
-    } else {
-      analogWrite(oscillatorPins[1], 64);
     }
 
 }
