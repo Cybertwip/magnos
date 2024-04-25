@@ -81,7 +81,7 @@ private:
     long long prevSwitchTime = 0, oscillationStartTime = 0;
     int oscillationsCount = 0;
     double period = 0.0;
-    int calibrationSteps = 4;
+    int calibrationSteps = 32;
 
 public:
     PIDController(double kp, double ki, double kd) : kp(kp), ki(ki), kd(kd) {}
@@ -120,9 +120,9 @@ public:
         if (oscillationsCount >= calibrationSteps) {
             autoTuning = false;
             period /= (oscillationsCount - 1);
-            kp = 0.6 * relayHigh / period;
-            ki = 2 * kp / period;
-            kd = kp * period / 8;
+            kp = 0.8 * relayHigh / period;
+            ki = 4 * kp / period;
+            kd = kp * period / 4;
 
             // Reset for possible future re-calibration
             oscillationsCount = 0;
@@ -167,23 +167,25 @@ double MovingAverageFilter::filter(double inputValue) {
 }
 
 
+MovingAverageFilter softFilter(24);
+
 // Define constants and create PIDController instances
 const int coilAPin = 2;
 const int coilBPin = 3;
 const int receiverPinA = A4;
-double maxFrequencyA = 32000;
-double maxFrequencyB = 64000;
+double maxFrequencyA = 4000;
+double maxFrequencyB = 4300;
 double maxCurrentA = 255;
-double maxCurrentB = 200;
+double maxCurrentB = 255;
 const double maxReading = 1023;
 
 const int numTrainSamples = 256;
 int predictionPhaseCounter = 0;
 
-PIDController frequencyPIDA(1.0, 0, 0); 
-PIDController frequencyPIDB(1.0, 0, 0); 
-PIDController amplitudePIDA(1.0, 0, 0); 
-PIDController amplitudePIDB(1.0, 0, 0); 
+PIDController frequencyPIDA(1.0, 0, 0.1); 
+PIDController frequencyPIDB(2.0, 0, 0.1); 
+PIDController amplitudePIDA(1.0, 1, 0.2); 
+PIDController amplitudePIDB(2.0, 1, 0.2); 
 
 bool tuningFrequencyA = true;
 bool tuningAmplitudeA = true;
@@ -217,13 +219,13 @@ double interpolate(double current, double target, double step) {
 
 
 // Number of steps per revolution of the internal gear shaft
-int stepsPerRevolution = 4096; // Change this depending on your motor's specification
+int stepsPerRevolution = 2048; // Change this depending on your motor's specification
 
 // Pins connected from the motor to the driver IN1, IN2
-int motorPins[4] = {8, 9, 10, 11}; // Only using 2 pins for simplicity
+int motorPins[4] = {8, 9}; // Only using 2 pins for simplicity
 
 // Initialize the stepper library on pins 8 and 9
-Stepper myStepper(stepsPerRevolution, motorPins[0], motorPins[1], motorPins[2], motorPins[3]);
+Stepper myStepper(stepsPerRevolution, motorPins[0], motorPins[1]);
 
 
 void setup() {
@@ -243,7 +245,7 @@ void setup() {
     lastTimeB = millis();
     lastTimeOscillation = millis();
 
-    myStepper.setSpeed(100);
+    myStepper.setSpeed(250);
     pinMode(motorPins[0], OUTPUT);
     pinMode(motorPins[1], OUTPUT);
 
@@ -262,6 +264,12 @@ void loop() {
     double emfError = (targetReading - currentA) / targetReading; // Adjusted error calculation
     
     if(currentA >= targetReading){
+            // Apply frequency adjustments to toggle pins at calculated intervals
+      applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
+      applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
+
+      oscillate(lastTimeOscillation, currentTime, ((currentA / maxReading)) * 255,  (1.0 - (currentA / maxReading)) * 255);
+
       return;
     } 
     
@@ -274,6 +282,8 @@ void loop() {
     // Compute PID outputs for frequency and amplitude control for coils A and B
     if(delta > 0){
       if(predictionPhaseCounter < numTrainSamples){
+
+
         double frequencyAdjustmentA = frequencyPIDA.compute(emfError, dt) * maxFrequencyA;
         double frequencyAdjustmentB = frequencyPIDB.compute(emfError, dt) * maxFrequencyB;
         double amplitudeAdjustmentA = amplitudePIDA.compute(emfError, dt) * maxCurrentA;
@@ -360,7 +370,7 @@ void loop() {
       applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
       applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
-      // oscillate(lastTimeOscillation, currentTime);
+      oscillate(lastTimeOscillation, currentTime, (1.0 - (currentA / maxReading)) * 255,  ((currentA / maxReading)) * 255);
     }
 
 
@@ -407,20 +417,18 @@ double applyFrequencyAdjustment(int pin, double frequency, double amplitude, lon
 
 
 // Define a function to apply frequency adjustment using PID control
-void oscillate(long long &lastTimeOscillation, long long currentTime) {
-    if (currentTime - lastTimeOscillation <= 3) {
+void oscillate(long long &lastTimeOscillation, long long currentTime, double frequencyOn, double frequencyOff) {
+
+    int toggleInterval = std::max(1, int(1000.0 / frequencyOn)); // Calculate interval in ms, prevent zero division
+
+    if (currentTime - lastTimeOscillation <= toggleInterval) {
         myStepper.step(1);
-    } else {
+    } 
+    
+    toggleInterval = std::max(1, int(1000.0 / frequencyOff)); // Calculate interval in ms, prevent zero division
 
-        myStepper.step(-1);
-
-        // analogWrite(motorPins[0], LOW);
-        // analogWrite(motorPins[1], LOW);
-        // analogWrite(motorPins[2], LOW);
-        // analogWrite(motorPins[3], LOW);
-
-        if(currentTime - lastTimeOscillation >= 7){
-          lastTimeOscillation = currentTime;
-        }
+    if(currentTime - lastTimeOscillation >= toggleInterval){
+      lastTimeOscillation = currentTime;
     }
+
 }
