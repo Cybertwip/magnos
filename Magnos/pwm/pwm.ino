@@ -296,7 +296,7 @@ void loop() {
       thisFrequencyB = thisFrequencyA * cos(M_PI / 4); 
 
       thisAmplitudeA = amplitudePID.getRelayState() ? maxCurrentA : 0;
-      thisAmplitudeB = thisAmplitudeA * sin(M_PI / 4); 
+      thisAmplitudeB = thisAmplitudeA * cos(M_PI / 4); 
 
       applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
       applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeA, lastTimeB, stateB, currentTime, stateA);
@@ -323,10 +323,10 @@ void loop() {
     } else if(delta > 0){
       if(predictionPhaseCounter < numTrainSamples){
         double frequencyAdjustmentA = frequencyPID.compute(emfError, dt) * maxFrequencyA;
-        double thetaFrequencyB = thisFrequencyA * sin(M_PI); 
+        double thetaFrequencyB = thisFrequencyA * sin(M_PI / 4); 
 
         double amplitudeAdjustmentA = amplitudePID.compute(emfError, dt) * maxCurrentA;
-        double amplitudeAdjustmentB = amplitudeAdjustmentA * cos(M_PI); 
+        double amplitudeAdjustmentB = amplitudeAdjustmentA * cos(M_PI / 4); 
 
         thisFrequencyA = std::max(0.0, std::min(frequencyAdjustmentA, maxFrequencyA));
         thisFrequencyB = std::max(0.0, std::min(thetaFrequencyB, maxFrequencyB));
@@ -363,9 +363,9 @@ void loop() {
         if (targetReading > 0) {  // Ensure targetReading is positive to avoid division by zero
 
             double frequencyAdjustmentA = frequencyModel.predict(emfError);
-            double frequencyAdjustmentB = frequencyAdjustmentA * sin(M_PI); 
+            double frequencyAdjustmentB = frequencyAdjustmentA * sin(M_PI / 4); 
             double amplitudeAdjustmentA = amplitudeModel.predict(emfError);
-            double amplitudeAdjustmentB = amplitudeAdjustmentA * cos(M_PI); 
+            double amplitudeAdjustmentB = amplitudeAdjustmentA * cos(M_PI / 4); 
             double thetaFrequencyB = thisFrequencyA * cos(M_PI / 4); 
 
             // Clamp the adjusted values within the valid range
