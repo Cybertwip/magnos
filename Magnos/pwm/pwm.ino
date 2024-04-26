@@ -293,7 +293,7 @@ void loop() {
       amplitudePID.calibrate(emfError, currentTime);
 
       thisFrequencyA = frequencyPID.getRelayState() ? maxFrequencyA : 0;
-      thisFrequencyB = thisFrequencyA * cos(M_PI / 4); 
+      thisFrequencyB = thisFrequencyA * sin(M_PI / 4); 
 
       thisAmplitudeA = amplitudePID.getRelayState() ? maxCurrentA : 0;
       thisAmplitudeB = thisAmplitudeA * cos(M_PI / 4); 
@@ -366,7 +366,6 @@ void loop() {
             double frequencyAdjustmentB = frequencyAdjustmentA * sin(M_PI / 4); 
             double amplitudeAdjustmentA = amplitudeModel.predict(emfError);
             double amplitudeAdjustmentB = amplitudeAdjustmentA * cos(M_PI / 4); 
-            double thetaFrequencyB = thisFrequencyA * cos(M_PI / 4); 
 
             // Clamp the adjusted values within the valid range
 
