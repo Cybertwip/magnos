@@ -190,9 +190,8 @@ long long accumulationTime = 0;
 const int numTrainSamples = 256;
 int predictionPhaseCounter = 0;
 
-PIDController frequencyPIDA(1.0, 0, 0.0); 
-PIDController amplitudePIDA(1.0, 0, 0.0); 
-PIDController amplitudePIDB(1.0, 0, 0.0); 
+PIDController frequencyPID(1.0, 0, 0.0); 
+PIDController amplitudePID(1.0, 0, 0.0); 
 
 bool tuningFrequencyA = true;
 bool tuningAmplitudeA = true;
@@ -212,10 +211,8 @@ double thisAmplitudeB = 0;
 
 const double targetReading = maxReading; // Example: 75% of maximum reading
 
-LinearRegressionModel frequencyModelA;
-LinearRegressionModel frequencyModelB;
-LinearRegressionModel amplitudeModelA;
-LinearRegressionModel amplitudeModelB;
+LinearRegressionModel frequencyModel;
+LinearRegressionModel amplitudeModel;
 
 double interpolate(double current, double target, double step) {
     if (abs(current - target) < step) return target; // Close enough to target
@@ -240,9 +237,8 @@ void setup() {
     Serial.begin(230400); // Set baud rate to 230400 bps
 
     // Start auto-tuning for frequency and amplitude PID controllers
-    frequencyPIDA.startAutoTuning(maxFrequencyA, 0);
-    amplitudePIDA.startAutoTuning(maxCurrentA, 0);
-    amplitudePIDB.startAutoTuning(maxCurrentB, 0);
+    frequencyPID.startAutoTuning(maxFrequencyA, 0);
+    amplitudePID.startAutoTuning(maxCurrentA, 0);
 
     lastTimeA = millis();
     lastTimeB = millis();
@@ -266,64 +262,71 @@ void loop() {
     int currentA = analogRead(receiverPinA);
     double emfError = (targetReading - currentA) / targetReading; // Adjusted error calculation
     
-
+    
     int magnosInput = analogRead(magnosPinIn);
 
-    if(magnosInput < maxReading * 0.75){
+    if(magnosInput < maxReading * 0.85){
         analogWrite(magnosPinOut, (magnosInput / maxReading) * 255);
-        analogWrite(oscillatorPins[1], (1.0 - emfError) * 255);
     } else {
       analogWrite(magnosPinOut, 0);
 
       if(oscillationToggle){
         analogWrite(oscillatorPins[1], 255);
       } else {
-        analogWrite(oscillatorPins[1], 64);
+        analogWrite(oscillatorPins[1], 72);
       }
     }
 
-    double oscillationError = softFilter.filter(emfError);
-
     if(currentA >= targetReading){
-            // Apply frequency adjustments to toggle pins at calculated intervals
-      applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
-      applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
-      oscillate(lastTimeOscillation, currentTime, (1.0 - oscillationError) * 2048,  (oscillationError) * 512);
+      oscillate(lastTimeOscillation, currentTime, 1000,  1000);
 
       return;
-    } 
+    }
 
-    bool calibrating = frequencyPIDA.calibrating() || amplitudePIDA.calibrating() || amplitudePIDB.calibrating();
+    bool calibrating = frequencyPID.calibrating() || amplitudePID.calibrating();
 
     if(calibrating){
       accumulationTime += delta;
 
-      frequencyPIDA.calibrate(emfError, currentTime);
-      amplitudePIDA.calibrate(emfError, currentTime);
-      amplitudePIDB.calibrate(emfError, currentTime);
+      frequencyPID.calibrate(emfError, currentTime);
+      amplitudePID.calibrate(emfError, currentTime);
 
-      double frequencyAdjustmentA = frequencyPIDA.getRelayState() ? maxFrequencyA : 0;
+      thisFrequencyA = frequencyPID.getRelayState() ? maxFrequencyA : 0;
+      thisFrequencyB = thisFrequencyA * cos(M_PI / 4); 
 
-      double thetaFrequencyB = thisFrequencyA * cos(M_PI / 4); 
+      thisAmplitudeA = amplitudePID.getRelayState() ? maxCurrentA : 0;
+      thisAmplitudeB = thisAmplitudeA * sin(M_PI / 4); 
 
-      double amplitudeAdjustmentA = amplitudePIDA.getRelayState() ? maxCurrentA : 0;
-      double amplitudeAdjustmentB = amplitudePIDB.getRelayState() ? maxCurrentA : 0;
+      applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
+      applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeA, lastTimeB, stateB, currentTime, stateA);
 
-      applyFrequencyAdjustment(coilAPin, frequencyAdjustmentA, amplitudeAdjustmentA, lastTimeA, stateA, currentTime, stateB);
-      applyFrequencyAdjustment(coilBPin, thetaFrequencyB, amplitudeAdjustmentB, lastTimeB, stateB, currentTime, stateA);
+      oscillationToggle = amplitudePID.getRelayState() ? true : false;
 
-      oscillationToggle = amplitudePIDA.getRelayState() ? true : false;
+      Serial.print(" - CAL: ");
+      Serial.print(" - Reading: ");
+      Serial.print(currentA);
+      Serial.print(" - Error: ");
+      Serial.print(emfError);
+
+      Serial.print(" - FA: ");
+      Serial.print(thisFrequencyA);
+      Serial.print(" - FB: ");
+      Serial.print(thisFrequencyB);
+
+      Serial.print(" - AA: ");
+      Serial.print(thisAmplitudeA);
+      Serial.print(" - AB: ");
+      Serial.println(thisAmplitudeB);
+
 
     } else if(delta > 0){
       if(predictionPhaseCounter < numTrainSamples){
+        double frequencyAdjustmentA = frequencyPID.compute(emfError, dt) * maxFrequencyA;
+        double thetaFrequencyB = thisFrequencyA * sin(M_PI); 
 
-
-        double frequencyAdjustmentA = frequencyPIDA.compute(emfError, dt) * maxFrequencyA;
-        double thetaFrequencyB = thisFrequencyA * cos(M_PI / 4); 
-
-        double amplitudeAdjustmentA = amplitudePIDA.compute(emfError, dt) * maxCurrentA;
-        double amplitudeAdjustmentB = amplitudePIDB.compute(emfError, dt) * maxCurrentB;
+        double amplitudeAdjustmentA = amplitudePID.compute(emfError, dt) * maxCurrentA;
+        double amplitudeAdjustmentB = amplitudeAdjustmentA * cos(M_PI); 
 
         thisFrequencyA = std::max(0.0, std::min(frequencyAdjustmentA, maxFrequencyA));
         thisFrequencyB = std::max(0.0, std::min(thetaFrequencyB, maxFrequencyB));
@@ -333,7 +336,7 @@ void loop() {
         predictionPhaseCounter++;
 
 
-            Serial.print(" - T: ");
+            Serial.print(" - PID: ");
             Serial.print(" - Reading: ");
             Serial.print(currentA);
             Serial.print(" - Error: ");
@@ -359,10 +362,10 @@ void loop() {
 
         if (targetReading > 0) {  // Ensure targetReading is positive to avoid division by zero
 
-            double frequencyAdjustmentA = frequencyModelA.predict(emfError);
-            double frequencyAdjustmentB = frequencyModelB.predict(emfError);
-            double amplitudeAdjustmentA = amplitudeModelA.predict(emfError);
-            double amplitudeAdjustmentB = amplitudeModelB.predict(emfError);
+            double frequencyAdjustmentA = frequencyModel.predict(emfError);
+            double frequencyAdjustmentB = frequencyAdjustmentA * sin(M_PI); 
+            double amplitudeAdjustmentA = amplitudeModel.predict(emfError);
+            double amplitudeAdjustmentB = amplitudeAdjustmentA * cos(M_PI); 
             double thetaFrequencyB = thisFrequencyA * cos(M_PI / 4); 
 
             // Clamp the adjusted values within the valid range
@@ -373,7 +376,7 @@ void loop() {
             thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
 
             
-            Serial.print(" - P: ");
+            Serial.print(" - PRE: ");
             Serial.print(" - Reading: ");
             Serial.print(currentA);
             Serial.print(" - Error: ");
@@ -397,10 +400,8 @@ void loop() {
       }
 
       if(predictionPhaseCounter < numTrainSamples){
-        frequencyModelA.addData({emfError, thisFrequencyA});
-        frequencyModelB.addData({emfError, thisFrequencyB});
-        amplitudeModelA.addData({emfError, thisAmplitudeA});
-        amplitudeModelB.addData({emfError, thisAmplitudeB});
+        frequencyModel.addData({emfError, thisFrequencyA});
+        amplitudeModel.addData({emfError, thisAmplitudeA});
       } 
 
       // Apply frequency adjustments to toggle pins at calculated intervals
@@ -409,7 +410,7 @@ void loop() {
       applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
       applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
-      oscillate(lastTimeOscillation, currentTime, (1.0 - oscillationError) * 2048,  (oscillationError) * 512);
+      oscillate(lastTimeOscillation, currentTime, 1,  1);
     }
 
 }
@@ -435,11 +436,12 @@ void oscillate(long long &lastTimeOscillation, long long currentTime, double fre
     int onInterval = (frequencyOn > 0) ? static_cast<int>(1000 / frequencyOn) : INT8_MAX;  // Prevent division by zero
     int offInterval = (frequencyOff > 0) ? static_cast<int>(1000 / frequencyOff) : INT8_MAX;  // Prevent division by zero
 
-    if (!oscillationToggle && currentTime - lastTimeOscillation >= offInterval) {
-        oscillationToggle = true;  
+    // Toggle logic
+    if (oscillationToggle && (currentTime - lastTimeOscillation >= onInterval)) {
+        oscillationToggle = false;  // Turn off
         lastTimeOscillation = currentTime;  // Update the last toggle time
-    } else if (oscillationToggle && currentTime - lastTimeOscillation >= onInterval) {
-        oscillationToggle = false;  
+    } else if (!oscillationToggle && (currentTime - lastTimeOscillation >= offInterval)) {
+        oscillationToggle = true;   // Turn on
         lastTimeOscillation = currentTime;  // Update the last toggle time
     }
 }
