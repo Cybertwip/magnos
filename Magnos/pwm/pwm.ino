@@ -370,7 +370,7 @@ void loop() {
             // Clamp the adjusted values within the valid range
 
             thisFrequencyA = std::max(0.0, std::min(frequencyAdjustmentA, maxFrequencyA));
-            thisFrequencyB = std::max(0.0, std::min(thetaFrequencyB, maxFrequencyB));
+            thisFrequencyB = std::max(0.0, std::min(frequencyAdjustmentB, maxFrequencyB));
             thisAmplitudeA = std::max(0.0, std::min(amplitudeAdjustmentA, maxCurrentA));
             thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
 
