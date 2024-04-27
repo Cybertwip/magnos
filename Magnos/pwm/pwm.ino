@@ -94,7 +94,7 @@ public:
         // Do not reset oscillationsCount and period here if resuming
         if (oscillationsCount == 0) {
             period = 0.0;
-            prevSwitchTime = millis(); // Re-initialize timing only if starting fresh
+            prevSwitchTime = micros(); // Re-initialize timing only if starting fresh
         }
     }
 
@@ -240,9 +240,9 @@ void setup() {
     frequencyPID.startAutoTuning(maxFrequencyA, 0);
     amplitudePID.startAutoTuning(maxCurrentA, 0);
 
-    lastTimeA = millis();
-    lastTimeB = millis();
-    lastTimeOscillation = millis();
+    lastTimeA = micros();
+    lastTimeB = micros();
+    lastTimeOscillation = micros();
     pinMode(oscillatorPins[0], OUTPUT);
     pinMode(oscillatorPins[1], OUTPUT);
 
@@ -251,9 +251,7 @@ void setup() {
 }
 
 void loop() {
-
-
-    long long currentTime = millis();
+    long long currentTime = micros();
     static long long lastTime = currentTime;
     long long delta = (currentTime - lastTime); // Calculate delta time in milliseconds
     double dt = (delta) / 1000.0; // Calculate delta time in seconds
@@ -265,26 +263,29 @@ void loop() {
     
     int magnosInput = analogRead(magnosPinIn);
 
-    if(magnosInput < maxReading * 0.85){
-        analogWrite(magnosPinOut, (magnosInput / maxReading) * 255);
-    } else {
+    if(magnosInput > 128){
       analogWrite(magnosPinOut, 0);
+
 
       if(oscillationToggle){
         analogWrite(oscillatorPins[1], 255);
       } else {
-        analogWrite(oscillatorPins[1], 72);
+        analogWrite(oscillatorPins[1], 0);
       }
-    }
 
-    if(currentA >= targetReading){
+    } else {
+
+      analogWrite(magnosPinOut, 255);
+    }
+    bool calibrating = frequencyPID.calibrating() || amplitudePID.calibrating();
+
+    if(currentA >= targetReading && !calibrating){
 
       oscillate(lastTimeOscillation, currentTime, 1000,  1000);
 
       return;
     }
 
-    bool calibrating = frequencyPID.calibrating() || amplitudePID.calibrating();
 
     if(calibrating){
       accumulationTime += delta;
@@ -304,21 +305,6 @@ void loop() {
       oscillationToggle = amplitudePID.getRelayState() ? true : false;
 
       Serial.print(" - CAL: ");
-      Serial.print(" - Reading: ");
-      Serial.print(currentA);
-      Serial.print(" - Error: ");
-      Serial.print(emfError);
-
-      Serial.print(" - FA: ");
-      Serial.print(thisFrequencyA);
-      Serial.print(" - FB: ");
-      Serial.print(thisFrequencyB);
-
-      Serial.print(" - AA: ");
-      Serial.print(thisAmplitudeA);
-      Serial.print(" - AB: ");
-      Serial.println(thisAmplitudeB);
-
 
     } else if(delta > 0){
       if(predictionPhaseCounter < numTrainSamples){
@@ -337,20 +323,6 @@ void loop() {
 
 
             Serial.print(" - PID: ");
-            Serial.print(" - Reading: ");
-            Serial.print(currentA);
-            Serial.print(" - Error: ");
-            Serial.print(emfError);
-
-            Serial.print(" - FA: ");
-            Serial.print(thisFrequencyA);
-            Serial.print(" - FB: ");
-            Serial.print(thisFrequencyB);
-
-            Serial.print(" - AA: ");
-            Serial.print(thisAmplitudeA);
-            Serial.print(" - AB: ");
-            Serial.println(thisAmplitudeB);
 
         
       } else {
@@ -376,20 +348,6 @@ void loop() {
 
             
             Serial.print(" - PRE: ");
-            Serial.print(" - Reading: ");
-            Serial.print(currentA);
-            Serial.print(" - Error: ");
-            Serial.print(emfError);
-
-            Serial.print(" - FA: ");
-            Serial.print(thisFrequencyA);
-            Serial.print(" - FB: ");
-            Serial.print(thisFrequencyB);
-
-            Serial.print(" - AA: ");
-            Serial.print(thisAmplitudeA);
-            Serial.print(" - AB: ");
-            Serial.println(thisAmplitudeB);
 
         } else {
             Serial.println("Invalid targetReading value; must be > 0");
@@ -411,6 +369,24 @@ void loop() {
 
       oscillate(lastTimeOscillation, currentTime, 1,  1);
     }
+
+
+      Serial.print(" - Reading: ");
+      Serial.print(currentA);
+      Serial.print(" - Short: ");
+      Serial.print(magnosInput);
+      Serial.print(" - Error: ");
+      Serial.print(emfError);
+
+      Serial.print(" - FA: ");
+      Serial.print(thisFrequencyA);
+      Serial.print(" - FB: ");
+      Serial.print(thisFrequencyB);
+
+      Serial.print(" - AA: ");
+      Serial.print(thisAmplitudeA);
+      Serial.print(" - AB: ");
+      Serial.println(thisAmplitudeB);
 
 }
 
