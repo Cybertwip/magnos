@@ -77,7 +77,7 @@ private:
     long long prevSwitchTime = 0, oscillationStartTime = 0;
     int oscillationsCount = 0;
     double period = 0.0;
-    int calibrationSteps = 4096;
+    int calibrationSteps = 1024;
 
     bool relayState = true;
 
@@ -112,7 +112,7 @@ public:
             }
             prevSwitchTime = currentTime;
 
-            relayState = ~relayState;
+            relayState = !relayState;
 
             oscillationsCount++;
         }
@@ -133,6 +133,10 @@ public:
     }
 
     double compute(double error, double dt) {
+        bool shouldToggle = error != prev_error;
+    		if (shouldToggle) {
+            relayState = !relayState;
+        }
         double p = kp * error;
         integral += error * dt;
         double d = kd * (error - prev_error) / dt;
@@ -225,6 +229,8 @@ double interpolate(double current, double target, double step) {
 int oscillatorPins[4] = {8, 9}; // Only using 2 pins for simplicity
 bool oscillationToggle = true;
 
+long osc = 100;
+
 void setup() {
 
     pinMode(coilAPin, OUTPUT);
@@ -251,7 +257,8 @@ void setup() {
 }
 
 void loop() {
-    long long currentTime = micros();
+    long long currentTime = millis();
+
     static long long lastTime = currentTime;
     long long delta = (currentTime - lastTime); // Calculate delta time in milliseconds
     double dt = (delta) / 1000.0; // Calculate delta time in seconds
@@ -260,32 +267,9 @@ void loop() {
     int currentA = analogRead(receiverPinA);
     double emfError = (targetReading - currentA) / targetReading; // Adjusted error calculation
     
-    
-    int magnosInput = analogRead(magnosPinIn);
+    tone(oscillatorPins[1], 4000000);
 
-    if(magnosInput > 128){
-      analogWrite(magnosPinOut, 0);
-
-
-      if(oscillationToggle){
-        analogWrite(oscillatorPins[1], 255);
-      } else {
-        analogWrite(oscillatorPins[1], 0);
-      }
-
-    } else {
-
-      analogWrite(magnosPinOut, 255);
-    }
     bool calibrating = frequencyPID.calibrating() || amplitudePID.calibrating();
-
-    if(currentA >= targetReading && !calibrating){
-
-      oscillate(lastTimeOscillation, currentTime, 1000,  1000);
-
-      return;
-    }
-
 
     if(calibrating){
       accumulationTime += delta;
@@ -294,10 +278,10 @@ void loop() {
       amplitudePID.calibrate(emfError, currentTime);
 
       thisFrequencyA = frequencyPID.getRelayState() ? maxFrequencyA : 0;
-      thisFrequencyB = thisFrequencyA * sin(M_PI / 4); 
+      thisFrequencyB = thisFrequencyA * sin(M_PI / 2); 
 
       thisAmplitudeA = amplitudePID.getRelayState() ? maxCurrentA : 0;
-      thisAmplitudeB = thisAmplitudeA * cos(M_PI / 4); 
+      thisAmplitudeB = thisAmplitudeA * sin(M_PI / 2); 
 
       applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
       applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeA, lastTimeB, stateB, currentTime, stateA);
@@ -309,21 +293,21 @@ void loop() {
     } else if(delta > 0){
       if(predictionPhaseCounter < numTrainSamples){
         double frequencyAdjustmentA = frequencyPID.compute(emfError, dt) * maxFrequencyA;
-        double thetaFrequencyB = thisFrequencyA * sin(M_PI / 4); 
+        double frequencyAdjustmentB = frequencyAdjustmentA * sin(M_PI / 2); 
 
         double amplitudeAdjustmentA = amplitudePID.compute(emfError, dt) * maxCurrentA;
-        double amplitudeAdjustmentB = amplitudeAdjustmentA * cos(M_PI / 4); 
+        double amplitudeAdjustmentB = amplitudeAdjustmentA * sin(M_PI / 2);  
 
         thisFrequencyA = std::max(0.0, std::min(frequencyAdjustmentA, maxFrequencyA));
-        thisFrequencyB = std::max(0.0, std::min(thetaFrequencyB, maxFrequencyB));
+        thisFrequencyB = std::max(0.0, std::min(frequencyAdjustmentB, maxFrequencyB));
         thisAmplitudeA = std::max(0.0, std::min(amplitudeAdjustmentA, maxCurrentA));
         thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
 
         predictionPhaseCounter++;
 
+        Serial.print(" - PID: ");
 
-            Serial.print(" - PID: ");
-
+        oscillationToggle = amplitudePID.getRelayState() ? true : false;
         
       } else {
 
@@ -337,7 +321,7 @@ void loop() {
             double frequencyAdjustmentA = frequencyModel.predict(emfError);
             double frequencyAdjustmentB = frequencyAdjustmentA * sin(M_PI / 4); 
             double amplitudeAdjustmentA = amplitudeModel.predict(emfError);
-            double amplitudeAdjustmentB = amplitudeAdjustmentA * cos(M_PI / 4); 
+            double amplitudeAdjustmentB = amplitudeAdjustmentA * sin(M_PI / 4); 
 
             // Clamp the adjusted values within the valid range
 
@@ -346,7 +330,9 @@ void loop() {
             thisAmplitudeA = std::max(0.0, std::min(amplitudeAdjustmentA, maxCurrentA));
             thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
 
-            
+
+            oscillationToggle = amplitudePID.getRelayState() ? true : false;
+
             Serial.print(" - PRE: ");
 
         } else {
@@ -367,17 +353,10 @@ void loop() {
       applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
       applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
-      oscillate(lastTimeOscillation, currentTime, 1,  1);
-    }
-
-
       Serial.print(" - Reading: ");
       Serial.print(currentA);
-      Serial.print(" - Short: ");
-      Serial.print(magnosInput);
       Serial.print(" - Error: ");
       Serial.print(emfError);
-
       Serial.print(" - FA: ");
       Serial.print(thisFrequencyA);
       Serial.print(" - FB: ");
@@ -387,6 +366,11 @@ void loop() {
       Serial.print(thisAmplitudeA);
       Serial.print(" - AB: ");
       Serial.println(thisAmplitudeB);
+
+    }
+
+
+
 
 }
 
@@ -398,26 +382,9 @@ double applyFrequencyAdjustment(int pin, double frequency, double amplitude, lon
     // Toggle the pin if enough time has elapsed and the other coil is not active
     if (currentTime - lastToggleTime >= toggleInterval) {
         pinState = !pinState;
-        analogWrite(pin, amplitude); // Apply amplitude only when pin is HIGH
+        analogWrite(pin, 255); // Apply amplitude only when pin is HIGH
         lastToggleTime = currentTime;
-    }
+    }         
 
     return amplitude;
 }
-
-
-void oscillate(long long &lastTimeOscillation, long long currentTime, double frequencyOn, double frequencyOff) {
-    // Convert frequency in Hz to interval in milliseconds
-    int onInterval = (frequencyOn > 0) ? static_cast<int>(1000 / frequencyOn) : INT8_MAX;  // Prevent division by zero
-    int offInterval = (frequencyOff > 0) ? static_cast<int>(1000 / frequencyOff) : INT8_MAX;  // Prevent division by zero
-
-    // Toggle logic
-    if (oscillationToggle && (currentTime - lastTimeOscillation >= onInterval)) {
-        oscillationToggle = false;  // Turn off
-        lastTimeOscillation = currentTime;  // Update the last toggle time
-    } else if (!oscillationToggle && (currentTime - lastTimeOscillation >= offInterval)) {
-        oscillationToggle = true;   // Turn on
-        lastTimeOscillation = currentTime;  // Update the last toggle time
-    }
-}
-
