@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoSTL.h>
-
+#include <Tone.h>
 struct DataPoint {
     double error;
     double adjustment;
@@ -225,17 +225,17 @@ double interpolate(double current, double target, double step) {
     return current;                                  // Default case (should not hit)
 }
 
-// Pins connected from the oscillator to the driver IN1, IN2
-int oscillatorPins[4] = {8, 9}; // Only using 2 pins for simplicity
-bool oscillationToggle = true;
+int oscillatorPins[3] = {7, 8, 9};
 
-long osc = 100;
+Tone osc1;
+Tone osc2;
+Tone osc3;
+
+
+Tone coilA;
+Tone coilB;
 
 void setup() {
-
-    pinMode(coilAPin, OUTPUT);
-    pinMode(coilBPin, OUTPUT);
-
     pinMode(magnosPinIn, INPUT);
     pinMode(magnosPinOut, OUTPUT);
 
@@ -249,16 +249,21 @@ void setup() {
     lastTimeA = micros();
     lastTimeB = micros();
     lastTimeOscillation = micros();
-    pinMode(oscillatorPins[0], OUTPUT);
-    pinMode(oscillatorPins[1], OUTPUT);
-
     analogWrite(coilAPin, maxCurrentA);
     analogWrite(coilBPin, maxCurrentB);
+
+    osc1.begin(oscillatorPins[0]);
+    osc2.begin(oscillatorPins[1]);
+    osc3.begin(oscillatorPins[2]);
+
+    coilA.begin(coilAPin);
+    coilB.begin(coilBPin);
+
 }
 
 void loop() {
     long long currentTime = millis();
-    static bool toneToggle = false;
+    static int toneStatus = 0;
     static long long lastTime = currentTime;
     long long delta = (currentTime - lastTime); // Calculate delta time in milliseconds
     double dt = (delta) / 1000.0; // Calculate delta time in seconds
@@ -267,13 +272,16 @@ void loop() {
     int currentA = analogRead(receiverPinA);
     double emfError = (targetReading - currentA) / targetReading; // Adjusted error calculation
     
-    if(toneToggle){
-      tone(oscillatorPins[0], 4000000);
-    } else {
-      tone(oscillatorPins[1], 4000000);
+    if(toneStatus == 0){
+      osc1.play(4000000);
+      toneStatus = 1;
+    } else if(toneStatus == 1){
+      osc2.play(4000000);
+      toneStatus = 2;
+    } else if(toneStatus == 2){
+      osc3.play(4000000);
+      toneStatus = 0;
     }
-
-    toneToggle = !toneToggle;
 
     bool calibrating = frequencyPID.calibrating() || amplitudePID.calibrating();
 
@@ -286,13 +294,16 @@ void loop() {
       thisFrequencyA = frequencyPID.getRelayState() ? maxFrequencyA : 0;
       thisFrequencyB = thisFrequencyA * sin(M_PI / 2); 
 
-      thisAmplitudeA = amplitudePID.getRelayState() ? maxCurrentA : 0;
-      thisAmplitudeB = thisAmplitudeA * sin(M_PI / 2); 
+      // thisAmplitudeA = amplitudePID.getRelayState() ? maxCurrentA : 0;
+      // thisAmplitudeB = thisAmplitudeA * sin(M_PI / 2); 
 
-      applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
-      applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeA, lastTimeB, stateB, currentTime, stateA);
 
-      oscillationToggle = amplitudePID.getRelayState() ? true : false;
+      coilA.play(thisFrequencyA);
+      coilB.play(thisFrequencyB);
+      // applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
+      // applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeA, lastTimeB, stateB, currentTime, stateA);
+
+      // oscillationToggle = amplitudePID.getRelayState() ? true : false;
 
       Serial.print(" - CAL: ");
 
@@ -306,14 +317,14 @@ void loop() {
 
         thisFrequencyA = std::max(0.0, std::min(frequencyAdjustmentA, maxFrequencyA));
         thisFrequencyB = std::max(0.0, std::min(frequencyAdjustmentB, maxFrequencyB));
-        thisAmplitudeA = std::max(0.0, std::min(amplitudeAdjustmentA, maxCurrentA));
-        thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
+        // thisAmplitudeA = std::max(0.0, std::min(amplitudeAdjustmentA, maxCurrentA));
+        // thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
 
         predictionPhaseCounter++;
 
         Serial.print(" - PID: ");
 
-        oscillationToggle = amplitudePID.getRelayState() ? true : false;
+        // oscillationToggle = amplitudePID.getRelayState() ? true : false;
         
       } else {
 
@@ -337,7 +348,7 @@ void loop() {
             thisAmplitudeB = std::max(0.0, std::min(amplitudeAdjustmentB, maxCurrentB));
 
 
-            oscillationToggle = amplitudePID.getRelayState() ? true : false;
+            // oscillationToggle = amplitudePID.getRelayState() ? true : false;
 
             Serial.print(" - PRE: ");
 
@@ -355,9 +366,11 @@ void loop() {
 
       // Apply frequency adjustments to toggle pins at calculated intervals
 
+      coilA.play(thisFrequencyA);
+      coilB.play(thisFrequencyB);
 
-      applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
-      applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
+      // applyFrequencyAdjustment(coilAPin, thisFrequencyA, thisAmplitudeA, lastTimeA, stateA, currentTime, stateB);
+      // applyFrequencyAdjustment(coilBPin, thisFrequencyB, thisAmplitudeB, lastTimeB, stateB, currentTime, stateA);
 
       Serial.print(" - Reading: ");
       Serial.print(currentA);
