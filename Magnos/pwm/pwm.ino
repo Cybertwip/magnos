@@ -258,7 +258,7 @@ void setup() {
 
 void loop() {
     long long currentTime = millis();
-
+    static bool toneToggle = false;
     static long long lastTime = currentTime;
     long long delta = (currentTime - lastTime); // Calculate delta time in milliseconds
     double dt = (delta) / 1000.0; // Calculate delta time in seconds
@@ -267,7 +267,13 @@ void loop() {
     int currentA = analogRead(receiverPinA);
     double emfError = (targetReading - currentA) / targetReading; // Adjusted error calculation
     
-    tone(oscillatorPins[1], 4000000);
+    if(toneToggle){
+      tone(oscillatorPins[0], 4000000);
+    } else {
+      tone(oscillatorPins[1], 4000000);
+    }
+
+    toneToggle = !toneToggle;
 
     bool calibrating = frequencyPID.calibrating() || amplitudePID.calibrating();
 
