@@ -176,7 +176,6 @@ MovingAverageFilter softFilter(255);
 
 // Define constants and create PIDController instances
 const int coilAPin = 2;
-const int coilBPin = 3;
 const int receiverPinA = A4;
 
 double oscillationFrequency = 4000000;
@@ -197,50 +196,22 @@ double interpolate(double current, double target, double step) {
     return current;                                  // Default case (should not hit)
 }
 
-int oscillatorPins[3] = {7, 8, 9};
+int oscillatorPin = 9;
 
 void setup() {
-    // pinMode(receiverPinA, INPUT);
-    // pinMode(A0, INPUT);
-    Serial.begin(9600); // Set baud rate to 230400 bps
-
-    // Start auto-tuning for frequency and amplitude PID controllers
-    // oscillationPID.startAutoTuning(1, 0);
 
     pinMode(coilAPin, OUTPUT);
-    pinMode(coilBPin, OUTPUT);
 
 
     analogWrite(coilAPin, 255);
-    analogWrite(coilBPin, 255);
 
-    pinMode(oscillatorPins[0], OUTPUT);
-    pinMode(oscillatorPins[1], OUTPUT);
-    pinMode(oscillatorPins[2], OUTPUT);
+    pinMode(oscillatorPin, OUTPUT);
+
+    tone(oscillatorPin, blueLaserMultiplier);
+
 }
 
 void loop() {
-
-    static int oscTurn = 0;
-
-
-    if(oscTurn == 0){
-      tone(oscillatorPins[0], oscillationFrequency, 10);
-      analogWrite(oscillatorPins[1], 0);
-      analogWrite(oscillatorPins[2], 0);
-      oscTurn = 1;
-    } else if(oscTurn == 1){
-      analogWrite(oscillatorPins[0], 0);
-      tone(oscillatorPins[1], oscillationFrequency / 2, 10);
-      analogWrite(oscillatorPins[2], 0);
-      oscTurn = 2;
-    } else {
-      analogWrite(oscillatorPins[0], 0);
-      analogWrite(oscillatorPins[1], 0);
-      tone(oscillatorPins[2], blueLaserMultiplier, 1000);
-      oscTurn = 0;
-    }
-
 
 
 }
