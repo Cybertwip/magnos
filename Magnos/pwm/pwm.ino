@@ -225,6 +225,7 @@ void loop() {
     // float voltage = sensorValue * (5.0 / 1023.0);
     // Serial.print(" - Voltage ");
     // Serial.print(voltage);
+    delayMicroseconds(1);
 
     // long long currentTime = micros();
     // static long long lastTime = currentTime;
@@ -240,13 +241,13 @@ void loop() {
 
 
     if(oscTurn == 0){
-      tone(oscillatorPins[0], oscillationFrequency, 100);
-      tone(oscillatorPins[1], 0);
+      tone(oscillatorPins[0], oscillationFrequency / 2, 10);
+      analogWrite(oscillatorPins[1], 0);
       analogWrite(oscillatorPins[2], 0);
       oscTurn = 1;
     } else if(oscTurn == 1){
       analogWrite(oscillatorPins[0], 0);
-      tone(oscillatorPins[1], oscillationFrequency, 100);
+      tone(oscillatorPins[1], oscillationFrequency / 2, 10);
       analogWrite(oscillatorPins[2], 0);
       oscTurn = 2;
     } else {
@@ -254,7 +255,6 @@ void loop() {
       analogWrite(oscillatorPins[1], 0);
       tone(oscillatorPins[2], blueLaserMultiplier, 1000);
       oscTurn = 0;
-
     }
 
     // bool calibrating = oscillationPID.calibrating();
