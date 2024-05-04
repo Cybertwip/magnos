@@ -180,14 +180,15 @@ const int coilBPin = 3;
 const int receiverPinA = A4;
 
 double oscillationFrequency = 4000000;
+double blueLaserMultiplier = 660;
 const double maxReading = 1023;
 
 const int numTrainSamples = 32;
 int predictionPhaseCounter = 0;
 
-PIDController oscillationPID(1.0, 0, 0.0); 
+// PIDController oscillationPID(1.0, 0, 0.0); 
 
-LinearRegressionModel oscillationModel;
+// LinearRegressionModel oscillationModel;
 
 double interpolate(double current, double target, double step) {
     if (abs(current - target) < step) return target; // Close enough to target
@@ -199,15 +200,19 @@ double interpolate(double current, double target, double step) {
 int oscillatorPins[3] = {7, 8, 9};
 
 void setup() {
-
-    pinMode(receiverPinA, INPUT);
+    // pinMode(receiverPinA, INPUT);
+    // pinMode(A0, INPUT);
     Serial.begin(9600); // Set baud rate to 230400 bps
 
     // Start auto-tuning for frequency and amplitude PID controllers
-    oscillationPID.startAutoTuning(1, 0);
+    // oscillationPID.startAutoTuning(1, 0);
 
     pinMode(coilAPin, OUTPUT);
     pinMode(coilBPin, OUTPUT);
+
+
+    analogWrite(coilAPin, 255);
+    analogWrite(coilBPin, 255);
 
     pinMode(oscillatorPins[0], OUTPUT);
     pinMode(oscillatorPins[1], OUTPUT);
@@ -215,84 +220,89 @@ void setup() {
 }
 
 void loop() {
-    long long currentTime = millis();
-    static long long lastTime = currentTime;
+
+    // int sensorValue = analogRead(A0);  // Assuming the solar cell is connected to A0
+    // float voltage = sensorValue * (5.0 / 1023.0);
+    // Serial.print(" - Voltage ");
+    // Serial.print(voltage);
+
+    // long long currentTime = micros();
+    // static long long lastTime = currentTime;
     static int oscTurn = 0;
-    long long delta = (currentTime - lastTime); // Calculate delta time in milliseconds
-    double dt = (delta) / 1000.0; // Calculate delta time in seconds
-    lastTime = currentTime;
+    // long long delta = (currentTime - lastTime); // Calculate delta time in milliseconds
+    // double dt = (delta) / 1000.0; // Calculate delta time in seconds
+    // lastTime = currentTime;
 
-    static int oscillationToggle = 0;
+    // static int oscillationToggle = 0;
 
-    int currentA = analogRead(receiverPinA);
-    double emfError = (maxReading - currentA) / maxReading; // Adjusted error calculation
+    // int currentA = analogRead(receiverPinA);
+    // double emfError = (maxReading - currentA) / maxReading; // Adjusted error calculation
+
 
     if(oscTurn == 0){
-      tone(oscillatorPins[0], oscillationFrequency, 100);      
-      analogWrite(oscillatorPins[1], 0);
+      tone(oscillatorPins[0], oscillationFrequency, 100);
+      tone(oscillatorPins[1], 0);
       analogWrite(oscillatorPins[2], 0);
       oscTurn = 1;
     } else if(oscTurn == 1){
-      tone(oscillatorPins[1], oscillationFrequency, 100);      
       analogWrite(oscillatorPins[0], 0);
+      tone(oscillatorPins[1], oscillationFrequency, 100);
       analogWrite(oscillatorPins[2], 0);
       oscTurn = 2;
     } else {
       analogWrite(oscillatorPins[0], 0);
-      analogWrite(oscillatorPins[1], 0);      
-      tone(oscillatorPins[2], oscillationFrequency, 100);      
+      analogWrite(oscillatorPins[1], 0);
+      tone(oscillatorPins[2], blueLaserMultiplier, 1000);
       oscTurn = 0;
+
     }
 
-    analogWrite(coilAPin, 255);
-    analogWrite(coilBPin, 255);
+    // bool calibrating = oscillationPID.calibrating();
 
-    bool calibrating = oscillationPID.calibrating();
+    // if(calibrating){
 
-    if(calibrating){
+    //   oscillationPID.calibrate(emfError, currentTime);
 
-      oscillationPID.calibrate(emfError, currentTime);
+    //   oscillationToggle = oscillationPID.getRelayState();
 
-      oscillationToggle = oscillationPID.getRelayState();
+    //   Serial.print(" - CAL: ");
+    //   Serial.print(" - Reading: ");
+    //   Serial.print(currentA);
+    //   Serial.print(" - Error: ");
+    //   Serial.println(emfError);
 
-      Serial.print(" - CAL: ");
-      Serial.print(" - Reading: ");
-      Serial.print(currentA);
-      Serial.print(" - Error: ");
-      Serial.println(emfError);
+    // } else if(delta > 0){
+    //   if(predictionPhaseCounter < numTrainSamples){
+    //     int fakeComputing = oscillationPID.compute(emfError, dt);
 
-    } else if(delta > 0){
-      if(predictionPhaseCounter < numTrainSamples){
-        int fakeComputing = oscillationPID.compute(emfError, dt);
+    //     oscillationToggle = oscillationPID.getRelayState();
 
-        oscillationToggle = oscillationPID.getRelayState();
+    //     predictionPhaseCounter++;
 
-        predictionPhaseCounter++;
-
-        Serial.print(" - PID: ");
+    //     Serial.print(" - PID: ");
         
-      } else {
+    //   } else {
 
-        predictionPhaseCounter++;
-        if(predictionPhaseCounter > numTrainSamples * 2){
-          predictionPhaseCounter = 0;
-        }
+    //     predictionPhaseCounter++;
+    //     if(predictionPhaseCounter > numTrainSamples * 2){
+    //       predictionPhaseCounter = 0;
+    //     }
 
-        oscillationToggle = round(oscillationModel.predict(emfError));
+    //     oscillationToggle = round(oscillationModel.predict(emfError));
 
-        Serial.print(" - PRE: ");
+    //     Serial.print(" - PRE: ");
 
-      }
+    //   }
 
-      if(predictionPhaseCounter < numTrainSamples){
-        oscillationModel.addData({emfError, oscillationToggle});
-      } 
+    //   if(predictionPhaseCounter < numTrainSamples){
+    //     oscillationModel.addData({emfError, oscillationToggle});
+    //   } 
 
-      Serial.print(" - Reading: ");
-      Serial.print(currentA);
-      Serial.print(" - Error: ");
-      Serial.println(emfError);
-    }
+    //   Serial.print(" - Reading: ");
+    //   Serial.print(currentA);
+    //   Serial.print(" - Error: ");
+    //   Serial.println(emfError);
+    // }
 
 
 
