@@ -221,27 +221,11 @@ void setup() {
 
 void loop() {
 
-    // int sensorValue = analogRead(A0);  // Assuming the solar cell is connected to A0
-    // float voltage = sensorValue * (5.0 / 1023.0);
-    // Serial.print(" - Voltage ");
-    // Serial.print(voltage);
-    delayMicroseconds(1);
-
-    // long long currentTime = micros();
-    // static long long lastTime = currentTime;
     static int oscTurn = 0;
-    // long long delta = (currentTime - lastTime); // Calculate delta time in milliseconds
-    // double dt = (delta) / 1000.0; // Calculate delta time in seconds
-    // lastTime = currentTime;
-
-    // static int oscillationToggle = 0;
-
-    // int currentA = analogRead(receiverPinA);
-    // double emfError = (maxReading - currentA) / maxReading; // Adjusted error calculation
 
 
     if(oscTurn == 0){
-      tone(oscillatorPins[0], oscillationFrequency / 2, 10);
+      tone(oscillatorPins[0], oscillationFrequency, 10);
       analogWrite(oscillatorPins[1], 0);
       analogWrite(oscillatorPins[2], 0);
       oscTurn = 1;
@@ -256,53 +240,6 @@ void loop() {
       tone(oscillatorPins[2], blueLaserMultiplier, 1000);
       oscTurn = 0;
     }
-
-    // bool calibrating = oscillationPID.calibrating();
-
-    // if(calibrating){
-
-    //   oscillationPID.calibrate(emfError, currentTime);
-
-    //   oscillationToggle = oscillationPID.getRelayState();
-
-    //   Serial.print(" - CAL: ");
-    //   Serial.print(" - Reading: ");
-    //   Serial.print(currentA);
-    //   Serial.print(" - Error: ");
-    //   Serial.println(emfError);
-
-    // } else if(delta > 0){
-    //   if(predictionPhaseCounter < numTrainSamples){
-    //     int fakeComputing = oscillationPID.compute(emfError, dt);
-
-    //     oscillationToggle = oscillationPID.getRelayState();
-
-    //     predictionPhaseCounter++;
-
-    //     Serial.print(" - PID: ");
-        
-    //   } else {
-
-    //     predictionPhaseCounter++;
-    //     if(predictionPhaseCounter > numTrainSamples * 2){
-    //       predictionPhaseCounter = 0;
-    //     }
-
-    //     oscillationToggle = round(oscillationModel.predict(emfError));
-
-    //     Serial.print(" - PRE: ");
-
-    //   }
-
-    //   if(predictionPhaseCounter < numTrainSamples){
-    //     oscillationModel.addData({emfError, oscillationToggle});
-    //   } 
-
-    //   Serial.print(" - Reading: ");
-    //   Serial.print(currentA);
-    //   Serial.print(" - Error: ");
-    //   Serial.println(emfError);
-    // }
 
 
 
