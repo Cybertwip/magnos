@@ -1,217 +1,225 @@
 #include <Arduino.h>
-#include <ArduinoSTL.h>
-struct DataPoint {
-    double error;
-    double adjustment;
-};
+// #include <ArduinoSTL.h>
+// struct DataPoint {
+//     double error;
+//     double adjustment;
+// };
 
-class LinearRegressionModel {
-private:
-    double intercept;
-    double slope;
-    double sum_x;
-    double sum_y;
-    double sum_xx;
-    double sum_xy;
-    int n;
-    bool trained;
+// class LinearRegressionModel {
+// private:
+//     double intercept;
+//     double slope;
+//     double sum_x;
+//     double sum_y;
+//     double sum_xx;
+//     double sum_xy;
+//     int n;
+//     bool trained;
 
-public:
+// public:
     
-    LinearRegressionModel() : intercept(0), slope(0), sum_x(0), sum_y(0), sum_xx(0), sum_xy(0), n(0), trained(false) {}
+//     LinearRegressionModel() : intercept(0), slope(0), sum_x(0), sum_y(0), sum_xx(0), sum_xy(0), n(0), trained(false) {}
 
-    void train(const std::vector<DataPoint>& data) {
-        for (const auto& point : data) {
-            addData(point);
-        }
-        trained = true;
-    }
+//     void train(const std::vector<DataPoint>& data) {
+//         for (const auto& point : data) {
+//             addData(point);
+//         }
+//         trained = true;
+//     }
 
-    void addData(const DataPoint& point) {
-        double old_mean_x = n > 0 ? sum_x / n : 0;
-        double old_mean_y = n > 0 ? sum_y / n : 0;
+//     void addData(const DataPoint& point) {
+//         double old_mean_x = n > 0 ? sum_x / n : 0;
+//         double old_mean_y = n > 0 ? sum_y / n : 0;
 
-        n++;
-        sum_x += point.error;
-        sum_y += point.adjustment;
+//         n++;
+//         sum_x += point.error;
+//         sum_y += point.adjustment;
         
-        double new_mean_x = sum_x / n;
-        double new_mean_y = sum_y / n;
+//         double new_mean_x = sum_x / n;
+//         double new_mean_y = sum_y / n;
 
-        sum_xx += (point.error - new_mean_x) * (point.error - old_mean_x);
-        sum_xy += (point.error - new_mean_x) * (point.adjustment - old_mean_y);
+//         sum_xx += (point.error - new_mean_x) * (point.error - old_mean_x);
+//         sum_xy += (point.error - new_mean_x) * (point.adjustment - old_mean_y);
 
-        updateModel();
-    }
+//         updateModel();
+//     }
 
-    void updateModel() {
-        if (sum_xx != 0) {
-            slope = sum_xy / sum_xx;
-            intercept = sum_y / n - slope * sum_x / n;
-        } else {
-            slope = 0;  // Prevent division by zero
-            intercept = sum_y / n;  // All data points have the same x value
-        }
-    }
-
-
-    double predict(double desiredCurrent) {
-        return intercept + slope * desiredCurrent;
-    }
-
-    bool isTrained() const {
-      return trained;
-    }
-};
+//     void updateModel() {
+//         if (sum_xx != 0) {
+//             slope = sum_xy / sum_xx;
+//             intercept = sum_y / n - slope * sum_x / n;
+//         } else {
+//             slope = 0;  // Prevent division by zero
+//             intercept = sum_y / n;  // All data points have the same x value
+//         }
+//     }
 
 
+//     double predict(double desiredCurrent) {
+//         return intercept + slope * desiredCurrent;
+//     }
 
-class PIDController {
-private:
-    double kp, ki, kd;
-    double integral = 0.0;
-    double prev_error = 0.0;
-    bool autoTuning = false;
-    double relayHigh, relayLow;
-    long long prevSwitchTime = 0, oscillationStartTime = 0;
-    int oscillationsCount = 0;
-    double period = 0.0;
-    int calibrationSteps = 64;
+//     bool isTrained() const {
+//       return trained;
+//     }
+// };
 
-    bool relayState = true;
 
-public:
-    PIDController(double kp, double ki, double kd) : kp(kp), ki(ki), kd(kd) {}
 
-    bool getRelayState() const { return relayState; }
-    void startAutoTuning(double relayHigh, double relayLow) {
-        if(!autoTuning){
-          autoTuning = true;
-        }
-        this->relayHigh = relayHigh;
-        this->relayLow = relayLow;
-        // Do not reset oscillationsCount and period here if resuming
-        if (oscillationsCount == 0) {
-            period = 0.0;
-            prevSwitchTime = micros(); // Re-initialize timing only if starting fresh
-        }
-    }
+// class PIDController {
+// private:
+//     double kp, ki, kd;
+//     double integral = 0.0;
+//     double prev_error = 0.0;
+//     bool autoTuning = false;
+//     double relayHigh, relayLow;
+//     long long prevSwitchTime = 0, oscillationStartTime = 0;
+//     int oscillationsCount = 0;
+//     double period = 0.0;
+//     int calibrationSteps = 64;
 
-    bool calibrating() { return autoTuning; }
+//     bool relayState = true;
 
-    void calibrate(double error, long long currentTime) {
-        if (!autoTuning) return;
+// public:
+//     PIDController(double kp, double ki, double kd) : kp(kp), ki(ki), kd(kd) {}
 
-        bool shouldToggle = error != prev_error;
-        long long timeDelta = currentTime - prevSwitchTime;
+//     bool getRelayState() const { return relayState; }
+//     void startAutoTuning(double relayHigh, double relayLow) {
+//         if(!autoTuning){
+//           autoTuning = true;
+//         }
+//         this->relayHigh = relayHigh;
+//         this->relayLow = relayLow;
+//         // Do not reset oscillationsCount and period here if resuming
+//         if (oscillationsCount == 0) {
+//             period = 0.0;
+//             prevSwitchTime = micros(); // Re-initialize timing only if starting fresh
+//         }
+//     }
 
-    		if (shouldToggle) {
-            if (oscillationsCount > 0) {
-                period += timeDelta;
-            }
-            prevSwitchTime = currentTime;
+//     bool calibrating() { return autoTuning; }
 
-            relayState = !relayState;
+//     void calibrate(double error, long long currentTime) {
+//         if (!autoTuning) return;
 
-            oscillationsCount++;
-        }
+//         bool shouldToggle = error != prev_error;
+//         long long timeDelta = currentTime - prevSwitchTime;
 
-        prev_error = error;
+//     		if (shouldToggle) {
+//             if (oscillationsCount > 0) {
+//                 period += timeDelta;
+//             }
+//             prevSwitchTime = currentTime;
 
-        if (oscillationsCount >= calibrationSteps) {
-            autoTuning = false;
-            period /= (oscillationsCount - 1);
-            kp = 0.6 * relayHigh / period;
-            ki = 2 * kp / period;
-            kd = kp * period / 2;
+//             relayState = !relayState;
 
-            // Reset for possible future re-calibration
-            oscillationsCount = 0;
+//             oscillationsCount++;
+//         }
 
-        }
-    }
+//         prev_error = error;
 
-    double compute(double error, double dt) {
-        bool shouldToggle = error != prev_error;
-    		if (shouldToggle) {
-            relayState = !relayState;
-        }
-        double p = kp * error;
-        integral += error * dt;
-        double d = kd * (error - prev_error) / dt;
-        double output = p + ki * integral + d;
-        prev_error = error;
-        return output;
-    }
-};
+//         if (oscillationsCount >= calibrationSteps) {
+//             autoTuning = false;
+//             period /= (oscillationsCount - 1);
+//             kp = 0.6 * relayHigh / period;
+//             ki = 2 * kp / period;
+//             kd = kp * period / 2;
 
-class MovingAverageFilter {
-private:
-    std::vector<double> buffer;
-    size_t windowSize;
+//             // Reset for possible future re-calibration
+//             oscillationsCount = 0;
+
+//         }
+//     }
+
+//     double compute(double error, double dt) {
+//         bool shouldToggle = error != prev_error;
+//     		if (shouldToggle) {
+//             relayState = !relayState;
+//         }
+//         double p = kp * error;
+//         integral += error * dt;
+//         double d = kd * (error - prev_error) / dt;
+//         double output = p + ki * integral + d;
+//         prev_error = error;
+//         return output;
+//     }
+// };
+
+// class MovingAverageFilter {
+// private:
+//     std::vector<double> buffer;
+//     size_t windowSize;
     
-public:
-    MovingAverageFilter(size_t size);
+// public:
+//     MovingAverageFilter(size_t size);
     
-    double filter(double inputValue);
-};
+//     double filter(double inputValue);
+// };
 
-MovingAverageFilter::MovingAverageFilter(size_t size) : windowSize(size) {}
+// MovingAverageFilter::MovingAverageFilter(size_t size) : windowSize(size) {}
 
-double MovingAverageFilter::filter(double inputValue) {
-    buffer.push_back(inputValue);
-    if (buffer.size() > windowSize) {
-        buffer.erase(buffer.begin());
-    }
+// double MovingAverageFilter::filter(double inputValue) {
+//     buffer.push_back(inputValue);
+//     if (buffer.size() > windowSize) {
+//         buffer.erase(buffer.begin());
+//     }
     
-    double sum = 0.0f;
-    for (const double& value : buffer) {
-        sum += value;
-    }
-    return sum / buffer.size();
-}
+//     double sum = 0.0f;
+//     for (const double& value : buffer) {
+//         sum += value;
+//     }
+//     return sum / buffer.size();
+// }
 
 
-MovingAverageFilter softFilter(255);
+// MovingAverageFilter softFilter(255);
 
 // Define constants and create PIDController instances
-const int coilAPin = 2;
-const int receiverPinA = A4;
+const int coilPinA = 2;
+const int coilPinB = 3;
+int oscillatorPinA = 9;
+int oscillatorPinB = 10;
+
+// const int receiverPinA = A4;
 
 double oscillationFrequency = 4000000;
-double blueLaserMultiplier = 660;
-const double maxReading = 1023;
+double blueLaserMultiplierA = 12;
+double blueLaserMultiplierB = 33;
+// const double maxReading = 1023;
 
-const int numTrainSamples = 32;
-int predictionPhaseCounter = 0;
+// const int numTrainSamples = 32;
+// int predictionPhaseCounter = 0;
 
-// PIDController oscillationPID(1.0, 0, 0.0); 
+// double interpolate(double current, double target, double step) {
+//     if (abs(current - target) < step) return target; // Close enough to target
+//     if (current < target) return current + step;     // Increment current
+//     if (current > target) return current - step;     // Decrement current
+//     return current;                                  // Default case (should not hit)
+// }
 
-// LinearRegressionModel oscillationModel;
-
-double interpolate(double current, double target, double step) {
-    if (abs(current - target) < step) return target; // Close enough to target
-    if (current < target) return current + step;     // Increment current
-    if (current > target) return current - step;     // Decrement current
-    return current;                                  // Default case (should not hit)
-}
-
-int oscillatorPin = 9;
 
 void setup() {
 
-    pinMode(coilAPin, OUTPUT);
+    pinMode(coilPinA, OUTPUT);
+    pinMode(coilPinB, OUTPUT);
 
+    analogWrite(coilPinA, 255);
+    analogWrite(coilPinB, 255);
 
-    analogWrite(coilAPin, 255);
-
-    pinMode(oscillatorPin, OUTPUT);
-
-    tone(oscillatorPin, blueLaserMultiplier);
+    pinMode(oscillatorPinA, OUTPUT);
+    pinMode(oscillatorPinB, OUTPUT);
 
 }
 
 void loop() {
 
+  static bool toggle = false;
 
+  if(toggle){
+    tone(oscillatorPinA, blueLaserMultiplierA, 500);
+  } else {
+    tone(oscillatorPinB, blueLaserMultiplierB, 1000);
+  }
+
+  toggle = !toggle;
 }
