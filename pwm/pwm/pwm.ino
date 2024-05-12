@@ -177,14 +177,21 @@
 // Define constants and create PIDController instances
 const int coilPinA = 2;
 const int coilPinB = 3;
-int oscillatorPinA = 9;
-int oscillatorPinB = 10;
+const int coilPinC = 7;
+// int oscillatorPinA = 9;
+// int oscillatorPinB = 10;
+
+// const int oscPinA = 6;
+// const int oscPinB = 7;
+// const int oscPinC = 8;
+// const int oscPinD = 9;
+
 
 // const int receiverPinA = A4;
 
-double oscillationFrequency = 4000000;
-double blueLaserMultiplierA = 12;
-double blueLaserMultiplierB = 33;
+// double oscillationFrequency = 4000000;
+// double blueLaserMultiplierA = 10000;
+// double blueLaserMultiplierB = 3000;
 // const double maxReading = 1023;
 
 // const int numTrainSamples = 32;
@@ -202,24 +209,13 @@ void setup() {
 
     pinMode(coilPinA, OUTPUT);
     pinMode(coilPinB, OUTPUT);
+    pinMode(coilPinC, OUTPUT);
 
-    analogWrite(coilPinA, 255);
-    analogWrite(coilPinB, 255);
-
-    pinMode(oscillatorPinA, OUTPUT);
-    pinMode(oscillatorPinB, OUTPUT);
+    analogWrite(coilPinA, 254);
+    analogWrite(coilPinB, 254);
+    analogWrite(coilPinC, 254);
 
 }
 
 void loop() {
-
-  static bool toggle = false;
-
-  if(toggle){
-    tone(oscillatorPinA, blueLaserMultiplierA, 500);
-  } else {
-    tone(oscillatorPinB, blueLaserMultiplierB, 1000);
-  }
-
-  toggle = !toggle;
 }
