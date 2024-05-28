@@ -174,10 +174,6 @@
 
 // MovingAverageFilter softFilter(255);
 
-// Define constants and create PIDController instances
-const int coilPinA = 2;
-const int coilPinB = 3;
-const int coilPinC = 7;
 // int oscillatorPinA = 9;
 // int oscillatorPinB = 10;
 
@@ -203,19 +199,47 @@ const int coilPinC = 7;
 //     if (current > target) return current - step;     // Decrement current
 //     return current;                                  // Default case (should not hit)
 // }
+const int coilPinA = 2;
+const int coilPinB = 3;
+const int outputPinA = 7;
 
+bool flop = false;
+unsigned long previousMillis = 0;
+const long interval = 50; 
+const long highDuration = 1;
 
 void setup() {
-
     pinMode(coilPinA, OUTPUT);
     pinMode(coilPinB, OUTPUT);
-    pinMode(coilPinC, OUTPUT);
+    pinMode(outputPinA, OUTPUT);
 
-    analogWrite(coilPinA, 254);
-    analogWrite(coilPinB, 254);
-    analogWrite(coilPinC, 254);
+    digitalWrite(coilPinA, HIGH);
+    digitalWrite(coilPinB, HIGH);
 
+    Serial.begin(9600);
 }
 
 void loop() {
+    if (flop) {
+        digitalWrite(coilPinA, HIGH);
+        digitalWrite(coilPinB, LOW);
+    } else {
+        digitalWrite(coilPinB, HIGH);
+        digitalWrite(coilPinA, LOW);
+    }
+    flop = !flop;
+
+    unsigned long currentMillis = millis();
+
+    if (currentMillis - previousMillis <= interval) {
+        digitalWrite(outputPinA, LOW);
+    } else {      
+      if (currentMillis - previousMillis <= interval + highDuration){
+        digitalWrite(outputPinA, HIGH);
+      } else {
+        previousMillis = currentMillis;        
+      }
+
+    }
 }
+
