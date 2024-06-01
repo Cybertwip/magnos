@@ -28,6 +28,8 @@
 #include "BasicCarGameState.h"
 #include "RocketGameState.h"
 #include "WheelGameState.h"
+#include "NuclearParryGameState.h"
+
 
 #if BUILD_COMPONENT_DETECTIVE
 #include "AdvancedCarGameState.h"
@@ -68,12 +70,12 @@ bool HelloWorld::init()
 	// Set the callback function for mouse move events
 	mouseListener->onMouseMove = AX_CALLBACK_1(HelloWorld::onMouseMove, this); // Assuming you're in the HelloWorld class
 	
-	// Register the mouse listener with the event dispatcher
+	// Register the mouse listener with the event dispatcherh
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
 	
 	// Enable mouse input (optional, if not already enabled)
 	_director->getOpenGLView()->setCursorVisible(true);
-	this->currentGameState = BasicCarGameState::create();
+	this->currentGameState = NuclearParryGameState::create();
 	this->addChild(currentGameState);
 
 	currentGameState->setup(_defaultCamera);
